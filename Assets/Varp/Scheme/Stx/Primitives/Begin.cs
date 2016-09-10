@@ -33,7 +33,7 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class PrimitiveBegin : BasePrimitive
     {
         // (begin ...)
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair pair = stx.GetList();
             Syntax kwdr = pair[0] as Syntax;

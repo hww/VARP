@@ -34,13 +34,43 @@ namespace VARP.Scheme.Data
     /// </summary>
     public sealed class Symbol : SObject, ISymbolic
     {
-        private static Dictionary<string, Symbol> internedSymbols = new Dictionary<string, Symbol>();
+        private string name;    //< symbol's name
+        private bool keyword;   //< is this symbol the keyword
 
-        private string name;
+        /// <summary>
+        /// Create new symbol
+        /// Any symbol started with ':' character marked as 'keyword'
+        /// The keywords are literals
+        /// </summary>
+        /// <param name="name">symbol name</param>
+        private Symbol(string name) {
+            this.name = name;
+            this.keyword = name[0] == ':';
+        }
+
+        /// <summary>
+        /// Return symbol's name
+        /// </summary>
         public string Name { get { return name; } }
 
-        private Symbol(string name) { this.name = name; }
+        #region SObject Methods
 
+        public override SBool AsBool() { return SBool.True; }
+        public override string AsString() { return Name; }
+        public override bool IsLiteral { get { return keyword; } }
+        public override bool IsIdentifier { get { return !keyword; } }
+        #endregion
+
+        #region ISymbolic
+
+        Scheme.Data.Symbol Scheme.Data.ISymbolic.Symbol { get { return this; } }
+        public object HashValue { get { return GetHashCode(); } }
+
+        #endregion
+
+        #region Symbol Factory
+
+        private static Dictionary<string, Symbol> internedSymbols = new Dictionary<string, Symbol>();
         public static Symbol Intern(string name)
         {
             Symbol value;
@@ -56,22 +86,7 @@ namespace VARP.Scheme.Data
             }
         }
 
-        #region SObject Methods
-        public override SBool AsBool() { return SBool.True; }
-        public override string AsString() { return Name; }
-        public override bool IsLiteral { get { return name[0] == ':'; } }
-        public override bool IsIdentifier { get { return name[0] != ':'; } }
         #endregion
-
-        #region ISymbolic
-
-        Scheme.Data.Symbol Scheme.Data.ISymbolic.Symbol { get { return this; } }
-        public object HashValue { get { return GetHashCode(); } }
-        //public GlobalEnvironment Location { get { return null; } }
-
-        #endregion
-
-
         #region Commonly used symbols
 
         public static string SYSTEM = "system";

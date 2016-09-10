@@ -33,11 +33,11 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class PrimitiveLambda : BasePrimitive
     {
         // (lambda () ...)
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsMinimum(stx, 1, argc, "lambda:");
+            AssertArgsMinimum("lambda", "arity mismatch", 1, argc, list);
 
             Syntax kwdr = list[0] as Syntax;
             Syntax args = list[1] as Syntax;
@@ -45,8 +45,10 @@ namespace VARP.Scheme.Stx.Primitives
             Arguments arguments = new Arguments();
             ArgumentsList.Parse(args.GetList(), env, ref arguments);
 
+            Environment localEnv = env.CreateEnvironment(arguments);
+
             Pair bodylist = (list.Cdr as Pair).Cdr as Pair;
-            Pair body = AstBuilder.ExpandListElements(bodylist, env);
+            Pair body = AstBuilder.ExpandListElements(bodylist, localEnv);
             return new AstLambda(stx, kwdr, arguments, body);
         }
     }

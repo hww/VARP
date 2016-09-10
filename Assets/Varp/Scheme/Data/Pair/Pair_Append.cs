@@ -57,11 +57,11 @@ namespace VARP.Scheme.Data
                     if (last.Cdr == null)
                         last.Cdr = Duplicate(right);
                     else //if (!(last.Cdr is Pair))
-                        throw new SchemeException("append: can't append to improper list");
+                        throw new SchemeError("append: can't append to improper list");
 
                     return first;
                 }
-                throw new ContractViolation("list?", Inspector.Inspect(left), "append:");
+                throw SchemeError.ArgumentError("append", "list?", left);
             }
 
         }

@@ -34,7 +34,7 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class PrimitiveCond : BasePrimitive
     {
         // (cond () ...)
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair list = stx.GetList();    //< list of syntax objects
             int argc = GetArgsCount(list);
@@ -46,14 +46,14 @@ namespace VARP.Scheme.Stx.Primitives
 
             foreach (Syntax conditional_stx in list.Cdr as Pair)
             {
-                if (elsecase != null) throw new SyntaxError(conditional_stx, "Unexpected expression after condition's else clause");
+                if (elsecase != null) throw SchemeError.SyntaxError("cond", "unexpected expression after condition's else clause", conditional_stx);
                 if (conditional_stx.IsSyntaxExpression)
                 {
                     // Get single conditional expression
                     Pair conditional_list = conditional_stx.GetList();
                     // Check arguments count, should be 2 for each condition
                     int size = Pair.Length(conditional_list);
-                    if (size != 2) new ArityMissmach(conditional_stx, 2, size, "cond:");
+                    if (size != 2) throw SchemeError.ArityError("cond", "arity missmach", 2, size, conditional_list);
                     // Now get condition and it's expression
                     Syntax var = conditional_list[0] as Syntax;
                     Syntax val = conditional_list[1] as Syntax;
@@ -79,7 +79,7 @@ namespace VARP.Scheme.Stx.Primitives
                 }
                 else
                 {
-                    throw new SyntaxError(conditional_stx, "Expected condition's expression list");
+                    throw SchemeError.SyntaxError("cond", "Expected condition's expression list", conditional_stx);
                 }
             }
 

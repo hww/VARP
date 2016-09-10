@@ -25,26 +25,49 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using VARP.Scheme.Tokenizing;
+using System.Collections.Generic;
+using System.Diagnostics;
 
-namespace VARP.Scheme.Exception
+namespace VARP.Scheme.Stx
 {
-    public class MissingParenthesis : SyntaxError
+    using Data;
+
+
+    public sealed class Binding : SObject
     {
-        public MissingParenthesis()
-            : base("Missing parenthesis")
+        public delegate AST CompilerPrimitive(Syntax expression, Environment context);
+
+        public Symbol Identifier;               //< variable index in the environment
+        public Symbol UID;                      //< unique id of variable name.number
+        public int Index;                       //< unique id of variable name.number
+        public CompilerPrimitive Primitive;     //< in case if primitive
+
+        // define global variable
+        public Binding(Symbol variable, CompilerPrimitive primitive = null)
         {
+            Debug.Assert(variable != null);
+            this.Identifier = variable;
+            this.UID = null;
+            this.Index = -1; // global!
+            this.Primitive = primitive;
+        }
+        public Binding(Symbol variable, int index, CompilerPrimitive primitive = null)
+        {
+            Debug.Assert(variable != null);
+            Debug.Assert(index >= 0);
+            this.Identifier = variable;
+            this.UID = null;
+            this.Index = index; // local!
+            this.Primitive = primitive;
         }
 
-        public MissingParenthesis(string message)
-            : base("Missing parenthesis: " + message)
-        {
-        }
+        public bool IsPrimitive { get { return Primitive != null; } }
+        public bool IsGlobal { get { return Index < 0; } }
 
-        public MissingParenthesis(string message, Token token)
-            : base("Missing parenthesis: " + message, token)
-        {
-        }
-
+        #region SObject Methods
+        public override SBool AsBool() { return SBool.True; }
+        public override string AsString() { return base.ToString(); }
+        #endregion
     }
+
 }

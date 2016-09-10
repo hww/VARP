@@ -25,15 +25,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using VARP.Scheme.Exception;
-using VARP.Scheme.REPL;
 
 namespace VARP.Scheme.Data
 {
-    public class SObject
+    using Exception;
+    using REPL;
+
+    public class SObject 
     {
-        // this value have to be used everywhere in your code
-        public static SVoid Void = new SVoid();
 
         public override string ToString()
         {
@@ -48,6 +47,7 @@ namespace VARP.Scheme.Data
         public virtual bool IsIdentifier { get { return false; } }
         // 0, 0.1, 99
         public virtual bool IsNumeric { get { return false; } }
+        public virtual SObject GetDatum() { return this; }
     }
 
     public class SObjectCastSafe 
@@ -135,7 +135,7 @@ namespace VARP.Scheme.Data
         public static Symbol GetSymbol(SObject obj) {
             if (obj is Symbol)
                 return (obj as Symbol);
-            throw new ContractViolation(obj,"symbol?", Inspector.Inspect(obj));
+            throw SchemeError.ArgumentError("get-symbol","symbol?", obj);
         }
         // ---------------------------------------------------------------
         // Numerical
@@ -143,12 +143,12 @@ namespace VARP.Scheme.Data
         public static SInteger GetSInteger(SObject obj) {
             if (obj is SInteger)   
                 return obj as SInteger;
-            throw new ContractViolation(obj, "int?", Inspector.Inspect(obj));
+            throw SchemeError.ArgumentError("get-integer", "int?", obj);
         }
         public static SFloat GetFloat(SObject obj) {
             if (obj is SFloat)
                 return obj as SFloat;
-            throw new ContractViolation(obj, "bool?", Inspector.Inspect(obj));
+            throw SchemeError.ArgumentError("get-float", "bool?", obj);
         }
         // ---------------------------------------------------------------
         // Boolean
@@ -156,7 +156,7 @@ namespace VARP.Scheme.Data
         public static SBool GetBool(SObject obj) {
             if (obj is SBool)
                 return obj as SBool;
-            throw new ContractViolation(obj, "bool?", Inspector.Inspect(obj));
+            throw SchemeError.ArgumentError("get-bool", "bool?", obj);
         }
         // ---------------------------------------------------------------
         // String
@@ -164,12 +164,12 @@ namespace VARP.Scheme.Data
         public static SString GetString(SObject obj) {
             if (obj is SString)
                return obj as SString;
-            throw new ContractViolation(obj, "string?", Inspector.Inspect(obj));
+            throw SchemeError.ArgumentError("get-string", "string?", obj);
         }
         public static SChar GetChar(SObject obj) {
             if (obj is SChar)
                 return obj as SChar;
-            throw new ContractViolation(obj, "char?", Inspector.Inspect(obj));
+            throw SchemeError.ArgumentError("get-char", "char?", obj);
         }
         // ---------------------------------------------------------------
         // Pair
@@ -177,20 +177,20 @@ namespace VARP.Scheme.Data
         // produces exceptions if @obj is null or not Par
         public static Pair GetPair(SObject obj) {
             if (obj is Pair) return obj as Pair;
-            throw new ContractViolation(obj, "cons?", Inspector.Inspect(obj));
+            throw SchemeError.ArgumentError("get_pair", "cons?", obj);
         }
         // return null if @obj is null, exception if object is not Pair and not null
         public static Pair GetPairOrNull(SObject obj)
         {
             if (obj == null) return null;
             if (obj is Pair) return obj as Pair;
-            throw new ContractViolation(obj, "cons?", Inspector.Inspect(obj));
+            throw SchemeError.ArgumentError("get-pair-or-null", "cons?", obj);
         }
 
         public static SObject GetLiteral(SObject obj) {
             if(obj.IsLiteral)
                 return obj;
-            throw new ContractViolation(obj, "literal?", Inspector.Inspect(obj));
+            throw SchemeError.ArgumentError("get-literal", "literal?", obj);
         }
 
         #endregion

@@ -44,6 +44,9 @@ namespace VARP.Scheme.Data
     /// As it can be with SNull
     public sealed class SVoid : SObject
     {
+        // this value have to be used everywhere in your code
+        public static SVoid Void = new SVoid();
+
         public SVoid() { }
         public override int GetHashCode() { return base.GetHashCode(); }
         public override bool Equals(object obj)

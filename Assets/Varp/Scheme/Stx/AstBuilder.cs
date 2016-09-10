@@ -41,7 +41,7 @@ namespace VARP.Scheme.Stx
         }
 
         // Expand string @expression to abstract syntax tree, in given @env environment
-        public static AST Expand(string expression, string filepath, LexicalEnvironment env)
+        public static AST Expand(string expression, string filepath, Environment env)
         {
             Syntax syntax = Parser.Parse(expression, filepath);
             return Expand(syntax, env);
@@ -54,7 +54,7 @@ namespace VARP.Scheme.Stx
         }
 
         // Expand string @syntax to abstract syntax tree, in given @env environment
-        public static AST Expand(Syntax syntax, LexicalEnvironment env)
+        public static AST Expand(Syntax syntax, Environment env)
         {
             if (syntax == null)
                 return null;
@@ -65,39 +65,39 @@ namespace VARP.Scheme.Stx
             else if (syntax.IsSyntaxExpression)
                 return ExpandExpression(syntax, env);
             else
-                throw new SyntaxError(syntax, "Expected literal, identifier or list expression");
+                throw SchemeError.SyntaxError("ast-builder-expand", "expected literal, identifier or list expression", syntax);
         }
         #endregion
 
         #region Private Expand Methods
 
         // aka: 99
-        public static AST ExpandLiteral(Syntax syntax, LexicalEnvironment env)
+        public static AST ExpandLiteral(Syntax syntax, Environment env)
         {
             // n.b. value '() is null it will be as literal
             return new AstLiteral(syntax);
         }
 
         // aka: x
-        public static AST ExpandIdentifier(Syntax syntax, LexicalEnvironment env)
+        public static AST ExpandIdentifier(Syntax syntax, Environment env)
         {
-            if (!syntax.IsIdentifier) new SyntaxError(syntax, "Expected identifier");
+            if (!syntax.IsSyntaxIdentifier) throw SchemeError.SyntaxError("ast-builder-expand-identifier", "expected identifier", syntax);
             Symbol varname = syntax.GetDatum<Symbol>();
-            LexicalBinding binding = env.Lookup(varname);
+            Binding binding = env.Lookup(varname);
             if (binding == null)
-                throw new SyntaxError(syntax, "Expected identifier");
+                throw SchemeError.SyntaxError("ast-builder-expand-identifier", "Expected identifier", syntax);
             return new AstReference(syntax, binding);
         }
 
         // aka: (...)
-        public static AST ExpandExpression(Syntax syntax, LexicalEnvironment env)
+        public static AST ExpandExpression(Syntax syntax, Environment env)
         {
             Pair list = syntax.GetList();
             if (list == null) return new AstApplication(syntax, null);
             Syntax ident = list.Car as Syntax;
             if (ident.IsSyntaxIdentifier)
             {
-                LexicalBinding binding = env.Lookup(ident.expression as Symbol);
+                Binding binding = env.Lookup(ident.expression as Symbol);
                 if (binding != null)
                 {
                     if (binding.IsPrimitive)
@@ -109,7 +109,7 @@ namespace VARP.Scheme.Stx
 
         // Expand list of syntax objects as: (#<syntax> #<syntax> ...)
         // aka: (...)
-        public static Pair ExpandListElements(Pair list, LexicalEnvironment env)
+        public static Pair ExpandListElements(Pair list, Environment env)
         {
             if (list == null) return null;
 

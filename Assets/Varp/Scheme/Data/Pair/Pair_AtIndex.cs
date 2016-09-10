@@ -51,10 +51,10 @@ namespace VARP.Scheme.Data
                 else
                 {
                     fast = null;
-                    if (index == 1) throw new SchemeException("Pair represents an improper list");
+                    if (index == 1) throw new SchemeError("Pair represents an improper list");
                 }
                 if (fast == null) throw new IndexOutOfRangeException("Attempt to access beyond the end of a Pair list");
-                if (fast == slow) throw new SchemeException("Pair represents an improper list");
+                if (fast == slow) throw new SchemeError("Pair represents an improper list");
 
                 index--;
                 if (index == 0) break;
@@ -67,10 +67,10 @@ namespace VARP.Scheme.Data
                 else
                 {
                     fast = null;
-                    if (index == 1) throw new SchemeException("Pair represents an improper list");
+                    if (index == 1) throw new SchemeError("Pair represents an improper list");
                 }
                 if (fast == null) throw new IndexOutOfRangeException("Attempt to access beyond the end of a Pair list");
-                if (fast == slow) throw new SchemeException("Pair represents an improper list");
+                if (fast == slow) throw new SchemeError("Pair represents an improper list");
                 index--;
             }
 

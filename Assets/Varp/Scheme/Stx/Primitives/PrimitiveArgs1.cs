@@ -35,11 +35,11 @@ namespace VARP.Scheme.Stx.Primitives
         // one arguments primitive.
         // more that one arguments will be raped to list of primitives
         // (foo 1)
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsEqual(stx, 1, argc);
+            AssertArgsEqual("primitive1", "arity mismatch", 1, argc, list);
             Syntax set_kwd = list[0] as Syntax;
             Pair arguments = AstBuilder.ExpandListElements(list.Cdr as Pair, env);
             return new AstPrimitive(stx, set_kwd, arguments);

@@ -40,7 +40,7 @@ namespace VARP.Scheme.Data
         {
             if (obj == null) return null;
             if (!(obj is Pair))
-                throw new ContractViolation("list?", Inspector.Inspect(obj), "Reverse");
+                throw SchemeError.ArgumentError("reverse", "list?", obj);
 
             Pair fast = obj as Pair;
             Pair slow = fast;
@@ -53,17 +53,17 @@ namespace VARP.Scheme.Data
                 if (fast.Cdr is Pair)
                     fast = fast.Cdr as Pair;
                 else
-                    throw new SchemeException("Reverse: Can't reverse looped or improper list");
+                    throw new SchemeError("Reverse: Can't reverse looped or improper list");
 
                 if (fast == null) break;
-                if (fast == slow) throw new SchemeException("Reverse: Can't reverse looped or improper list");
+                if (fast == slow) throw new SchemeError("Reverse: Can't reverse looped or improper list");
 
                 reversed = new Pair(fast.Car, reversed);
                 if (fast.Cdr == null) break;
                 if (fast.Cdr is Pair)
                     fast = fast.Cdr as Pair;
                 else
-                    throw new SchemeException("Reverse: Can't reverse looped or improper list");
+                    throw new SchemeError("Reverse: Can't reverse looped or improper list");
                 slow = slow.Cdr as Pair;
             }
             return reversed;

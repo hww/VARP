@@ -34,12 +34,24 @@ namespace VARP.Scheme.Stx.Primitives
     {
         #region Assertions
         protected static int GetArgsCount(SObject o) { return Pair.Length(o) - 1; }
-        protected static void AssertArgsMinimum(Syntax syntax, int minimum, int given) { if (given < minimum) throw new ArityMissmach(syntax, minimum, given, ArityMissmach.Options.Minimum); }
-        protected static void AssertArgsMaximum(Syntax syntax, int maximum, int given) { if (given > maximum) throw new ArityMissmach(syntax, maximum, given, ArityMissmach.Options.Minimum); }
-        protected static void AssertArgsEqual(Syntax syntax, int required, int given) { if (given != required) throw new ArityMissmach(syntax, required, given, ArityMissmach.Options.Equal); }
-        protected static void AssertArgsMinimum(Syntax syntax, int minimum, int given, string message) { if (given < minimum) throw new ArityMissmach(syntax, minimum, given, message, ArityMissmach.Options.Minimum); }
-        protected static void AssertArgsMaximum(Syntax syntax, int maximum, int given, string message) { if (given > maximum) throw new ArityMissmach(syntax, maximum, given, message, ArityMissmach.Options.Minimum); }
-        protected static void AssertArgsEqual(Syntax syntax, int required, int given, string message) { if (given != required) throw new ArityMissmach(syntax, required, given, message, ArityMissmach.Options.Equal); }
+        protected static void AssertArgsMinimum(string name, string message, int expected, int given, Pair argv)
+        {
+            if (given < expected)
+                throw SchemeError.ArityError(name, message, expected, given, argv);
+        }
+
+        protected static void AssertArgsMaximum(string name, string message, int expected, int given, Pair argv)
+        {
+            if (given > expected)
+                throw SchemeError.ArityError(name, message, expected, given, argv);
+        }
+
+        protected static void AssertArgsEqual(string name, string message, int expected, int given, Pair argv)
+        {
+            if (given != expected)
+                throw SchemeError.ArityError(name, message, expected, given, argv);
+        }
+
         #endregion
     }
 }

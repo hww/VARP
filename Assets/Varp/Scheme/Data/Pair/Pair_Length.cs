@@ -65,7 +65,7 @@ namespace VARP.Scheme.Data
                 return count;
             }
             else
-                throw new ContractViolation("list?", Inspector.Inspect(pair), "Length");
+                throw SchemeError.ArgumentError("length", "list?", pair);
         }
     }
 }

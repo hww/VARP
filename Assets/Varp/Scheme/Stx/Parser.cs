@@ -50,7 +50,8 @@ namespace VARP.Scheme.Stx
             Tokenizer reader = new Tokenizer(new System.IO.StringReader(scheme), filepath);
 
             Syntax res = Parser.Parse(reader);
-            if (reader.ReadToken() != null) throw new SyntaxError("Found extra tokens after the end of a scheme expression");
+            Token token = reader.ReadToken();
+            if (token != null) throw SchemeError.SyntaxError("parser", "found extra tokens after the end of a scheme expression", token);
 
             return res;
         }
@@ -75,8 +76,7 @@ namespace VARP.Scheme.Stx
         protected static Syntax ParseToken(Token thisToken, Tokenizer moreTokens)
         {
             if (thisToken == null)
-                throw new SyntaxError("Unexpectedly reached the end of the input", moreTokens.LastToken);
-            Token nextToken;
+                throw SchemeError.SyntaxError("parser", "unexpectedly reached the end of the input", moreTokens.LastToken);
 
             switch (thisToken.Type)
             {
@@ -115,11 +115,11 @@ namespace VARP.Scheme.Stx
                     return ParseQuoted(thisToken, moreTokens);
 
                 case TokenType.BadNumber:
-                    throw new SyntaxError("\"" + thisToken.Value + "\" looks like it should be a number, but it contains a syntax error", thisToken);
+                    throw SchemeError.SyntaxError("parser", "looks like it should be a number, but it contains a syntax error", thisToken);
 
                 default:
                     // Unknown token type
-                    throw new SyntaxError("The element \"" + thisToken.Value + "\" is being used in a context where it is not understood", thisToken);
+                    throw SchemeError.SyntaxError("parser", "the element is being used in a context where it is not understood", thisToken);
             }
         }
 
@@ -161,23 +161,23 @@ namespace VARP.Scheme.Stx
                 // Fetch the next token
                 nextToken = moreTokens.ReadToken();
                 if (nextToken == null)
-                    throw new MissingParenthesis("Improperly formed list.", dotToken);
+                    throw SchemeError.SyntaxError("parser", "Improperly formed list.", dotToken);
 
                 //if (!improper && nextToken.Type == TokenType.Symbol && dotSymbol.Equals(nextToken.Value) && thisToken.Type == TokenType.OpenBracket)
                 if (nextToken.Type == TokenType.Dot)
                 {
                     if (dotToken != null || thisToken.Type != TokenType.OpenBracket)
-                        throw new SyntaxError("Improperly formed dotted list", nextToken);
+                        throw SchemeError.SyntaxError("parser", "Improperly formed dotted list", nextToken);
                     dotToken = nextToken;
                     nextToken = moreTokens.ReadToken();
                     if (nextToken == null)
-                        throw new SyntaxError("Improperly formed dotted list", dotToken);
+                        throw SchemeError.SyntaxError("parser", "Improperly formed dotted list", dotToken);
                     if (nextToken.Type == TokenType.CloseBracket)
-                        throw new SyntaxError("Improperly formed dotted list", dotToken);
+                        throw SchemeError.SyntaxError("parser", "Improperly formed dotted list", dotToken);
                     listContents.Add(ParseToken(nextToken, moreTokens));
                     nextToken = moreTokens.ReadToken();
                     if (nextToken.Type != TokenType.CloseBracket)
-                        throw new SyntaxError("Improperly formed dotted list", dotToken);
+                        throw SchemeError.SyntaxError("parser", "Improperly formed dotted list", dotToken);
                     break;
                 }
             }
@@ -185,7 +185,7 @@ namespace VARP.Scheme.Stx
             if (nextToken == null)
             {
                 // Missing ')'
-                throw new MissingParenthesis("Missing close parenthesis", thisToken);
+                throw SchemeError.SyntaxError("parser", "missing close parenthesis", thisToken);
             }
 
             if (dotToken != null)
@@ -216,15 +216,15 @@ namespace VARP.Scheme.Stx
                 // Fetch the next token
                 nextToken = moreTokens.ReadToken();
                 if (nextToken == null)
-                    throw new MissingParenthesis("Improperly formed list.", dotToken);
+                    throw SchemeError.SyntaxError("parser", "Improperly formed list.", dotToken);
 
                 //if (!improper && nextToken.Type == TokenType.Symbol && dotSymbol.Equals(nextToken.Value) && thisToken.Type == TokenType.OpenBracket)
                 if (nextToken.Type == TokenType.Dot)
-                    throw new SyntaxError("Improperly formed dotted list", nextToken);
+                    throw SchemeError.SyntaxError("parser", "Improperly formed dotted list", nextToken);
             }
 
             if (nextToken == null) // Missing ')'
-                throw new MissingParenthesis("Missing close parenthesis", thisToken);
+                throw SchemeError.SyntaxError("parser", "Missing close parenthesis", thisToken);
 
             return new Syntax(new SVector(listContents), thisToken);
         }
@@ -243,7 +243,7 @@ namespace VARP.Scheme.Stx
             {
                 thisToken = reader.ReadToken();
             }
-            catch (SchemeException)
+            catch (SchemeError)
             {
                 thisToken = new Token(TokenType.BadSyntax, "", null);
             }

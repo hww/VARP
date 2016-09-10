@@ -33,11 +33,11 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class QuaziquotePrimitive : BasePrimitive
     {
         // `(foo ...)
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsEqual(stx, 1, argc, "quote:");
+            AssertArgsEqual("quaziquote", "arity mismatch", 1, argc, list);
             Syntax lit = list[0] as Syntax;
             if (lit.IsLiteral)
             {

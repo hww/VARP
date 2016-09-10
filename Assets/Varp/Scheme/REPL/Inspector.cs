@@ -82,10 +82,10 @@ namespace VARP.Scheme.REPL
                 return InspectSchemeObjectIntern(x as SVector, options);
             if (x is AST)
                 return (x as AST).Inspect();
-            if (x is LexicalBinding)
-                return InspectSchemeObjectIntern(x as LexicalBinding, options);
-            if (x is LexicalEnvironment)
-                return InspectSchemeObjectIntern(x as LexicalEnvironment, options);
+            if (x is Binding)
+                return InspectSchemeObjectIntern(x as Binding, options);
+            if (x is Stx.Environment)
+                return InspectSchemeObjectIntern(x as Stx.Environment, options);
             // all another just convert to string
             return x.AsString();
 
@@ -111,7 +111,7 @@ namespace VARP.Scheme.REPL
             else
                 return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.GetDatum(), options));
         }
-        static string InspectSchemeObjectIntern(LexicalBinding bind, InspectOptions options = InspectOptions.Default)
+        static string InspectSchemeObjectIntern(Binding bind, InspectOptions options = InspectOptions.Default)
         {
             string prefix = bind.IsPrimitive ? "#Prim" : string.Empty; 
                 if (bind.IsGlobal)
@@ -120,9 +120,9 @@ namespace VARP.Scheme.REPL
                     return string.Format("[{0}] {1} {2}>", bind.Index, prefix, bind.Identifier.Name);
         }
 
-        static string InspectSchemeObjectIntern(LexicalEnvironment env, InspectOptions options = InspectOptions.Default)
+        static string InspectSchemeObjectIntern(Stx.Environment env, InspectOptions options = InspectOptions.Default)
         {
-            int tabs = env.GetLevelNumber();
+            int tabs = env.GetEnvironmentIndex();
             string tabstr = new string(' ', tabs * 4);
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(tabstr + "Lexical Environment");
@@ -130,11 +130,6 @@ namespace VARP.Scheme.REPL
             {
                 sb.AppendLine(tabstr + InspectSchemeObjectIntern(b, options));
             }
-            foreach (var c in env.Children)
-            {
-                sb.AppendLine(tabstr + InspectSchemeObjectIntern(c as LexicalEnvironment, options));
-            }
-
             return sb.ToString();
         }
         static bool IsSpecialForm(SObject obj)

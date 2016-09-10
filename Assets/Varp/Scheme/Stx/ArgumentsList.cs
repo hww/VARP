@@ -36,13 +36,20 @@ namespace VARP.Scheme.Stx
 
     public sealed class Arguments
     {
-        public Pair required;
-        public Pair optional;
-        public Pair key;
-        public Pair rest;
-        public Pair body;
-        public Pair values; // for let
+        // -------------------------------------------------------------
+        //  Example: (lambda (v1 v2 :optional o1 (o2 1) :key k1 (k2 2) :rest r)
+        // -------------------------------------------------------------
+        public Pair required;   //< (v1 v2)
+        public Pair optional;   //< (:optional o1 (o2 1))    
+        public Pair key;        //< (:key k1 (k2 2))    
+        public Pair rest;       //< (:rest r)
+        public Pair body;       //< ??
+        // -------------------------------------------------------------
+        //  Example: (let ((x 1) (y 2)) ...)
+        // -------------------------------------------------------------
+        public Pair values;     //< (1 2)
     }
+
     public sealed class ArgumentsList
     {
         public enum Type
@@ -60,7 +67,7 @@ namespace VARP.Scheme.Stx
 
         // @arguments is the list of syntax objects: (syntax syntax syntax ...)
         // result is the list: ((required) (optional) (key) (rest))
-        public static void Parse(Pair arguments, LexicalEnvironment env, ref Arguments args)
+        public static void Parse(Pair arguments, Environment env, ref Arguments args)
         {
             if (arguments == null) return ;
 
@@ -129,32 +136,36 @@ namespace VARP.Scheme.Stx
                             if (arg.IsSyntaxIdentifier)
                                 Add(ref required, ref required_last, new AstLiteral(arg));
                             else
-                                throw new ContractViolation(arg, "symbol?", Inspector.Inspect(arg), "lambda: bad required argument");
+                                throw SchemeError.ArgumentError("lambda", "symbol?", arg);
                             break;
 
                         case Type.Optionals:
-                            if (arg.IsSyntaxExpression)
+                            if (arg.IsSyntaxIdentifier)
+                                Add(ref optional, ref optional_last, MakeArgPair(arg, arg, env));
+                            else if (arg.IsSyntaxExpression)
                                 Add(ref optional, ref optional_last, MakeArgPair(arg, arg.GetList(), env));
                             else
-                                throw new ContractViolation(arg, "list?", Inspector.Inspect(arg), "lambda: bad &optional argument");
+                                throw SchemeError.ArgumentError("lamba", "list?", arg);
                             break;
 
                         case Type.Key:
-                            if (arg.IsSyntaxExpression)
+                            if (arg.IsSyntaxIdentifier)
+                                Add(ref optional, ref optional_last, MakeArgPair(arg, arg, env));
+                            else if (arg.IsSyntaxExpression)
                                 Add(ref key, ref key_last, MakeArgPair( arg, arg.GetList(), env));
                             else
-                                throw new ContractViolation(arg, "list?", Inspector.Inspect(arg), "lambda: bad &key argument");
+                                throw SchemeError.ArgumentError("lamba", "list?", arg);
                             break;
 
                         case Type.Rest:
-                            if (arg.IsIdentifier)
+                            if (arg.IsSyntaxIdentifier)
                                 Add(ref rest, ref rest_last, new AstLiteral(arg));
                             else
-                                throw new ContractViolation(arg, "symbol?", Inspector.Inspect(arg), "lambda: bad argument after &rest");
+                                throw SchemeError.ArgumentError("lamba", "symbol?", arg);
                             arg_type = Type.End;
                             break;
                         case Type.End:
-                            throw new SyntaxError(arg, "lambda: unexpected extra argument " + Inspector.Inspect(arg));
+                            throw SchemeError.SyntaxError("lambda", "unexpected extra argument", arg);
                     }
                 }
                     if (curent.Cdr == null) break;
@@ -166,7 +177,7 @@ namespace VARP.Scheme.Stx
                     {
                         if (true)
                         {
-                            throw new SyntaxError(arg, "lambda: unexpected dot syntax in arguments.  " + Inspector.Inspect(arg));
+                            throw SchemeError.SyntaxError("lambda", "unexpected dot syntax in arguments",arg);
                         }
                         else
                         {
@@ -175,7 +186,7 @@ namespace VARP.Scheme.Stx
                                 rest = Pair.ListFromArguments(new AstLiteral(curent.Cdr as Syntax), null);
                             }
                             else
-                                throw new ContractViolation(curent.Cdr, "symbol?", Inspector.Inspect(curent.Cdr), "lambda: bad argument after '.'");
+                                throw SchemeError.SyntaxError("lambda", "bad argument after '.'", curent.Cdr);
                             curent = null;
                         }
                     }
@@ -188,7 +199,7 @@ namespace VARP.Scheme.Stx
             args.rest = rest; 
         }
 
-        public static void ParseLetList(Pair arguments, LexicalEnvironment env, ref Arguments args)
+        public static void ParseLetList(Pair arguments, Environment env, ref Arguments args)
         {
             if (arguments == null)
             {
@@ -225,7 +236,7 @@ namespace VARP.Scheme.Stx
                     Add(ref vals, ref vals_last, arg_pair[1]);
                 }
                 else
-                    throw new ContractViolation(arg, "list?", Inspector.Inspect(arg), "let: bad argument definition");
+                    throw SchemeError.ArgumentError("let", "list?", arg);
 
                 if (curent.Cdr == null) break;
                 if (curent.Cdr is Data.Pair)
@@ -234,7 +245,7 @@ namespace VARP.Scheme.Stx
                 }
                 else
                 {
-                    throw new SyntaxError(arg, "lambda: unexpected dot syntax in arguments.  " + Inspector.Inspect(arg));
+                    throw SchemeError.SyntaxError("let", "unexpected dot syntax in arguments", arg);
                 }
             }
             args.required = vars;
@@ -242,21 +253,30 @@ namespace VARP.Scheme.Stx
         }
 
         /// <summary>
-        /// Build argument pair
-        /// (identifier AST)
+        /// Build argument pair from identifier and initializer only (lambda (:optional (x 1) (y 2) (z 3)) ...)
         /// </summary>
-        static Pair MakeArgPair(Syntax stx, Pair list, LexicalEnvironment env)
+        static Pair MakeArgPair(Syntax stx, Pair list, Environment env)
         {
             int argc = Data.Pair.Length(list);
-            if (argc != 2) new ArityMissmach(stx, 2, argc, "lambda: bad &key or &optional argument");
+            if (argc != 2) throw SchemeError.ArityError("let", "lambda: bad &key or &optional argument", 2, argc, list);
 
             Syntax a = list[0] as Syntax;
             Syntax b = list[1] as Syntax;
 
             if (!a.IsSyntaxIdentifier)
-                new ContractViolation("symbol?", Inspector.Inspect(a.GetDatum()), "lambda: bad argument identifier");
+                SchemeError.ArgumentError("lambda or let", "symbol?", a);
 
-            Pair pair = Pair.ListFromArguments(a, AstBuilder.Expand(b, env));
+            return Pair.ListFromArguments(a, AstBuilder.Expand(b, env));
+        }
+        /// <summary>
+        /// Build argument pair from identifier only (lambda (:optional x y z) ...)
+        /// </summary>
+        static Pair MakeArgPair(Syntax stx, Syntax identifier, Environment env)
+        {
+            if (!identifier.IsSyntaxIdentifier)
+                SchemeError.ArgumentError("lambda", "symbol?", identifier);
+
+            Pair pair = Pair.ListFromArguments(identifier, new AstLiteral(Syntax.False));
 
             return pair;
         }

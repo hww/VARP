@@ -34,18 +34,18 @@ namespace VARP.Scheme.Stx.Primitives
     {
         // (set! x 10)
         // (set! x (+ 1 2))
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsEqual(stx, 2, argc, "set!");
+            AssertArgsEqual("set!", "arity mismatch", 2, argc, list);
 
             Syntax set_kwd = list[0] as Syntax;
             Syntax var_stx = list[1] as Syntax;
             Syntax val_stx = list[2] as Syntax;
 
             Symbol var_id = var_stx.GetIdentifier();
-            LexicalBinding binding = env.Lookup(var_id); // TODO! Maybe error when it is not defined
+            Binding binding = env.Lookup(var_id); // TODO! Maybe error when it is not defined
             if (binding == null) env.DefineVariable(var_id);
 
             return new AstSet(stx, set_kwd, var_stx, AstBuilder.Expand(val_stx, env), binding);

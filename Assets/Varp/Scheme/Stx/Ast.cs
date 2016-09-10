@@ -119,8 +119,8 @@ namespace VARP.Scheme.Stx
     // variable reference  e.g. x
     public sealed class AstReference : AST
     {
-        public LexicalBinding Binding;
-        public AstReference(Syntax syntax, LexicalBinding binding) : base(syntax)
+        public Binding Binding;
+        public AstReference(Syntax syntax, Binding binding) : base(syntax)
         {
             Binding = binding;
         }
@@ -138,8 +138,8 @@ namespace VARP.Scheme.Stx
         public Syntax Keyword;              // set!                                     
         public Syntax Variable;             // x   
         public AST Value;                   // 99
-        public LexicalBinding Binding;      //
-        public AstSet(Syntax syntax, Syntax keyword, Syntax variable, AST value, LexicalBinding binding) : base(syntax)
+        public Binding Binding;      //
+        public AstSet(Syntax syntax, Syntax keyword, Syntax variable, AST value, Binding binding) : base(syntax)
         {
             this.Keyword = keyword;
             this.Variable = variable;
@@ -161,8 +161,8 @@ namespace VARP.Scheme.Stx
         public Syntax Keyword;              // set!                                     
         public Syntax Variable;             // x   
         public AST Value;                   // 99
-        public LexicalBinding Binding;      //
-        public AstDefine(Syntax syntax, Syntax keyword, Syntax variable, AST value, LexicalBinding binding) : base(syntax)
+        public Binding Binding;      //
+        public AstDefine(Syntax syntax, Syntax keyword, Syntax variable, AST value, Binding binding) : base(syntax)
         {
             this.Keyword = keyword;
             this.Variable = variable;
@@ -329,7 +329,7 @@ namespace VARP.Scheme.Stx
                             break;
                         case 1:
                             if (true)
-                                throw new SyntaxError(Expression, "lambda: too many &rest arguments: " + Inspector.Inspect(rst));
+                                throw SchemeError.SyntaxError("duplicate", "lambda: too many &rest arguments: " , Expression, rst);
                             else
                                 last.Cdr = rst.Car;
                             break;
@@ -337,7 +337,7 @@ namespace VARP.Scheme.Stx
                             Pair.Duplicate(rst, ref last.Cdr, ref last);
                             break;
                         default:
-                            throw new SyntaxError(Expression, "lambda: too many &rest arguments: " + Inspector.Inspect(rst));
+                            throw SchemeError.SyntaxError("duplicate", "lambda: too many &rest arguments: ", Expression, rst);
                     }
                 }
             }

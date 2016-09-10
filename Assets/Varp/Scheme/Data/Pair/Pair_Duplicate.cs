@@ -153,7 +153,7 @@ namespace VARP.Scheme.Data
                 dstFirst = dstLast = null;
                 return 0;
             }
-            if (!(sourceFirst is Pair)) throw new ContractViolation("list?", Inspector.Inspect(sourceFirst), "duplicate:");
+            if (!(sourceFirst is Pair)) throw SchemeError.ArgumentError("duplicate", "list?", sourceFirst);
             Pair fast = sourceFirst as Pair;
             Pair loopHead = GetLoopHead(fast); // element which point inside the list
             PairSpan span = new PairSpan(new Pair());

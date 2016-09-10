@@ -33,11 +33,11 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class PrimitiveIf : BasePrimitive
     {
         // (if () ...)
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsMinimum(stx, 2, argc, "if:");
+            AssertArgsMinimum("if", "arity mismatch", 2, argc, list);
 
             Syntax keyword = list[0] as Syntax;
             Syntax cond = list[1] as Syntax;

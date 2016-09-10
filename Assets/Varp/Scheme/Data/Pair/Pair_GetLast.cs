@@ -66,7 +66,7 @@ namespace VARP.Scheme.Data
 
                 slow = (Pair)slow.Cdr;
             }
-            throw new SchemeException("Requested last element for looped list");
+            throw new SchemeError("Requested last element for looped list");
         }
     }
 }

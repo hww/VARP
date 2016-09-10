@@ -43,7 +43,7 @@ namespace VARP.Scheme.Data
         /// <returns>last element in list</returns>
         public static int Sublist(Pair source, int starts, int ends, ref Pair dstFirst, ref Pair dstLast)
         {
-            if (!(source is Pair)) throw new ContractViolation("list?", Inspector.Inspect(source), "sublist:");
+            if (!(source is Pair)) throw SchemeError.ArgumentError("sublist", "list?", source);
             PairSpan span = new PairSpan();
             span.SetSpan(source, starts, ends);
             if (span.IsEmpty)

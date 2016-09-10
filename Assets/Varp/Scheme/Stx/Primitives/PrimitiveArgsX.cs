@@ -34,7 +34,7 @@ namespace VARP.Scheme.Stx.Primitives
     {
 
         // (display 1 2 3 4 ...)
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);

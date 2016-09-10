@@ -33,11 +33,11 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class QuotePrimitive : BasePrimitive
     {
         // '(foo ...)
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsEqual(stx, 1, argc, "quote:");
+            AssertArgsEqual("quote", "arity mismatch", 1, argc, list);
             Syntax lit = list[0] as Syntax;
             if (lit.IsLiteral)
                 return new AstLiteral(lit);

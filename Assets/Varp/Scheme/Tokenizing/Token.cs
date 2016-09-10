@@ -72,7 +72,7 @@ namespace VARP.Scheme.Tokenizing
             else if (Value == "#f")
                 return false;
             else
-                throw new SyntaxError(this, "Improperly formed bool value");
+                throw SchemeError.SyntaxError("get-bool", "improperly formed bool value", this);
         }
 
         public int GetInteger()
@@ -89,12 +89,12 @@ namespace VARP.Scheme.Tokenizing
                         int hval = int.Parse(Value.Substring(2), NumberStyles.AllowHexSpecifier);
                         return hval;
                     default:
-                        throw new SyntaxError(this, "Wrong token type");
+                        throw SchemeError.SyntaxError("get-integer", "wrong token type", this);
                 }
             }
             catch (System.Exception ex)
             {
-                throw new SyntaxError(this, "Improperly formed int value", ex);
+                throw SchemeError.SyntaxError("get-integer", "improperly formed int value", this);
             }
         }
 
@@ -105,7 +105,7 @@ namespace VARP.Scheme.Tokenizing
             float val = 0;
             if (float.TryParse(Value, out val))
                 return val;
-            throw new SyntaxError(this, "Improperly formed float value");
+            throw SchemeError.SyntaxError("get-float", "improperly formed float value", this);
         }
         public string GetString()
         {
@@ -131,7 +131,7 @@ namespace VARP.Scheme.Tokenizing
                 char c = (char)0;
                 if (SChar.NameToCharacter(Value, out c))
                     return c;
-                throw new SyntaxError(this, "Improperly formed char value");
+                throw SchemeError.SyntaxError("get-character", "improperly formed char value", this);
             }
         }
 

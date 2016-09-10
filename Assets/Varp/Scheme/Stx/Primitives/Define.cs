@@ -35,11 +35,11 @@ namespace VARP.Scheme.Stx.Primitives
     {
         // (define x ...)
         // (define (x) ...)
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsEqual(stx, 2, argc, "define:");
+            AssertArgsEqual("define", "arity mismatch", 2, argc, list);
 
             Syntax def_stx = list[0] as Syntax;
             Syntax var_stx = list[1] as Syntax;
@@ -52,14 +52,14 @@ namespace VARP.Scheme.Stx.Primitives
                 // ----------------------------------------------------------------
                 int after_identifier = Pair.Length(val_lst);
                 if (after_identifier == 0)
-                    throw new SyntaxError(stx, "define: missing expression after identifier in: " + Inspector.Inspect(list));
+                    throw SchemeError.SyntaxError("define", "missing expression after identifier in", stx, list);
                 if (after_identifier > 1)
-                    throw new SyntaxError(stx, "define: multiple expressions after identifier in: " + Inspector.Inspect(list));
+                    throw SchemeError.SyntaxError("define", "multiple expressions after identifier in", stx, list);
 
                 AST value = Expand(val_lst.Car as Syntax, env);
 
                 Symbol var_id = var_stx.GetIdentifier();
-                LexicalBinding bind = env.Lookup(var_id);
+                Binding bind = env.Lookup(var_id);
                 if (bind == null) env.DefineVariable(var_id);
 
                 return new AstDefine(stx, def_stx, var_stx, value, bind);
@@ -79,13 +79,13 @@ namespace VARP.Scheme.Stx.Primitives
 
                 Syntax identifier_stx = args_list.Car as Syntax;
                 Symbol identifier = (args_list.Car as Syntax).GetIdentifier();
-                LexicalBinding binding = env.Lookup(identifier);
+                Binding binding = env.Lookup(identifier);
                 if (binding == null) env.DefineVariable(identifier);
 
                 return new AstDefine(stx, def_stx, identifier_stx, lambda, binding);
             }
             else
-                throw new ContractViolation(stx, "symbol? or list?", Inspector.Inspect(var_stx), "define: bad arguments list");
+                throw SchemeError.ArgumentError("define", "symbol? or list?", var_stx);
         }
     }
 }

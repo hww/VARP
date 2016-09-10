@@ -51,7 +51,7 @@ namespace VARP.Scheme.VM
                  //   Instruction i = TEMPLATE.Code[PC];
                 }
             }
-            catch (SchemeEndException ex)
+            catch (SchemeError ex)
             {
                 //return VALUE;
             }

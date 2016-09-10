@@ -36,6 +36,9 @@ namespace VARP.Scheme.Stx
 
     public sealed class Syntax : SObject, IEnumerable<Syntax>
     {
+        public static Syntax False = new Syntax(SBool.False, null as Location);
+        public static Syntax Void = new Syntax(SVoid.Void, null as Location);
+
         public SObject expression;
         public Location location;
 
@@ -78,12 +81,12 @@ namespace VARP.Scheme.Stx
         }
         #endregion
 
-        public SObject GetDatum() { return SyntaxToDatum(expression); }
+        public override SObject GetDatum() { return SyntaxToDatum(expression); }
         public T GetDatum<T>() where T:class { return SyntaxToDatum(expression) as T; }
         public Symbol GetIdentifier()
         {
             if (expression is Symbol) return expression as Symbol;
-            throw new ExpectedIdentifier(this);
+            throw SchemeError.ArgumentError("get-identifier", "identifier?", this);
         }
         static SObject SyntaxToDatum(SObject expression)
         {

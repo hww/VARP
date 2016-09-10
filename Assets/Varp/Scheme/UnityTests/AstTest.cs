@@ -100,7 +100,7 @@ public class AstTest : MonoBehaviour {
             } while (lexer.LastToken != null);
             astString = sb.ToString();
             envString = AstBuilder.environment.Inspect();
-        } catch (SchemeException ex)
+        } catch (SchemeError ex)
         {
             astString = ex.Message;
             throw ex;

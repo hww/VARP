@@ -33,22 +33,23 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class PrimitiveLet : BasePrimitive
     {
         // (let () ...)
-        public static AST Expand(Syntax stx, LexicalEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsMinimum(stx, 2, argc, "lambda:");
+            AssertArgsMinimum("let", "arity mismatch", 2, argc, list);
 
             Syntax keyword = list[0] as Syntax;     // let arguments
             Syntax arguments = list[1] as Syntax;   // let arguments
             Pair body = list.PairAtIndex(2);        // let body
 
-            if (!arguments.IsSyntaxExpression) throw new SyntaxError(stx, "let: bad syntax (missing name or binding pairs)");
+            if (!arguments.IsSyntaxExpression) throw SchemeError.SyntaxError("let", "bad syntax (missing name or binding pairs)", stx);
 
             Arguments letarguments = new Arguments();
             ArgumentsList.ParseLetList(arguments.GetList(), env, ref letarguments);
+            Environment localEnv = env.CreateEnvironment(letarguments);
 
-            AST lambda = new AstLambda(stx, keyword, letarguments, AstBuilder.ExpandListElements(body, env));
+            AST lambda = new AstLambda(stx, keyword, letarguments, AstBuilder.ExpandListElements(body, localEnv));
             return new AstApplication(stx, new Pair(lambda, letarguments.values));
         }
     }

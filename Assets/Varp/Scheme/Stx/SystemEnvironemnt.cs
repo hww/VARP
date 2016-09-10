@@ -28,7 +28,7 @@
 namespace VARP.Scheme.Stx
 {
     using Primitives;
-    public sealed class SystemEnvironemnt : LexicalEnvironment
+    public sealed class SystemEnvironemnt : Environment
     {
         public SystemEnvironemnt() : base(null)
         {

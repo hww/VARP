@@ -184,7 +184,7 @@ namespace VARP.Scheme.Tokenizing
             // we didn't get opening and closing quotes :(
             if (!matchingQuotes)
             {
-                throw new SyntaxError(lastToken, "Unmatched quotes in string literal");
+                throw SchemeError.SyntaxError("tokenizer", "unmatched quotes in string literal", lastToken);
             }
 
             return DefineToken(type, builder.ToString());
@@ -223,7 +223,8 @@ namespace VARP.Scheme.Tokenizing
                     type = TokenType.Unquote;
                     break;
                 default:
-                    throw new SyntaxError(lastToken, "Unexpected character");
+                    throw SchemeError.SyntaxError("tokenizer", "unexpected character", lastToken);
+
             }
 
             builder.Append((char)Character);
@@ -250,7 +251,7 @@ namespace VARP.Scheme.Tokenizing
                 if (Character == '.')
                 {
                     if (type == TokenType.Floating)
-                        throw new SyntaxError(lastToken, "Error in numerical literal");
+                        throw SchemeError.SyntaxError("tokenizer", "error in numerical literal", lastToken);
 
                     type = TokenType.Floating;
                 }
@@ -341,7 +342,7 @@ namespace VARP.Scheme.Tokenizing
             //}
             else
             {
-                throw new SyntaxError(lastToken, "Inside '#' but no matching characters to construct a token");
+                throw SchemeError.SyntaxError("tokenizer", "inside '#' but no matching characters to construct a token", lastToken);
             }
         }
 
