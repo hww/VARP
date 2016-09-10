@@ -30,13 +30,6 @@ using VARP.Scheme.REPL;
 
 namespace VARP.Scheme.Data
 {
-
-    public enum InspectOptions
-    {
-        Default,
-        PrettyPrint
-    }
-
     public class SObject
     {
         // this value have to be used everywhere in your code
@@ -49,15 +42,11 @@ namespace VARP.Scheme.Data
         public virtual SBool AsBool() { return SBool.False; }
         public virtual string AsString() { return base.ToString(); }
         public virtual string Inspect() { return Inspector.Inspect(this); }
-
-        public virtual bool IsNull { get { return false; } }
-        public virtual bool IsVoid { get { return false; } }
-        public virtual bool IsList { get { return false; } }
-        public virtual bool IsPair { get { return false; } }
-        public virtual bool IsLiteral { get { return true; } }
-        public virtual bool IsIdentifier { get { return true; } }
-        public virtual bool IsSymbol { get { return false; } }
-        public virtual bool IsKeyword { get { return false; } }
+        // self computed value
+        public virtual bool IsLiteral { get { return false; } }
+        // foo, bar, baz
+        public virtual bool IsIdentifier { get { return false; } }
+        // 0, 0.1, 99
         public virtual bool IsNumeric { get { return false; } }
     }
 
@@ -197,13 +186,7 @@ namespace VARP.Scheme.Data
             if (obj is Pair) return obj as Pair;
             throw new ContractViolation(obj, "cons?", Inspector.Inspect(obj));
         }
-        // return null if @obj is null and Pair if object is list. 
-        // exception for improper list
-        public static Pair GetList(SObject obj) {
-            if (obj == null) return null;
-            if (obj.IsList) return obj as Pair;
-            throw new ContractViolation(obj, "list?", Inspector.Inspect(obj));
-        }
+
         public static SObject GetLiteral(SObject obj) {
             if(obj.IsLiteral)
                 return obj;

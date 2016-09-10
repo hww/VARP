@@ -33,7 +33,7 @@ namespace VARP.Scheme.Stx
     using Data;
 
 
-    public class LexicalBinding : SObject
+    public sealed class LexicalBinding : SObject
     {
         public delegate AST CompilerPrimitive(Syntax expression, LexicalEnvironment context);
 

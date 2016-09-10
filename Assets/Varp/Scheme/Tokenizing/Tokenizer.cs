@@ -34,7 +34,7 @@ namespace VARP.Scheme.Tokenizing
 {
     using Exception;
     using Utils;
-    public class Tokenizer
+    public sealed class Tokenizer
     {
         public TokenReader reader;
         protected BetterStringBuilder builder;

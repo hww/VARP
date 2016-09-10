@@ -38,6 +38,13 @@ namespace VARP.Scheme.REPL
     {
         string Inspect();
     }
+
+    public enum InspectOptions
+    {
+        Default,
+        PrettyPrint
+    }
+
     /// <summary>
     /// Formats and prints objects
     /// </summary>

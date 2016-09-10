@@ -27,7 +27,7 @@
 
 namespace VARP.Scheme.Data
 {
-    public class SString : SObject
+    public sealed class SString : SObject
     {
         public string Value;
         public SString()
@@ -60,6 +60,7 @@ namespace VARP.Scheme.Data
         #region SObject Methods
         public override SBool AsBool() { return Value == null ? SBool.False : SBool.True; }
         public override string AsString() { return Value.ToString(); }
+        public override bool IsLiteral { get { return true; } }
 
         #endregion
 

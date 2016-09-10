@@ -47,7 +47,6 @@ namespace VARP.Scheme.Exception
         {
         }
 
-
         static protected string GetLocationString(object x)
         {
             if (x is Location)
@@ -58,6 +57,7 @@ namespace VARP.Scheme.Exception
                 return GetLocationStringIntern((x as Syntax).location);
             return string.Empty;
         }
+
         static string GetLocationStringIntern(Location x)
         {
             return x==null ? string.Empty : string.Format("{0}({1},{2})", x.File, x.LineNumber, x.ColNumber);

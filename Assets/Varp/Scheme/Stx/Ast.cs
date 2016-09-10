@@ -53,9 +53,9 @@ namespace VARP.Scheme.Stx
         }
 
         // n.b. will be reimplemented for most of types.
-        public virtual SObject GetDatum() { return GetDatumFrom(this); }
-
-        public SObject GetDatumFrom(SObject obj)
+        public virtual SObject GetDatum() { return GetDatum(this); }
+        public T GetDatum<T>() where T:class { return GetDatum(this) as T; }
+        public SObject GetDatum(SObject obj)
         {
             if (obj == null) return null;
             if (obj is Syntax) return (obj as Syntax).GetDatum();
@@ -67,7 +67,7 @@ namespace VARP.Scheme.Stx
                 Pair last = first;
                 while (curent != null)
                 {
-                    last.Car = GetDatumFrom(curent.Car);
+                    last.Car = GetDatum(curent.Car);
                     if (curent.Cdr is Pair)
                     {
                         curent = curent.Cdr as Pair;
@@ -77,7 +77,7 @@ namespace VARP.Scheme.Stx
                     else
                     {
                         // . syntax
-                        last.Cdr = GetDatumFrom(curent.Cdr);
+                        last.Cdr = GetDatum(curent.Cdr);
                         curent = null;
                         break;
                     }
@@ -91,7 +91,8 @@ namespace VARP.Scheme.Stx
         public override string AsString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast{0}>", GetLocationString()); }
         #endregion
-        protected string GetLocationString() {
+        protected string GetLocationString()
+        {
             if (Expression == null) return string.Empty;
             if (Expression.location == null) return string.Empty;
             return string.Format(":{0}:{1}", Expression.location.LineNumber, Expression.location.ColNumber);
@@ -99,31 +100,31 @@ namespace VARP.Scheme.Stx
     }
 
     // literal e.g. 99 or #f
-    public class AstLiteral : AST
+    public sealed class AstLiteral : AST
     {
         public AstLiteral(Syntax stx) : base(stx)
         {
-            //if (!stx.IsLiteral) throw new SyntaxError(stx, "AstLiteral: Expected literal");
         }
-        public override SObject GetDatum() { return GetDatumFrom(Expression); }
+        public override SObject GetDatum() { return GetDatum(Expression); }
 
         #region SObject Methods
         public override string AsString() { return Expression.AsString(); }
-        public override string Inspect() {
-            return string.Format("#<ast-lit{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatumFrom(Expression)));
+        public override string Inspect()
+        {
+            return string.Format("#<ast-lit{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum(Expression)));
         }
         #endregion
     }
 
     // variable reference  e.g. x
-    public class AstReference : AST
+    public sealed class AstReference : AST
     {
         public LexicalBinding Binding;
         public AstReference(Syntax syntax, LexicalBinding binding) : base(syntax)
         {
             Binding = binding;
         }
-        public override SObject GetDatum() { return GetDatumFrom(Expression); }
+        public override SObject GetDatum() { return GetDatum(Expression); }
 
         #region SObject Methods
         public override string AsString() { return base.ToString(); }
@@ -132,7 +133,7 @@ namespace VARP.Scheme.Stx
     }
 
     // variable assignment e.g. (set! x 99)
-    public class AstSet : AST
+    public sealed class AstSet : AST
     {
         public Syntax Keyword;              // set!                                     
         public Syntax Variable;             // x   
@@ -145,7 +146,7 @@ namespace VARP.Scheme.Stx
             this.Value = value;
             this.Binding = binding;
         }
-        public override SObject GetDatum() { return Pair.ListFromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatumFrom(Value)); }
+        public override SObject GetDatum() { return Pair.ListFromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value)); }
 
         #region SObject Methods
         public override string AsString() { return base.ToString(); }
@@ -155,7 +156,7 @@ namespace VARP.Scheme.Stx
 
     // variable assignment e.g. (define (x) ...) or (define x ...)
     // same as set! but does not require previous declaration
-    public class AstDefine : AST
+    public sealed class AstDefine : AST
     {
         public Syntax Keyword;              // set!                                     
         public Syntax Variable;             // x   
@@ -168,17 +169,16 @@ namespace VARP.Scheme.Stx
             this.Value = value;
             this.Binding = binding;
         }
-        public override SObject GetDatum() { return Pair.ListFromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatumFrom(Value)); }
+        public override SObject GetDatum() { return Pair.ListFromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value)); }
 
         #region SObject Methods
         public override string AsString() { return base.ToString(); }
-        public override string Inspect() { return string.Format("#<ast-def{0} {1} {2}>", GetLocationString(), Variable.AsString(), Inspector.Inspect(GetDatumFrom(Value))); }
+        public override string Inspect() { return string.Format("#<ast-def{0} {1} {2}>", GetLocationString(), Variable.AsString(), Inspector.Inspect(GetDatum(Value))); }
         #endregion
     }
 
     // conditional e.g. (if 1 2 3)
-    // (subx)
-    public class AstIfCondition : AST
+    public sealed class AstIfCondition : AST
     {
         public Syntax Keyword;
         public AST condExpression;        // 1
@@ -192,11 +192,12 @@ namespace VARP.Scheme.Stx
             this.thenExperssion = then;
             this.elseExpression = els;
         }
-        public override SObject GetDatum() {
+        public override SObject GetDatum()
+        {
             if (elseExpression == null)
-                return Pair.ListFromArguments(Keyword.GetDatum(), GetDatumFrom(condExpression), GetDatumFrom(thenExperssion));
+                return Pair.ListFromArguments(Keyword.GetDatum(), GetDatum(condExpression), GetDatum(thenExperssion));
             else
-                return Pair.ListFromArguments(Keyword.GetDatum(), GetDatumFrom(condExpression), GetDatumFrom(thenExperssion), GetDatumFrom(elseExpression));
+                return Pair.ListFromArguments(Keyword.GetDatum(), GetDatum(condExpression), GetDatum(thenExperssion), GetDatum(elseExpression));
         }
         #region SObject Methods
         public override string AsString() { return base.ToString(); }
@@ -205,7 +206,7 @@ namespace VARP.Scheme.Stx
     }
 
     // conditional e.g. (cond (() .. ) (() ...) (else ...))
-    public class AstConditionCond : AST
+    public sealed class AstConditionCond : AST
     {
         public Syntax Keyword;
         public Pair Conditions;     //< list of pairs
@@ -219,13 +220,15 @@ namespace VARP.Scheme.Stx
         }
         public override SObject GetDatum()
         {
-            Pair conditions = GetDatumFrom(Conditions) as Pair;
+
+            Pair conditions = GetDatum(Conditions) as Pair;
             if (ElseCase != null)
             {
-                Pair else_case = new Pair(GetDatumFrom(ElseCase), null);
+                Pair else_case = new Pair(GetDatum(ElseCase), null);
                 conditions = Pair.Append(conditions, else_case) as Pair;
             }
             return new Pair(Keyword.GetDatum(), conditions);
+
         }
 
         #region SObject Methods
@@ -238,8 +241,7 @@ namespace VARP.Scheme.Stx
     }
 
     // primitive op e.g. (+ 1 2)
-    // (subx op)
-    public class AstPrimitive : AST
+    public sealed class AstPrimitive : AST
     {
         public Syntax Identifier;
         public Pair Arguments;
@@ -248,8 +250,9 @@ namespace VARP.Scheme.Stx
             this.Identifier = identifier;
             this.Arguments = arguments;
         }
-        public override SObject GetDatum() {
-            return new Pair(Identifier.GetDatum(), GetDatumFrom(Arguments));
+        public override SObject GetDatum()
+        {
+            return new Pair(Identifier.GetDatum(), GetDatum(Arguments));
         }
 
         #region SObject Methods
@@ -259,7 +262,7 @@ namespace VARP.Scheme.Stx
     }
 
     // application e.g. (f 1 2)
-    public class AstApplication : AST
+    public sealed class AstApplication : AST
     {
         Pair expression;
         public AstApplication(Syntax syntax, Pair expression) : base(syntax)
@@ -268,7 +271,7 @@ namespace VARP.Scheme.Stx
         }
         public override SObject GetDatum()
         {
-            return GetDatumFrom(expression);
+            return GetDatum(expression);
         }
         #region SObject Methods
         public override string AsString() { return base.ToString(); }
@@ -281,8 +284,7 @@ namespace VARP.Scheme.Stx
     }
 
     // lambda expression   e.g. (lambda(x) x)
-    // (subx params)
-    public class AstLambda : AST
+    public sealed class AstLambda : AST
     {
         public Syntax Keyword;       // (<lambda> (...) ...)
         public Arguments ArgList;  // (lambda <(...)> )
@@ -298,6 +300,7 @@ namespace VARP.Scheme.Stx
         }
         public override SObject GetDatum()
         {
+
             Pair args = null;
             Pair last = null;
 
@@ -338,9 +341,10 @@ namespace VARP.Scheme.Stx
                     }
                 }
             }
-            Pair list = Pair.ListFromArguments(ref last, Keyword.GetDatum(), GetDatumFrom(args));
-            last.Cdr = GetDatumFrom(BodyExpression);
+            Pair list = Pair.ListFromArguments(ref last, Keyword.GetDatum(), GetDatum(args));
+            last.Cdr = GetDatum(BodyExpression);
             return list;
+
         }
 
         #region SObject Methods
@@ -353,8 +357,7 @@ namespace VARP.Scheme.Stx
     }
 
     // sequence e.g. (begin 1 2)
-    // (subx)
-    public class AstSequence : AST
+    public sealed class AstSequence : AST
     {
         public Syntax Keyword;
         public Pair BodyExpression;
@@ -365,7 +368,7 @@ namespace VARP.Scheme.Stx
         }
         public override SObject GetDatum()
         {
-            return new Pair(Keyword.GetDatum(), GetDatumFrom(BodyExpression));
+            return new Pair(Keyword.GetDatum(), GetDatum(BodyExpression));
         }
 
         #region SObject Methods
@@ -376,6 +379,5 @@ namespace VARP.Scheme.Stx
         }
         #endregion
     }
-
 
 }

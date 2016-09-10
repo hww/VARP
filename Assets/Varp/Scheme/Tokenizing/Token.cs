@@ -32,7 +32,7 @@ namespace VARP.Scheme.Tokenizing
 {
     using Data;
     using Exception;
-    public class Token : SObject
+    public sealed class Token : SObject
     { 
         public TokenType Type;
         public string Value;
@@ -59,6 +59,7 @@ namespace VARP.Scheme.Tokenizing
         #region SObject Methods
         public override SBool AsBool() { return SBool.True; }
         public override string AsString() { return Value; }
+        public override bool IsLiteral { get { return true; } }
 
         #endregion
 

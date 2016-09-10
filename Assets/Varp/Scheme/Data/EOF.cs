@@ -27,5 +27,5 @@
 
 namespace VARP.Scheme.Data
 {
-    public class EOF { public static EOF TheEOFValue = new EOF(); }
+    public sealed class EOF { public static EOF TheEOFValue = new EOF(); }
 }

@@ -37,7 +37,7 @@ namespace VARP.Scheme.Stx
     /// <summary>
     /// Class that reads symbols from a Tokenizer and turns them into an object
     /// </summary>
-    public class Parser
+    public sealed class Parser
     {
 
         /// <summary>

@@ -42,7 +42,7 @@ namespace VARP.Scheme.Data
     ///
     /// Difference between SVoid and SNull: SVoid can be recognized as empty list
     /// As it can be with SNull
-    public class SVoid : SObject
+    public sealed class SVoid : SObject
     {
         public SVoid() { }
         public override int GetHashCode() { return base.GetHashCode(); }
@@ -52,7 +52,6 @@ namespace VARP.Scheme.Data
         }
 
         #region SObject Methods
-        public override bool IsVoid { get { return true; } }
         public override bool IsLiteral { get { return true; } }
 
         public SBool ToBool() { return SBool.False; }

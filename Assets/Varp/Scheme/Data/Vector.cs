@@ -60,6 +60,8 @@ namespace VARP.Scheme.Data
         public override SBool AsBool() { return SBool.True; }
         public override string AsString() { return ToString(); }
 
+        public override bool IsLiteral { get { return true; } }
+
         #endregion
 
         #region IEnumerable<T> Members
@@ -105,7 +107,7 @@ namespace VARP.Scheme.Data
         #endregion
     }
 
-    public class SVector : SVectorBase<SObject>
+    public sealed class SVector : SVectorBase<SObject>
     {
         public SVector() : base() {  }
         public SVector(int capacity) : base(capacity) { }

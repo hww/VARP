@@ -162,7 +162,7 @@ namespace VARP.Scheme.Data
 
             while (fast != null)
             {
-                span.First.Car = fast.Car; 
+                span.Last.Car = fast.Car; 
 
                 if (fast.Cdr == null) break;
                 if (fast.Cdr is Pair)

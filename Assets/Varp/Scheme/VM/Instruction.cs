@@ -25,41 +25,43 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace VARP.Scheme.Tokenizing
+namespace VARP.Scheme.VM
 {
-    using Data;
-
-    /// <summary>
-    /// This class is pointer inside source code. It contains
-    /// debugging information.
-    /// Using class instead of structure let you in future strip
-    /// out of runtime debugging information
-    /// </summary>
-    public sealed class Location : SObject
+    public struct Instruction
     {
-        public int LineNumber; 
-        public int ColNumber;
-        public int CharNumber;
-        public string File;
-
-        public Location()
+        public enum OpCodes
         {
+            SaveContinuation = 0, // 0
+            FetchLiteral,         // 1
+            Push,                 // 2 
+            Apply,                // 3
+            Bind,                 // 4
+            MakeClosure,          // 5
+            ToplevelGet,          // 6
+            ToplevelSet,          // 7
+            LocalGet,             // 8
+            LocalSet,             // 9
+            Return,               // 10
+            End,                  // 11
+            Jump,                 // 12
+            JumpIfFalse,          // 13
+            BindVarArgs,          // 14
+        };
 
-        }
-        public Location(int lineNumber, int colNumber, int charNumber, string file)
-        {
-            LineNumber = lineNumber;
-            ColNumber = colNumber;
-            CharNumber = charNumber;
-            File = file;
-        }
+        public OpCodes OpCode;
+        public ushort A;
+        public ushort B;
+        public uint AX;
 
-        public Location(Location location)
+        public Instruction(uint code)
         {
-            LineNumber = location.LineNumber;
-            ColNumber = location.ColNumber;
-            CharNumber = location.CharNumber;
-            File = location.File;
+            // 6 bits for the opcode
+            // 13 bits for A
+            // 13 bits for B
+            OpCode = (OpCodes)(code & 0x3F);
+            A = (ushort)((code >> 6) & 0x1FFF);
+            B = (ushort)(code >> 19);
+            AX = code >> 6;
         }
     }
 }

@@ -30,7 +30,7 @@ namespace VARP.Scheme.Stx.Primitives
 
     using Data;
 
-    public class PrimitiveArgsX : BasePrimitive
+    public sealed class PrimitiveArgsX : BasePrimitive
     {
 
         // (display 1 2 3 4 ...)

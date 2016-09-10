@@ -31,7 +31,7 @@ namespace VARP.Scheme.Stx.Primitives
     using Data;
     using Exception;
 
-    public class PrimitiveCond : BasePrimitive
+    public sealed class PrimitiveCond : BasePrimitive
     {
         // (cond () ...)
         public static AST Expand(Syntax stx, LexicalEnvironment env)
@@ -47,7 +47,7 @@ namespace VARP.Scheme.Stx.Primitives
             foreach (Syntax conditional_stx in list.Cdr as Pair)
             {
                 if (elsecase != null) throw new SyntaxError(conditional_stx, "Unexpected expression after condition's else clause");
-                if (conditional_stx.IsList)
+                if (conditional_stx.IsSyntaxExpression)
                 {
                     // Get single conditional expression
                     Pair conditional_list = conditional_stx.GetList();
@@ -58,7 +58,7 @@ namespace VARP.Scheme.Stx.Primitives
                     Syntax var = conditional_list[0] as Syntax;
                     Syntax val = conditional_list[1] as Syntax;
 
-                    if (var.IsSymbol && var.GetIdentifier() == Symbol.ELSE)
+                    if (var.IsSyntaxIdentifier && var.GetIdentifier() == Symbol.ELSE)
                     {
                         elsecase = Pair.ListFromArguments(var, AstBuilder.Expand(val, env));
                     }

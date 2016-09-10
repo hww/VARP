@@ -30,7 +30,7 @@ namespace VARP.Scheme.Stx
     using Data;
     using Exception;
 
-    public class AstBuilder
+    public sealed class AstBuilder
     {
         public static SystemEnvironemnt environment = new SystemEnvironemnt();
         #region Public Methods
@@ -58,11 +58,11 @@ namespace VARP.Scheme.Stx
         {
             if (syntax == null)
                 return null;
-            else if (syntax.IsLiteral)
+            else if (syntax.IsSyntaxLiteral)
                 return ExpandLiteral(syntax, env);
-            else if (syntax.IsSymbol)
+            else if (syntax.IsSyntaxIdentifier)
                 return ExpandIdentifier(syntax, env);
-            else if (syntax.IsList)
+            else if (syntax.IsSyntaxExpression)
                 return ExpandExpression(syntax, env);
             else
                 throw new SyntaxError(syntax, "Expected literal, identifier or list expression");
@@ -81,8 +81,8 @@ namespace VARP.Scheme.Stx
         // aka: x
         public static AST ExpandIdentifier(Syntax syntax, LexicalEnvironment env)
         {
-            if (!syntax.IsSymbol || syntax.IsLiteral) new SyntaxError(syntax, "Expected identifier");
-            Symbol varname = syntax.GetDatum() as Symbol;
+            if (!syntax.IsIdentifier) new SyntaxError(syntax, "Expected identifier");
+            Symbol varname = syntax.GetDatum<Symbol>();
             LexicalBinding binding = env.Lookup(varname);
             if (binding == null)
                 throw new SyntaxError(syntax, "Expected identifier");
@@ -95,7 +95,7 @@ namespace VARP.Scheme.Stx
             Pair list = syntax.GetList();
             if (list == null) return new AstApplication(syntax, null);
             Syntax ident = list.Car as Syntax;
-            if (ident.IsSymbol)
+            if (ident.IsSyntaxIdentifier)
             {
                 LexicalBinding binding = env.Lookup(ident.expression as Symbol);
                 if (binding != null)

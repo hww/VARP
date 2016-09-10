@@ -59,8 +59,6 @@ namespace VARP.Scheme.Data
         #region SObject Methods
         public override SBool AsBool() { return SBool.True; }
         public override string AsString() { return Name; }
-        public override bool IsSymbol { get { return true; } }
-        public override bool IsKeyword { get { return name[0] == ':'; } }
         public override bool IsLiteral { get { return name[0] == ':'; } }
         public override bool IsIdentifier { get { return name[0] != ':'; } }
         #endregion

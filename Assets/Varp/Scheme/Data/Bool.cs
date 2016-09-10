@@ -27,7 +27,7 @@
 
 namespace VARP.Scheme.Data
 {
-    public class SBool : SObject
+    public sealed class SBool : SObject
     {
         public static SBool True = new SBool(true);
         public static SBool False = new SBool(false);
@@ -55,7 +55,7 @@ namespace VARP.Scheme.Data
         #region SObject Methods
         public override SBool AsBool() { return SBool.True; }
         public override string AsString() { return Value ? "#t" : "#f"; }
- 
+        public override bool IsLiteral { get { return true; } }
         #endregion
     }
 }

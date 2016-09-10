@@ -27,7 +27,7 @@
 
 namespace VARP.Scheme.Data
 {
-    public class SInteger : SObject
+    public sealed class SInteger : SObject
     {
         public int Value;
         public SInteger() { }
@@ -60,7 +60,7 @@ namespace VARP.Scheme.Data
         public override SBool AsBool() { return Value == 0 ? SBool.False : SBool.True; }
         public override string AsString() { return Value.ToString(); }
         public override bool IsNumeric { get { return true; } }
-
+        public override bool IsLiteral { get { return true; } }
         #endregion
 
         #region Casting

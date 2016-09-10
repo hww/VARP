@@ -31,17 +31,17 @@ namespace VARP.Timing
 {
     /// <summary>
     /// The guard for calling function only once per frame
-    /// 
-    /// Usage:
-    ///     OncePerFrame once;
+    /// </summary>
+    /// <example>
+    ///     OncePerFrame tick;
     ///     bool Tick()
     ///     {
-    ///         if (once.IsFirst())
+    ///         if (tick.IsFirst())
     ///         {
     ///             ... 
     ///         }
     ///     }
-    /// </summary>
+    /// </example>
     public struct OncePerFrame
     {
         int frameCount;

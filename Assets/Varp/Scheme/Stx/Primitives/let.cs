@@ -30,7 +30,7 @@ namespace VARP.Scheme.Stx.Primitives
     using Exception;
     using Data;
 
-    public class PrimitiveLet : BasePrimitive
+    public sealed class PrimitiveLet : BasePrimitive
     {
         // (let () ...)
         public static AST Expand(Syntax stx, LexicalEnvironment env)
@@ -43,7 +43,7 @@ namespace VARP.Scheme.Stx.Primitives
             Syntax arguments = list[1] as Syntax;   // let arguments
             Pair body = list.PairAtIndex(2);        // let body
 
-            if (!arguments.IsList) throw new SyntaxError(stx, "let: bad syntax (missing name or binding pairs)");
+            if (!arguments.IsSyntaxExpression) throw new SyntaxError(stx, "let: bad syntax (missing name or binding pairs)");
 
             Arguments letarguments = new Arguments();
             ArgumentsList.ParseLetList(arguments.GetList(), env, ref letarguments);

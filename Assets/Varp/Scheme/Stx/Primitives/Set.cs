@@ -30,7 +30,7 @@ namespace VARP.Scheme.Stx.Primitives
 
     using Data;
 
-    public class PrimitiveSet : BasePrimitive
+    public sealed class PrimitiveSet : BasePrimitive
     {
         // (set! x 10)
         // (set! x (+ 1 2))

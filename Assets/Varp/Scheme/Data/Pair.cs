@@ -177,6 +177,9 @@ namespace VARP.Scheme.Data
         public bool HasLoop() { return Pair.HasLoop(this); }
         public bool IsImproper() { return Pair.IsImproper(this); }
         public bool IsImproperOrLoop() { return Pair.IsImproperOrLoop(this); }
+        public bool IsList { get { return Cdr is Pair || Cdr == null; } }
+        public bool IsPair { get { return !(Cdr is Pair || Cdr == null); } }
+
         #endregion
 
         public override int GetHashCode()
@@ -385,8 +388,6 @@ namespace VARP.Scheme.Data
         #endregion
 
         #region SObject Methods
-        public override bool IsList { get { return Cdr is Pair || Cdr == null; } }
-        public override bool IsPair { get { return !(Cdr is Pair || Cdr == null); } }
         public override bool IsLiteral { get { return false; } }
         public override SBool AsBool() { return SBool.True; }
         public override string AsString() { return AsString(this); }

@@ -34,7 +34,7 @@ namespace VARP.Scheme.Stx
     using Exception;
     using REPL;
 
-    public class Arguments
+    public sealed class Arguments
     {
         public Pair required;
         public Pair optional;
@@ -43,7 +43,7 @@ namespace VARP.Scheme.Stx
         public Pair body;
         public Pair values; // for let
     }
-    public class ArgumentsList
+    public sealed class ArgumentsList
     {
         public enum Type
         {
@@ -92,9 +92,9 @@ namespace VARP.Scheme.Stx
 
             Func<Syntax, bool> SymbolToArgumentType = (Syntax stx) =>
             {
-                if (!stx.IsSymbol) return false;
+                if (!(stx.GetDatum() is Symbol)) return false;
 
-                Symbol symbol = stx.GetDatum() as Symbol;
+                Symbol symbol = stx.GetDatum<Symbol>();
 
                 if (symbol == Symbol.OPTIONAL)
                 {
@@ -126,28 +126,28 @@ namespace VARP.Scheme.Stx
                     switch (arg_type)
                     {
                         case Type.Required:
-                            if (arg.IsSymbol)
+                            if (arg.IsSyntaxIdentifier)
                                 Add(ref required, ref required_last, new AstLiteral(arg));
                             else
                                 throw new ContractViolation(arg, "symbol?", Inspector.Inspect(arg), "lambda: bad required argument");
                             break;
 
                         case Type.Optionals:
-                            if (arg.IsList)
+                            if (arg.IsSyntaxExpression)
                                 Add(ref optional, ref optional_last, MakeArgPair(arg, arg.GetList(), env));
                             else
                                 throw new ContractViolation(arg, "list?", Inspector.Inspect(arg), "lambda: bad &optional argument");
                             break;
 
                         case Type.Key:
-                            if (arg.IsList)
+                            if (arg.IsSyntaxExpression)
                                 Add(ref key, ref key_last, MakeArgPair( arg, arg.GetList(), env));
                             else
                                 throw new ContractViolation(arg, "list?", Inspector.Inspect(arg), "lambda: bad &key argument");
                             break;
 
                         case Type.Rest:
-                            if (arg.IsSymbol)
+                            if (arg.IsIdentifier)
                                 Add(ref rest, ref rest_last, new AstLiteral(arg));
                             else
                                 throw new ContractViolation(arg, "symbol?", Inspector.Inspect(arg), "lambda: bad argument after &rest");
@@ -218,7 +218,7 @@ namespace VARP.Scheme.Stx
             while (curent != null)
             {
                 Syntax arg = curent.Car as Syntax;
-                if (arg.IsList)
+                if (arg.IsSyntaxExpression)
                 {
                     Pair arg_pair = MakeArgPair(arg, arg.GetList(), env);
                     Add(ref vars, ref vars_last, arg_pair[0]);
@@ -253,7 +253,7 @@ namespace VARP.Scheme.Stx
             Syntax a = list[0] as Syntax;
             Syntax b = list[1] as Syntax;
 
-            if (!a.IsSymbol)
+            if (!a.IsSyntaxIdentifier)
                 new ContractViolation("symbol?", Inspector.Inspect(a.GetDatum()), "lambda: bad argument identifier");
 
             Pair pair = Pair.ListFromArguments(a, AstBuilder.Expand(b, env));

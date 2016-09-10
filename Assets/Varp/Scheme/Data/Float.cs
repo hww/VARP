@@ -27,7 +27,7 @@
 
 namespace VARP.Scheme.Data
 {
-    public class SFloat : SObject
+    public sealed class SFloat : SObject
     {
         public float Value;
         public SFloat() { }
@@ -60,6 +60,7 @@ namespace VARP.Scheme.Data
         public override SBool AsBool() { return Value==0 ? SBool.False : SBool.True; }
         public override string AsString() { return Value.ToString("0.0###############"); }
         public override bool IsNumeric { get { return true; } }
+        public override bool IsLiteral { get { return true; } }
         #endregion
 
         #region Casting

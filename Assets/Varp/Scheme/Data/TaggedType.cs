@@ -29,7 +29,7 @@ using VARP.Scheme.REPL;
 
 namespace VARP.Scheme.Data
 {
-    public class TaggedType : SObject
+    public sealed class TaggedType : SObject
     {
         public Symbol Tag;
         public object Data;
@@ -43,6 +43,8 @@ namespace VARP.Scheme.Data
         #region SObject Methods
         public SBool ToBool() { return SBool.True; }
         public override string AsString() { return string.Format("{0} {1}",Tag,Data); }
+        public override bool IsLiteral { get { return true; } }
+
         #endregion
     }
     //public struct STaggedType

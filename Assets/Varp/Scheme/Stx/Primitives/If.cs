@@ -30,7 +30,7 @@ namespace VARP.Scheme.Stx.Primitives
 
     using Data;
 
-    public class PrimitiveIf : BasePrimitive
+    public sealed class PrimitiveIf : BasePrimitive
     {
         // (if () ...)
         public static AST Expand(Syntax stx, LexicalEnvironment env)

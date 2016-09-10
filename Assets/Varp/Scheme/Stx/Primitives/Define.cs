@@ -31,7 +31,7 @@ namespace VARP.Scheme.Stx.Primitives
     using REPL;
     using Data;
 
-    public class PrimitiveDefine : BasePrimitive
+    public sealed class PrimitiveDefine : BasePrimitive
     {
         // (define x ...)
         // (define (x) ...)
@@ -45,7 +45,7 @@ namespace VARP.Scheme.Stx.Primitives
             Syntax var_stx = list[1] as Syntax;
             Pair val_lst = list.PairAtIndex(2);
 
-            if (var_stx.IsSymbol)
+            if (var_stx.IsSyntaxIdentifier)
             {
                 // ----------------------------------------------------------------
                 // identifier aka: (define x ...)
@@ -64,7 +64,7 @@ namespace VARP.Scheme.Stx.Primitives
 
                 return new AstDefine(stx, def_stx, var_stx, value, bind);
             }
-            else if (var_stx.IsList)
+            else if (var_stx.IsSyntaxExpression)
             {
                 // ----------------------------------------------------------------
                 // identifier aka: (define (x ...) ...) as result lambda expression

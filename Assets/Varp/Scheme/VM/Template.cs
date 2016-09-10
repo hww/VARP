@@ -25,41 +25,17 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace VARP.Scheme.Tokenizing
+namespace VARP.Scheme.VM
 {
-    using Data;
-
-    /// <summary>
-    /// This class is pointer inside source code. It contains
-    /// debugging information.
-    /// Using class instead of structure let you in future strip
-    /// out of runtime debugging information
-    /// </summary>
-    public sealed class Location : SObject
+    public sealed class Template
     {
-        public int LineNumber; 
-        public int ColNumber;
-        public int CharNumber;
-        public string File;
+        public object[] Literals;
+        public Instruction[] Code;
 
-        public Location()
+        public Template(object[] literals, Instruction[] code)
         {
-
-        }
-        public Location(int lineNumber, int colNumber, int charNumber, string file)
-        {
-            LineNumber = lineNumber;
-            ColNumber = colNumber;
-            CharNumber = charNumber;
-            File = file;
-        }
-
-        public Location(Location location)
-        {
-            LineNumber = location.LineNumber;
-            ColNumber = location.ColNumber;
-            CharNumber = location.CharNumber;
-            File = location.File;
+            Literals = literals;
+            Code = code;
         }
     }
 }

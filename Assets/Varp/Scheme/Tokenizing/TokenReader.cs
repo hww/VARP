@@ -29,7 +29,7 @@ using System.IO;
 
 namespace VARP.Scheme.Tokenizing
 {
-    public class TokenReader
+    public sealed class TokenReader
     {
         /// <summary>
         /// Constructor that can be used by subclasses that don't want to provide tokens via a TextReader
@@ -91,10 +91,10 @@ namespace VARP.Scheme.Tokenizing
             return chr;
         }
 
-        public virtual string FilePath { get { return filePath; } }
-        public virtual int CharNumber { get { return charNumber; } }
-        public virtual int LineNumber { get { return lineNumber; } }
-        public virtual int ColNumber { get { return colNumber; } }
+        public string FilePath { get { return filePath; } }
+        public int CharNumber { get { return charNumber; } }
+        public int LineNumber { get { return lineNumber; } }
+        public int ColNumber { get { return colNumber; } }
 
 
         #endregion

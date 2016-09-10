@@ -34,7 +34,7 @@ namespace VARP.Scheme.Stx
     using Exception;
     using Tokenizing;
 
-    public class Syntax : SObject, IEnumerable<Syntax>
+    public sealed class Syntax : SObject, IEnumerable<Syntax>
     {
         public SObject expression;
         public Location location;
@@ -79,6 +79,7 @@ namespace VARP.Scheme.Stx
         #endregion
 
         public SObject GetDatum() { return SyntaxToDatum(expression); }
+        public T GetDatum<T>() where T:class { return SyntaxToDatum(expression) as T; }
         public Symbol GetIdentifier()
         {
             if (expression is Symbol) return expression as Symbol;
@@ -124,15 +125,15 @@ namespace VARP.Scheme.Stx
             return expression;
         }
 
+        public bool IsSyntax(System.Type type) { return this.GetType() == type; }
+        public bool IsSyntaxIdentifier { get { return (expression != null) && expression.IsIdentifier; } }
+        public bool IsSyntaxLiteral { get { return (expression != null) && expression.IsLiteral; } }
+        public bool IsSyntaxExpression { get { return (expression == null) || expression is Pair; } }
 
         #region SObject Methods
-        public override bool IsSymbol { get { return (expression != null) && expression.IsSymbol; } }
-        public override bool IsLiteral { get { return (expression != null) && expression.IsLiteral; } }
-        public override bool IsKeyword { get { return (expression != null) && expression.IsKeyword; } }
-        public override bool IsList { get { return (expression == null) || expression.IsList; } }
-        public override bool IsPair { get { return (expression != null) && expression.IsPair; } }
         public override SBool AsBool() { return SBool.True; }
         public override string AsString() { return expression == null ? "()" : expression.AsString(); }
+
         #endregion
 
 

@@ -25,41 +25,51 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace VARP.Scheme.Tokenizing
+namespace VARP.Scheme.VM
 {
     using Data;
+    using Exception;
 
-    /// <summary>
-    /// This class is pointer inside source code. It contains
-    /// debugging information.
-    /// Using class instead of structure let you in future strip
-    /// out of runtime debugging information
-    /// </summary>
-    public sealed class Location : SObject
+    public sealed class VarpVM
     {
-        public int LineNumber; 
-        public int ColNumber;
-        public int CharNumber;
-        public string File;
-
-        public Location()
+        public object RunTemplate(Template template)
         {
-
-        }
-        public Location(int lineNumber, int colNumber, int charNumber, string file)
-        {
-            LineNumber = lineNumber;
-            ColNumber = colNumber;
-            CharNumber = charNumber;
-            File = file;
+            return RunClosure(new Frame(null, template));
         }
 
-        public Location(Location location)
+        private object RunClosure(Frame frame, params SObject[] args)
         {
-            LineNumber = location.LineNumber;
-            ColNumber = location.ColNumber;
-            CharNumber = location.CharNumber;
-            File = location.File;
+            Template template = frame.template;
+
+#if PROFILER
+            _profiler.EnterFunction(null, TEMPLATE);
+#endif
+            try
+            {
+                while (true)
+                {
+                 //   Instruction i = TEMPLATE.Code[PC];
+                }
+            }
+            catch (SchemeEndException ex)
+            {
+                //return VALUE;
+            }
+            finally
+            {
+               // CONT = PREV_CONT;
+               // ENVT = PREV_ENVT;
+               // EVAL_STACK = PREV_EVAL_STACK;
+               // TEMPLATE = PREV_TEMPLATE;
+               // PC = PREV_PC;
+            }
+
+
+#if PROFILER
+            _profiler.EnterFunction(null, TEMPLATE);
+#endif
+            return null;
         }
+
     }
 }

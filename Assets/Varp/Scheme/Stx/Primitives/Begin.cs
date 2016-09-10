@@ -30,7 +30,7 @@ namespace VARP.Scheme.Stx.Primitives
 
     using Data;
 
-    public class PrimitiveBegin : BasePrimitive
+    public sealed class PrimitiveBegin : BasePrimitive
     {
         // (begin ...)
         public static AST Expand(Syntax stx, LexicalEnvironment env)

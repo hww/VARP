@@ -25,41 +25,30 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace VARP.Scheme.Tokenizing
+namespace VARP.Scheme.VM
 {
     using Data;
 
-    /// <summary>
-    /// This class is pointer inside source code. It contains
-    /// debugging information.
-    /// Using class instead of structure let you in future strip
-    /// out of runtime debugging information
-    /// </summary>
-    public sealed class Location : SObject
+    public sealed class Frame
     {
-        public int LineNumber; 
-        public int ColNumber;
-        public int CharNumber;
-        public string File;
+        public Frame parent;        //< pointer to parent frame
+        public Template template;   //< pointer to template
+        public int pc;              //< program counter
+        public SObject[] variables; //< register set
 
-        public Location()
+        public Frame(Frame parent, Template template, int size = 0)
         {
-
-        }
-        public Location(int lineNumber, int colNumber, int charNumber, string file)
-        {
-            LineNumber = lineNumber;
-            ColNumber = colNumber;
-            CharNumber = charNumber;
-            File = file;
+            this.parent = parent;
+            this.template = template;
+            this.variables = new SObject[size];
         }
 
-        public Location(Location location)
+        /// <summary>
+        /// Return size of this frame
+        /// </summary>
+        public int Count
         {
-            LineNumber = location.LineNumber;
-            ColNumber = location.ColNumber;
-            CharNumber = location.CharNumber;
-            File = location.File;
+            get { return variables.Length; }
         }
     }
 }

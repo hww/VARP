@@ -25,41 +25,58 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace VARP.Scheme.Tokenizing
+ using System.Collections.Generic;
+
+namespace VARP.Scheme.VM
 {
     using Data;
 
-    /// <summary>
-    /// This class is pointer inside source code. It contains
-    /// debugging information.
-    /// Using class instead of structure let you in future strip
-    /// out of runtime debugging information
-    /// </summary>
-    public sealed class Location : SObject
+    public struct Binding
     {
-        public int LineNumber; 
-        public int ColNumber;
-        public int CharNumber;
-        public string File;
+        public Environment environment;
+        public SObject value;
+    }
 
-        public Location()
-        {
+    public sealed class Environment : SObject, IEnumerable<Binding>
+    {
+        public Environment parent;        //< pointer to parent frame
+        public Symbol name;               //< environment name
 
-        }
-        public Location(int lineNumber, int colNumber, int charNumber, string file)
+        Dictionary<Symbol, Binding> Bindings = new Dictionary<Symbol, Binding>();
+
+        public Environment(Environment parent, Symbol name, int size)
         {
-            LineNumber = lineNumber;
-            ColNumber = colNumber;
-            CharNumber = charNumber;
-            File = file;
+            this.parent = parent;
+            this.name = name;
+            this.Bindings = new Dictionary<Symbol, Binding>(size);
         }
 
-        public Location(Location location)
+        #region IEnumerable<T> Members
+
+        public IEnumerator<Binding> GetEnumerator()
         {
-            LineNumber = location.LineNumber;
-            ColNumber = location.ColNumber;
-            CharNumber = location.CharNumber;
-            File = location.File;
+            foreach (var b in Bindings.Values)
+                yield return b;
         }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            // Lets call the generic version here
+            return this.GetEnumerator();
+        }
+
+        #endregion
+
+        #region SObject Methods
+        public override SBool AsBool() { return SBool.True; }
+        public override string ToString() { return string.Format("#<lexical-environment size={0}>", Bindings.Count); }
+        public override string AsString() { return base.ToString(); }
+
+        #endregion
+
     }
 }

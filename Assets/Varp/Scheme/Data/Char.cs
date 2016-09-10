@@ -29,7 +29,7 @@ using System.Collections.Generic;
 
 namespace VARP.Scheme.Data
 {
-    public class SChar : SObject
+    public sealed class SChar : SObject
     {
         public char Value;
         public SChar() { }
@@ -55,9 +55,8 @@ namespace VARP.Scheme.Data
 
         #region SObject Methods
         public override SBool AsBool() { return SBool.True; }
-        public override string AsString() {
-            return CharacterToName(Value);
-        }
+        public override string AsString() { return CharacterToName(Value); }
+        public override bool IsLiteral { get { return true; } }
         #endregion
 
         #region Named Characters

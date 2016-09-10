@@ -30,7 +30,7 @@ namespace VARP.Scheme.Stx.Primitives
 
     using Data;
 
-    public class QuaziquotePrimitive : BasePrimitive
+    public sealed class QuaziquotePrimitive : BasePrimitive
     {
         // `(foo ...)
         public static AST Expand(Syntax stx, LexicalEnvironment env)
