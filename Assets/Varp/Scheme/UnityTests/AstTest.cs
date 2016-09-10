@@ -34,11 +34,12 @@ using VARP.Scheme.REPL;
 using VARP.Scheme.Exception;
 
 [ExecuteInEditMode]
-public class AstTest : MonoBehaviour {
+public class AstTest : MonoBehaviour
+{
 
     Tokenizer lexer;
 
-    [TextArea(5,100)]
+    [TextArea(5, 100)]
     public string testString;
     [TextArea(5, 100)]
     public string tokensString;
@@ -57,37 +58,38 @@ public class AstTest : MonoBehaviour {
     void OnValidate()
     {
         System.Text.StringBuilder sb;
-        // ------------------------------------------------------------------
-        // Just tokenized it
-        // ------------------------------------------------------------------
-        sb = new System.Text.StringBuilder();
-        lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
-        Token token = lexer.ReadToken();
-        while (token != null)
-        {
-            sb.Append(Inspector.Inspect(token) + " ");
-            token = lexer.ReadToken();
-        }
-        tokensString = sb.ToString();
-
-        // ------------------------------------------------------------------
-        // Parse scheme
-        // ------------------------------------------------------------------
-        lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
-        sb = new System.Text.StringBuilder();
-        do
-        {
-            SObject result = Parser.Parse(lexer);
-            if (result == null) break;
-            sb.AppendLine(result.Inspect());
-        } while (lexer.LastToken != null);
-        syntaxString = sb.ToString();
-
-        // ------------------------------------------------------------------
-        // Parse scheme
-        // ------------------------------------------------------------------
         try
         {
+            // ------------------------------------------------------------------
+            // Just tokenized it
+            // ------------------------------------------------------------------
+            sb = new System.Text.StringBuilder();
+            lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
+            Token token = lexer.ReadToken();
+            while (token != null)
+            {
+                sb.Append(Inspector.Inspect(token) + " ");
+                token = lexer.ReadToken();
+            }
+            tokensString = sb.ToString();
+
+            // ------------------------------------------------------------------
+            // Parse scheme
+            // ------------------------------------------------------------------
+            lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
+            sb = new System.Text.StringBuilder();
+            do
+            {
+                SObject result = Parser.Parse(lexer);
+                if (result == null) break;
+                sb.AppendLine(result.Inspect());
+            } while (lexer.LastToken != null);
+            syntaxString = sb.ToString();
+
+            // ------------------------------------------------------------------
+            // Parse scheme
+            // ------------------------------------------------------------------
+
             lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
 
             sb = new System.Text.StringBuilder();
@@ -100,7 +102,8 @@ public class AstTest : MonoBehaviour {
             } while (lexer.LastToken != null);
             astString = sb.ToString();
             envString = AstBuilder.environment.Inspect();
-        } catch (SchemeError ex)
+        }
+        catch (SchemeError ex)
         {
             astString = ex.Message;
             throw ex;

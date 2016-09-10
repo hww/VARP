@@ -51,6 +51,10 @@ namespace VARP.Scheme.Exception
         {
         }
 
+        /// ================================================================================
+        /// Expand location string from object
+        /// ================================================================================
+       
         static protected string GetLocationString(object x)
         {
             if (x is Location)
@@ -91,7 +95,7 @@ namespace VARP.Scheme.Exception
             foreach (var v in fields)
             {
                 sb.Append(" ");
-                sb.Append(Inspector.Inspect(v));
+                sb.Append(Inspect(v));
             }
             return sb.ToString();
         }
@@ -124,8 +128,25 @@ namespace VARP.Scheme.Exception
 
         public static string ArgumentErrorMessage(string name, string expected, object val)
         {
-            string vstr = Inspector.Inspect(val);
+            string vstr = Inspect(val);
             return string.Format("{0}: contract violation\n   expected: {1}\n   given: {2}", name, expected, vstr);
+        }
+
+        public static string ArgumentErrorMessage(string name, string expected, int badPos, Pair vals)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(string.Format("{0}: contract violation\n   expected: {1}\n   given: {2}\n  argument position: {3}\n  other arguments...:\n", name, expected, badPos, vals[badPos]));
+            int index = 0;
+            foreach (var val in vals)
+            {
+                if (index != badPos)
+                {
+                    sb.Append("  ");
+                    sb.AppendLine(val.AsString());
+                }
+                index++;
+            }
+            return sb.ToString();
         }
 
         public static string ArgumentErrorMessage(string name, string expected, int badPos, params object[] vals)
@@ -136,12 +157,17 @@ namespace VARP.Scheme.Exception
             {
                 if (i == badPos) continue; // skip bad argument
                 sb.Append("  ");
-                sb.AppendLine(Inspector.Inspect(vals[i]));
+                sb.AppendLine(Inspect(vals[i]));
             }
             return sb.ToString();
         }
 
         public static SchemeError ArgumentError(string name, string expected, object val)
+        {
+            return new SchemeError(ResultErrorMessage(name, expected, val));
+        }
+
+        public static SchemeError ArgumentError(string name, string expected, int badPos, Pair val)
         {
             return new SchemeError(ResultErrorMessage(name, expected, val));
         }
@@ -158,7 +184,8 @@ namespace VARP.Scheme.Exception
 
         public static string ResultErrorMessage(string name, string expected, object val)
         {
-            string vstr = Inspector.Inspect(val);
+            string locs = GetLocationString(val);
+            string vstr = Inspect(val);
             return string.Format("{0}: contract violation\n   expected: {1}\n   given: {2}", name, expected, vstr);
         }
 
@@ -170,7 +197,7 @@ namespace VARP.Scheme.Exception
             {
                 if (i == badPos) continue; // skip bad argument
                 sb.Append("  ");
-                sb.AppendLine(Inspector.Inspect(vals[i]));
+                sb.AppendLine(Inspect(vals[i]));
             }
             return sb.ToString();
         }
@@ -213,7 +240,7 @@ namespace VARP.Scheme.Exception
             sb.Append(string.Format("  {0} index: {1}\n", indexPrefix, index));
             sb.Append(string.Format(" valid-range: [{0},{1}]\n", lowerBound, upperBound));
             sb.Append(string.Format(" {0}: \n  ", typeDescription));
-            sb.Append(Inspector.Inspect(inValue));
+            sb.Append(Inspect(inValue));
 
             return sb.ToString();
         }
@@ -243,7 +270,7 @@ namespace VARP.Scheme.Exception
             sb.Append(string.Format("  given: {0}\n", given));
             sb.Append("  arguments...:\n");
             foreach (var arg in argv)
-                sb.AppendLine("  " + Inspector.Inspect(arg));
+                sb.AppendLine("  " + Inspect(arg));
             return sb.ToString();
         }
 
@@ -267,7 +294,7 @@ namespace VARP.Scheme.Exception
         /// <returns></returns>
         public static string SyntaxErrorMessage(string name, string message, SObject expression, SObject subexpression = null)
         {
-            string expressionStr = Inspector.Inspect(expression.GetDatum());
+            string expressionStr = Inspect(expression.GetDatum());
             if (subexpression == null)
             {
                 string loc = GetLocationString(expression);
@@ -276,7 +303,7 @@ namespace VARP.Scheme.Exception
             else
             {
                 string loc = GetLocationString(subexpression);
-                string subexpressionStr = Inspector.Inspect(expression.GetDatum());
+                string subexpressionStr = Inspect(expression.GetDatum());
                 return string.Format("{0}: {1}: {2} in: {3}\n error syntax: {4}", loc, name, message, expressionStr);
             }
         }
@@ -284,6 +311,26 @@ namespace VARP.Scheme.Exception
         public static SchemeError SyntaxError(string name, string message, SObject expression, SObject subexpression = null)
         {
             return new SchemeError(SyntaxErrorMessage(name, message, expression, subexpression));
+        }
+
+        // ----------------------
+        // Inspector
+        // ----------------------
+
+        // Standart REPL inspector uses o.Inspect() method
+        // this verio will use AsStrin() method
+
+        /// <summary>
+        /// Inspect object for error message
+        /// </summary>
+        /// <param name="o"></param>
+        static string Inspect(object o)
+        {
+            if (o == null)
+                return "()";
+            if (o is SObject)
+                return (o as SObject).AsString();
+            return o.ToString();
         }
     }
 }

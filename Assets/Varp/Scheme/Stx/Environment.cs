@@ -99,10 +99,13 @@ namespace VARP.Scheme.Stx
             int count = 0;
             foreach (var arg in arguments)
             {
-                if (arg is Syntax)
+                if (arg is Syntax && (arg as Syntax).IsIdentifier)
+                {
                     DefineVariable((arg as Syntax).GetIdentifier());
+                    count++;
+                }
                 else
-                    throw SchemeError.ArgumentError("lambda", "identifier?", arg);
+                    throw SchemeError.ArgumentError("lambda", "identifier?", count, arguments);
             }
             return count;
         }
@@ -111,9 +114,11 @@ namespace VARP.Scheme.Stx
             int count = 0;
             foreach (var arg in arguments)
             {
-                if (arg is Syntax)
+                if (arg is Syntax && (arg as Syntax).IsIdentifier)
+                {
                     DefineVariable((arg as Syntax).GetIdentifier());
-                if (arg is Pair)
+                }
+                else if (arg is Pair)
                 {
                     Syntax var = (arg as Pair)[0] as Syntax;
                     AST val = (arg as Pair)[1] as AST;
