@@ -68,7 +68,7 @@ namespace VARP.Scheme.Exception
 
         static string GetLocationStringIntern(Location x)
         {
-            return x == null ? string.Empty : string.Format("{0}({1},{2})", x.File, x.LineNumber, x.ColNumber);
+            return x == null ? string.Empty : string.Format("{0}({1},{2}): ", x.File, x.LineNumber, x.ColNumber);
         }
 
         /// ================================================================================
@@ -132,34 +132,31 @@ namespace VARP.Scheme.Exception
             return string.Format("{0}: contract violation\n   expected: {1}\n   given: {2}", name, expected, vstr);
         }
 
-        public static string ArgumentErrorMessage(string name, string expected, int badPos, Pair vals)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine(string.Format("{0}: contract violation\n   expected: {1}\n   given: {2}\n  argument position: {3}\n  other arguments...:\n", name, expected, badPos, vals[badPos]));
-            int index = 0;
-            foreach (var val in vals)
-            {
-                if (index != badPos)
-                {
-                    sb.Append("  ");
-                    sb.AppendLine(val.AsString());
-                }
-                index++;
-            }
-            return sb.ToString();
-        }
-
         public static string ArgumentErrorMessage(string name, string expected, int badPos, params object[] vals)
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(string.Format("{0}: contract violation\n   expected: {1}\n   given: {2}\n  argument position: {3}\n  other arguments...:\n", name, expected, badPos, vals[badPos]));
+            string loc = string.Empty;
+            string badStr = string.Empty;
             for (var i = 0; i < vals.Length; i++)
             {
-                if (i == badPos) continue; // skip bad argument
+                if (i == badPos)
+                {
+                    loc = GetLocationString(vals[i]);
+                    badStr = Inspect(vals[i]);
+                    continue; // skip bad argument
+                }
                 sb.Append("  ");
                 sb.AppendLine(Inspect(vals[i]));
             }
-            return sb.ToString();
+            string argStr = sb.ToString();
+
+            return string.Format("{0}{1}: contract violation\n   expected: {2}\n   given: {3}\n  argument position: {4}\n  other arguments...:\n{5}", loc, name, expected, badPos, badStr, argStr);
+        }
+
+        public static string ArgumentErrorMessage(string name, string expected, int badPos, Pair vals)
+        {
+            SObject[] array = Pair.ToArray(vals);
+            return ArgumentErrorMessage(name, expected, badPos, array);
         }
 
         public static SchemeError ArgumentError(string name, string expected, object val)
@@ -167,14 +164,13 @@ namespace VARP.Scheme.Exception
             return new SchemeError(ResultErrorMessage(name, expected, val));
         }
 
-        public static SchemeError ArgumentError(string name, string expected, int badPos, Pair val)
-        {
-            return new SchemeError(ResultErrorMessage(name, expected, val));
-        }
-
         public static SchemeError ArgumentError(string name, string expected, int badPos, params object[] vals)
         {
             return new SchemeError(ResultErrorMessage(name, expected, badPos, vals));
+        }
+        public static SchemeError ArgumentError(string name, string expected, int badPos, Pair val)
+        {
+            return new SchemeError(ResultErrorMessage(name, expected, val));
         }
 
 
@@ -186,20 +182,27 @@ namespace VARP.Scheme.Exception
         {
             string locs = GetLocationString(val);
             string vstr = Inspect(val);
-            return string.Format("{0}: contract violation\n   expected: {1}\n   given: {2}", name, expected, vstr);
+            return string.Format("{0}{1}: contract violation\n   expected: {2}\n   given: {3}", locs, name, expected, vstr);
         }
 
         public static string ResultErrorMessage(string name, string expected, int badPos, params object[] vals)
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(string.Format("{0}: contract violation\n   expected: {1}\n   given: {2}\n  result position: {3}\n  other result position...:\n", name, expected, badPos, vals[badPos]));
+            string loc = string.Empty;
+            string badStr = string.Empty;
             for (var i = 0; i < vals.Length; i++)
             {
-                if (i == badPos) continue; // skip bad argument
+                if (i == badPos)
+                {
+                    loc = GetLocationString(vals[i]);
+                    badStr = Inspect(vals[i]);
+                    continue; // skip bad argument
+                }
                 sb.Append("  ");
                 sb.AppendLine(Inspect(vals[i]));
             }
-            return sb.ToString();
+            string argStr = sb.ToString();
+            return string.Format("{0}{1}: contract violation\n   expected: {2}\n   given: {3}\n  result position: {4}\n  other result position...:\n{5}", loc, name, expected, badPos, badStr, argStr);
         }
 
         public static SchemeError ResultError(string name, string expected, object val)
@@ -261,9 +264,20 @@ namespace VARP.Scheme.Exception
         // Arity error methods
         // ----------------------
 
-        public static string ArityErrorMessage(string name, string message, int expected, int given, Pair argv)
+            /// <summary>
+            /// Arity error message
+            /// </summary>
+            /// <param name="name">function name wehre happens error</param>
+            /// <param name="message">the error message</param>
+            /// <param name="expected">expected arguments quantity</param>
+            /// <param name="given">given arguments quantity</param>
+            /// <param name="argv">arguments</param>
+            /// <param name="expression">the expression whenre happens error</param>
+            /// <returns></returns>
+        public static string ArityErrorMessage(string name, string message, int expected, int given, Pair argv, Syntax expression)
         {
             StringBuilder sb = new StringBuilder();
+            sb.Append(GetLocationString(expression));
             sb.Append("arity mismatch;\n");
             sb.Append("  the expected number of arguments does not match the given number\n");
             sb.Append(string.Format("  expected: {0}\n", expected));
@@ -274,9 +288,9 @@ namespace VARP.Scheme.Exception
             return sb.ToString();
         }
 
-        public static SchemeError ArityError(string name, string message, int expected, int given, Pair argv)
+        public static SchemeError ArityError(string name, string message, int expected, int given, Pair argv, Syntax expression)
         {
-            return new SchemeError(ArityErrorMessage(name, message, expected, given, argv));
+            return new SchemeError(ArityErrorMessage(name, message, expected, given, argv, expression));
         }
 
 

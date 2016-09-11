@@ -37,7 +37,7 @@ namespace VARP.Scheme.Stx.Primitives
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsEqual("quote", "arity mismatch", 1, argc, list);
+            AssertArgsEqual("quote", "arity mismatch", 1, argc, list, stx);
             Syntax lit = list[0] as Syntax;
             if (lit.IsLiteral)
                 return new AstLiteral(lit);

@@ -53,7 +53,7 @@ namespace VARP.Scheme.Stx.Primitives
                     Pair conditional_list = conditional_stx.GetList();
                     // Check arguments count, should be 2 for each condition
                     int size = Pair.Length(conditional_list);
-                    if (size != 2) throw SchemeError.ArityError("cond", "arity missmach", 2, size, conditional_list);
+                    if (size != 2) throw SchemeError.ArityError("cond", "arity missmach", 2, size, conditional_list, conditional_stx);
                     // Now get condition and it's expression
                     Syntax var = conditional_list[0] as Syntax;
                     Syntax val = conditional_list[1] as Syntax;

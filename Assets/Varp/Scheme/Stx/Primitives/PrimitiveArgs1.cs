@@ -39,7 +39,7 @@ namespace VARP.Scheme.Stx.Primitives
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsEqual("primitive1", "arity mismatch", 1, argc, list);
+            AssertArgsEqual("primitive1", "arity mismatch", 1, argc, list, stx);
             Syntax set_kwd = list[0] as Syntax;
             Pair arguments = AstBuilder.ExpandListElements(list.Cdr as Pair, env);
             return new AstPrimitive(stx, set_kwd, arguments);

@@ -39,7 +39,7 @@ namespace VARP.Scheme.Stx.Primitives
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsEqual("define", "arity mismatch", 2, argc, list);
+            AssertArgsEqual("define", "arity mismatch", 2, argc, list, stx);
 
             Syntax def_stx = list[0] as Syntax;
             Syntax var_stx = list[1] as Syntax;

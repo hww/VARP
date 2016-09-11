@@ -38,7 +38,7 @@ namespace VARP.Scheme.Stx.Primitives
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsEqual("set!", "arity mismatch", 2, argc, list);
+            AssertArgsEqual("set!", "arity mismatch", 2, argc, list, stx);
 
             Syntax set_kwd = list[0] as Syntax;
             Syntax var_stx = list[1] as Syntax;

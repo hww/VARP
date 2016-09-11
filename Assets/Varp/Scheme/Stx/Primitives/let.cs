@@ -37,7 +37,7 @@ namespace VARP.Scheme.Stx.Primitives
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsMinimum("let", "arity mismatch", 2, argc, list);
+            AssertArgsMinimum("let", "arity mismatch", 2, argc, list, stx);
 
             Syntax keyword = list[0] as Syntax;     // let arguments
             Syntax arguments = list[1] as Syntax;   // let arguments
@@ -47,7 +47,7 @@ namespace VARP.Scheme.Stx.Primitives
 
             Arguments letarguments = new Arguments();
             ArgumentsList.ParseLetList(arguments.GetList(), env, ref letarguments);
-            Environment localEnv = env.CreateEnvironment(letarguments);
+            Environment localEnv = env.CreateEnvironment(stx, letarguments);
 
             AST lambda = new AstLambda(stx, keyword, letarguments, AstBuilder.ExpandListElements(body, localEnv));
             return new AstApplication(stx, new Pair(lambda, letarguments.values));

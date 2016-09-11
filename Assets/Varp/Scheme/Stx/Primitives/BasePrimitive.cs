@@ -34,22 +34,22 @@ namespace VARP.Scheme.Stx.Primitives
     {
         #region Assertions
         protected static int GetArgsCount(SObject o) { return Pair.Length(o) - 1; }
-        protected static void AssertArgsMinimum(string name, string message, int expected, int given, Pair argv)
+        protected static void AssertArgsMinimum(string name, string message, int expected, int given, Pair argv, Syntax expression)
         {
             if (given < expected)
-                throw SchemeError.ArityError(name, message, expected, given, argv);
+                throw SchemeError.ArityError(name, message, expected, given, argv, expression);
         }
 
-        protected static void AssertArgsMaximum(string name, string message, int expected, int given, Pair argv)
+        protected static void AssertArgsMaximum(string name, string message, int expected, int given, Pair argv, Syntax expression)
         {
             if (given > expected)
-                throw SchemeError.ArityError(name, message, expected, given, argv);
+                throw SchemeError.ArityError(name, message, expected, given, argv, expression);
         }
 
-        protected static void AssertArgsEqual(string name, string message, int expected, int given, Pair argv)
+        protected static void AssertArgsEqual(string name, string message, int expected, int given, Pair argv, Syntax expression)
         {
             if (given != expected)
-                throw SchemeError.ArityError(name, message, expected, given, argv);
+                throw SchemeError.ArityError(name, message, expected, given, argv, expression);
         }
 
         #endregion

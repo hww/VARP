@@ -66,7 +66,8 @@ namespace VARP.Scheme.Stx
         delegate void AddDelegate(ref Pair first, ref Pair last, SObject obj);
 
         // @arguments is the list of syntax objects: (syntax syntax syntax ...)
-        // result is the list: ((required) (optional) (key) (rest))
+        // result is the structure Arguments
+        // the variable names as syntaxes, but initializers as AST
         public static void Parse(Pair arguments, Environment env, ref Arguments args)
         {
             if (arguments == null) return ;
@@ -134,7 +135,7 @@ namespace VARP.Scheme.Stx
                     {
                         case Type.Required:
                             if (arg.IsSyntaxIdentifier)
-                                Add(ref required, ref required_last, new AstLiteral(arg));
+                                Add(ref required, ref required_last, arg);
                             else
                                 throw SchemeError.ArgumentError("lambda", "symbol?", arg);
                             break;
@@ -159,7 +160,7 @@ namespace VARP.Scheme.Stx
 
                         case Type.Rest:
                             if (arg.IsSyntaxIdentifier)
-                                Add(ref rest, ref rest_last, new AstLiteral(arg));
+                                Add(ref rest, ref rest_last, arg);
                             else
                                 throw SchemeError.ArgumentError("lamba", "symbol?", arg);
                             arg_type = Type.End;
@@ -258,7 +259,7 @@ namespace VARP.Scheme.Stx
         static Pair MakeArgPair(Syntax stx, Pair list, Environment env)
         {
             int argc = Data.Pair.Length(list);
-            if (argc != 2) throw SchemeError.ArityError("let", "lambda: bad &key or &optional argument", 2, argc, list);
+            if (argc != 2) throw SchemeError.ArityError("let", "lambda: bad &key or &optional argument", 2, argc, list, stx);
 
             Syntax a = list[0] as Syntax;
             Syntax b = list[1] as Syntax;

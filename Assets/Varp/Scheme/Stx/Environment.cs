@@ -67,39 +67,42 @@ namespace VARP.Scheme.Stx
         /// <summary>
         /// Create new child environment
         /// </summary>
+        /// <param name="expression">Expression where is this arguments list</param>
         /// <param name="arguments">Arguments list</param>
         /// <returns>new environment</returns>
-        public Environment CreateEnvironment(Arguments arguments)
+        public Environment CreateEnvironment(Syntax expression, Arguments arguments)
         {
             Environment env = new Environment(this);
-            env.ExpandLocals(arguments);
+            env.ExpandLocals(expression, arguments);
             return env;
         }
 
         /// <summary>
         /// Expand environment to and define list of given arguments
         /// </summary>
+        /// <param name="expression">Expression where is this arguments list</param>
         /// <param name="arguments"></param>
-        public void ExpandLocals(Arguments arguments)
+        public void ExpandLocals(Syntax expression, Arguments arguments)
         {
             if (arguments.required != null)
-                Requried = ExpandRequired(arguments.required);
+                Requried = ExpandRequired(expression, arguments.required);
             if (arguments.optional != null)
-                Optional = ExpandOptional(arguments.optional);
+                Optional = ExpandOptional(expression, arguments.optional);
             if (arguments.key != null)
-                Keys = ExpandOptional(arguments.key);
+                Keys = ExpandOptional(expression, arguments.key);
             if (arguments.rest != null)
             {
-                DefineVariable((arguments.rest[1] as Syntax).GetIdentifier());
+                Syntax synt = arguments.rest[1] as Syntax;
+                DefineVariable(synt.GetIdentifier());
                 Rest = 1;
             }
         }
-        private int ExpandRequired(Pair arguments)
+        private int ExpandRequired(Syntax expression, Pair arguments)
         {
             int count = 0;
             foreach (var arg in arguments)
             {
-                if (arg is Syntax && (arg as Syntax).IsIdentifier)
+                if (arg is Syntax && (arg as Syntax).IsSyntaxIdentifier)
                 {
                     DefineVariable((arg as Syntax).GetIdentifier());
                     count++;
@@ -109,21 +112,47 @@ namespace VARP.Scheme.Stx
             }
             return count;
         }
-        private int ExpandOptional(Pair arguments)
+        private int ExpandOptional(Syntax expression, Pair arguments)
         {
             int count = 0;
             foreach (var arg in arguments)
             {
-                if (arg is Syntax && (arg as Syntax).IsIdentifier)
+                if (arg is Syntax)
                 {
-                    DefineVariable((arg as Syntax).GetIdentifier());
+                    Syntax varname = arg as Syntax;
+                    if (varname.IsSyntaxIdentifier)
+                    {
+                        Symbol ident = varname.GetIdentifier();
+                        if (ident == Symbol.OPTIONAL) continue;
+                        if (ident == Symbol.KEY) continue;
+                        DefineVariable(ident);
+                    }
+                    else
+                        throw SchemeError.ArgumentError("lambda", "identifier?", count, arguments);
                 }
                 else if (arg is Pair)
                 {
-                    Syntax var = (arg as Pair)[0] as Syntax;
-                    AST val = (arg as Pair)[1] as AST;
-                    DefineVariable((arg as Syntax).GetIdentifier());
+                    Pair p = arg as Pair;
+                    SObject v0 = p[0];
+                    SObject v1 = p[1];
+                    Symbol ident = null;
+                    AST value = null;
+
+                    if (v0 is Syntax && (v0 as Syntax).IsSyntaxIdentifier)
+                        ident = (v0 as Syntax).GetIdentifier();
+                    else
+                        throw SchemeError.ArgumentError("lambda", "syntax?", count, arguments);
+
+                    if (v1 is AST)
+                        value = v1 as AST;
+                    else
+                        throw SchemeError.ArgumentError("lambda", "ast?", count, arguments);
+
+                    Syntax var = arg as Syntax;
+
+                    DefineVariable(ident);
                 }
+                count++;
             }
             return count;
         }
@@ -143,7 +172,23 @@ namespace VARP.Scheme.Stx
 
         /// <summary>
         /// Safely return existing value. Does not produce 
+        /// exception if value is not exists.
+        /// Find only in this environment
+        /// </summary>
+        /// <param name="name">identifier</param>
+        /// <returns>Bidiing or null</returns>
+        public Binding LookupLocal(Symbol name)
+        {
+            Binding value;
+            if (BindingsMap.TryGetValue(name, out value))
+                return value;
+            return null;
+        }
+
+        /// <summary>
+        /// Safely return existing value. Does not produce 
         /// exception if value is not exists
+        /// Find in this environment, then try parent one
         /// </summary>
         /// <param name="name">identifier</param>
         /// <returns>Bidiing or null</returns>
@@ -152,8 +197,9 @@ namespace VARP.Scheme.Stx
             Binding value;
             if (BindingsMap.TryGetValue(name, out value))
                 return value;
-            return null;
+            return Parent == null ? null : Parent.Lookup(name);
         }
+
         /// <summary>
         /// Get definition by index. Use only for local environment
         /// </summary>
@@ -218,7 +264,7 @@ namespace VARP.Scheme.Stx
         }
 
         /// <summary>
-        /// Clear environmetn
+        /// Clear environment
         /// </summary>
         public void Clear()
         {

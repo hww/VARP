@@ -37,7 +37,7 @@ namespace VARP.Scheme.Stx.Primitives
         {
             Pair list = stx.GetList();
             int argc = GetArgsCount(list);
-            AssertArgsMinimum("if", "arity mismatch", 2, argc, list);
+            AssertArgsMinimum("if", "arity mismatch", 2, argc, list, stx);
 
             Syntax keyword = list[0] as Syntax;
             Syntax cond = list[1] as Syntax;
