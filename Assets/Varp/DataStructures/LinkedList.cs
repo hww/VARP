@@ -568,6 +568,70 @@ namespace VARP.DataStructures
 
         #endregion
 
+        #region Array Interface
+        public LinkedListNode<T> GetNodeAtIndex(int index)
+        {
+            Debug.Assert(index >= 0);
+            Debug.Assert(index < count);
+            LinkedListNode<T> curet = First;
+            while (index>0)
+            {
+                curet = curet.Next;
+                index--;
+            }
+            return curet;
+        }
+
+        public T this[int index]
+        {
+            get { return GetNodeAtIndex(index).Value; }
+            set { GetNodeAtIndex(index).Value = value; }
+        }
+
+        #endregion
+
+        #region Two Lists Operations Interface
+
+        public void Append(LinkedList<T> other)
+        {
+            Debug.Assert(other != null);
+            while (other.Count > 0)
+                AddLast(other.First);
+        }
+
+        public LinkedList<T> Duplicate()
+        {
+            LinkedList<T> result = new LinkedList<T>();
+            foreach (var v in this)
+            {
+                LinkedListNode<T> n = new LinkedListNode<T>(v);
+                result.AddLast(n);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Make sublist from give index, and up to size
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="size">if -1 then up to end of list</param>
+        /// <returns></returns>
+        public LinkedList<T> Duplicate(int index, int size)
+        {
+            Debug.Assert(index >= 0);
+            LinkedList<T> result = new LinkedList<T>();
+            if (index >= Count) return result;
+            LinkedListNode<T> curent = GetNodeAtIndex(index);
+            while (curent != null && (size < 0 || size > 0))
+            {
+                LinkedListNode<T> n = new LinkedListNode<T>(curent.Value);
+                result.AddLast(n);
+                size--;
+            }
+            return result;
+        }
+
+        #endregion
     }
 
 

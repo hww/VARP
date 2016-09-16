@@ -36,7 +36,7 @@ namespace VARP.Scheme.Stx
     /// Syntax and Pair. Use the data in existing data structure and do not make copy
     /// values without reason. It will make more loaded GC but at same time simpify code.
     /// </summary>
-    public class AST : SObject
+    public class AST : ValueClass
     {
         /// <summary>
         /// This is location of the expression
@@ -53,41 +53,46 @@ namespace VARP.Scheme.Stx
         }
 
         // n.b. will be reimplemented for most of types.
-        public virtual SObject GetDatum() { return GetDatum(this); }
+        public virtual Value GetDatum() { return Value.Nill; }
         public T GetDatum<T>() where T:class { return GetDatum(this) as T; }
-        public SObject GetDatum(SObject obj)
+        public Value GetDatum(AST ast)
         {
-            if (obj == null) return null;
-            if (obj is Syntax) return (obj as Syntax).GetDatum();
-            if (obj is AST) return (obj as AST).GetDatum();
-            if (obj is Pair)
-            {
-                Pair curent = obj as Pair;
-                Pair first = new Pair();
-                Pair last = first;
-                while (curent != null)
-                {
-                    last.Car = GetDatum(curent.Car);
-                    if (curent.Cdr is Pair)
-                    {
-                        curent = curent.Cdr as Pair;
-                        last.Cdr = new Pair();
-                        last = last.Cdr as Pair;
-                    }
-                    else
-                    {
-                        // . syntax
-                        last.Cdr = GetDatum(curent.Cdr);
-                        curent = null;
-                        break;
-                    }
-                }
-                return first;
-            }
-            return obj;
+            return ast.GetDatum();
         }
-        #region SObject Methods
-        public override SBool AsBool() { return SBool.True; }
+        public Value GetDatum(Syntax syn)
+        {
+            return syn.AsDatum();
+        }
+        public Value GetDatum(Value value)
+        {
+            if (value == null) return Value.Nill;
+            if (value.IsSyntax)
+                return value.AsSyntax().AsDatum();
+            if (value.IsAST)
+                return value.AsAST().GetDatum();
+            if (value.IsValueList)
+                return GetDatum(value.AsValueList());
+            if (value.IsValueVector)
+                return GetDatum(value.AsValueVector());
+            return new Value(value);
+        }
+        public Value GetDatum(ValueList list)
+        {
+            ValueList result = new ValueList();
+            foreach (var curent in list)
+                result.AddLast(curent.AsAST().GetDatum());
+            return new Value(result);
+        }
+        public Value GetDatum(ValueVector vector)
+        {
+            ValueVector result = new ValueVector(vector.Count);
+            foreach (var curent in vector)
+                result.Add(curent.AsAST().GetDatum());
+            return new Value(result);
+        }
+
+        #region ValueType Methods
+        public override bool AsBool() { return true; }
         public override string AsString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast{0}>", GetLocationString()); }
         #endregion
@@ -105,9 +110,9 @@ namespace VARP.Scheme.Stx
         public AstLiteral(Syntax stx) : base(stx)
         {
         }
-        public override SObject GetDatum() { return GetDatum(Expression); }
+        public override Value GetDatum() { return GetDatum(Expression); }
 
-        #region SObject Methods
+        #region ValueType Methods
         public override string AsString() { return Expression.AsString(); }
         public override string Inspect()
         {
@@ -124,9 +129,9 @@ namespace VARP.Scheme.Stx
         {
             Binding = binding;
         }
-        public override SObject GetDatum() { return GetDatum(Expression); }
+        public override Value GetDatum() { return GetDatum(Expression); }
 
-        #region SObject Methods
+        #region ValueType Methods
         public override string AsString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast-ref{0} {1}>", GetLocationString(), Binding.Identifier); }
         #endregion
@@ -146,9 +151,9 @@ namespace VARP.Scheme.Stx
             this.Value = value;
             this.Binding = binding;
         }
-        public override SObject GetDatum() { return Pair.ListFromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value)); }
+        public override Value GetDatum() { return ValueList.ListFromArguments(Expression.AsDatum(), Variable.AsDatum(), GetDatum(Value)).ToValue(); }
 
-        #region SObject Methods
+        #region ValueType Methods
         public override string AsString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast-set{0} {1} {2}>", GetLocationString(), Variable.AsString(), Inspector.Inspect(Value)); }
         #endregion
@@ -169,9 +174,9 @@ namespace VARP.Scheme.Stx
             this.Value = value;
             this.Binding = binding;
         }
-        public override SObject GetDatum() { return Pair.ListFromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value)); }
+        public override Value GetDatum() { return ValueList.ListFromArguments(Expression.AsDatum(), Variable.AsDatum(), GetDatum(Value)).ToValue(); }
 
-        #region SObject Methods
+        #region ValueType Methods
         public override string AsString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast-def{0} {1} {2}>", GetLocationString(), Variable.AsString(), Inspector.Inspect(GetDatum(Value))); }
         #endregion
@@ -192,14 +197,14 @@ namespace VARP.Scheme.Stx
             this.thenExperssion = then;
             this.elseExpression = els;
         }
-        public override SObject GetDatum()
+        public override Value GetDatum()
         {
             if (elseExpression == null)
-                return Pair.ListFromArguments(Keyword.GetDatum(), GetDatum(condExpression), GetDatum(thenExperssion));
+                return ValueList.ListFromArguments(Keyword.AsDatum(), GetDatum(condExpression), GetDatum(thenExperssion)).ToValue();
             else
-                return Pair.ListFromArguments(Keyword.GetDatum(), GetDatum(condExpression), GetDatum(thenExperssion), GetDatum(elseExpression));
+                return ValueList.ListFromArguments(Keyword.AsDatum(), GetDatum(condExpression), GetDatum(thenExperssion), GetDatum(elseExpression)).ToValue();
         }
-        #region SObject Methods
+        #region ValueType Methods
         public override string AsString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast-if{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum())); }
         #endregion
@@ -209,29 +214,25 @@ namespace VARP.Scheme.Stx
     public sealed class AstConditionCond : AST
     {
         public Syntax Keyword;
-        public Pair Conditions;     //< list of pairs
-        public Pair ElseCase;       //< else condition
+        public ValueList Conditions;     //< list of pairs
+        public ValueList ElseCase;       //< else condition
 
-        public AstConditionCond(Syntax syntax, Syntax keyword, Pair conditions, Pair elseCase) : base(syntax)
+        public AstConditionCond(Syntax syntax, Syntax keyword, ValueList conditions, ValueList elseCase) : base(syntax)
         {
             this.Keyword = keyword;
             this.Conditions = conditions;
             this.ElseCase = elseCase;
         }
-        public override SObject GetDatum()
+        public override Value GetDatum()
         {
-
-            Pair conditions = GetDatum(Conditions) as Pair;
-            if (ElseCase != null)
-            {
-                Pair else_case = new Pair(GetDatum(ElseCase), null);
-                conditions = Pair.Append(conditions, else_case) as Pair;
-            }
-            return new Pair(Keyword.GetDatum(), conditions);
-
+            ValueList resut = new ValueList();
+            resut.AddLast(Keyword.AsDatum());
+            resut.Append(GetDatum(Conditions).AsValueList());
+            resut.Append(GetDatum(ElseCase).AsValueList());
+            return resut.ToValue();
         }
 
-        #region SObject Methods
+        #region ValueType Methods
         public override string AsString() { return base.ToString(); }
         public override string Inspect()
         {
@@ -244,18 +245,21 @@ namespace VARP.Scheme.Stx
     public sealed class AstPrimitive : AST
     {
         public Syntax Identifier;
-        public Pair Arguments;
-        public AstPrimitive(Syntax syntax, Syntax identifier, Pair arguments) : base(syntax)
+        public ValueList Arguments;
+        public AstPrimitive(Syntax syntax, Syntax identifier, ValueList arguments) : base(syntax)
         {
             this.Identifier = identifier;
             this.Arguments = arguments;
         }
-        public override SObject GetDatum()
+        public override Value GetDatum()
         {
-            return new Pair(Identifier.GetDatum(), GetDatum(Arguments));
+            ValueList resut = new ValueList();
+            resut.AddLast(Identifier.AsDatum());
+            resut.Append(GetDatum(Arguments).AsValueList());
+            return resut.ToValue();
         }
 
-        #region SObject Methods
+        #region ValueType Methods
         public override string AsString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast-prim{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum())); }
         #endregion
@@ -264,16 +268,16 @@ namespace VARP.Scheme.Stx
     // application e.g. (f 1 2)
     public sealed class AstApplication : AST
     {
-        Pair expression;
-        public AstApplication(Syntax syntax, Pair expression) : base(syntax)
+        ValueList expression;
+        public AstApplication(Syntax syntax, ValueList expression) : base(syntax)
         {
             this.expression = expression;
         }
-        public override SObject GetDatum()
+        public override Value GetDatum()
         {
             return GetDatum(expression);
         }
-        #region SObject Methods
+        #region ValueType Methods
         public override string AsString() { return base.ToString(); }
         public override string Inspect()
         {
@@ -286,68 +290,31 @@ namespace VARP.Scheme.Stx
     // lambda expression   e.g. (lambda(x) x)
     public sealed class AstLambda : AST
     {
-        public Syntax Keyword;       // (<lambda> (...) ...)
-        public Arguments ArgList;  // (lambda <(...)> )
-        public Pair BodyExpression;  // (lambda (...) <...>)
-        public AstLambda(Syntax syntax, Syntax keyword, Arguments arguments, Pair expression) : base(syntax)
+        public Syntax Keyword;              // (<lambda> (...) ...)
+        public Arguments ArgList;           // (lambda <(...)> )
+        public ValueList BodyExpression;    // (lambda (...) <...>)
+        public AstLambda(Syntax syntax, Syntax keyword, Arguments arguments, ValueList expression) : base(syntax)
         {
             this.ArgList = arguments;
             this.BodyExpression = expression;
-            if (keyword.GetDatum() == Symbol.LAMBDA)
+            if (keyword.AsDatum() == Symbol.LAMBDA)
                 this.Keyword = keyword;
             else
                 this.Keyword = new Syntax(Symbol.LAMBDA, keyword.location);
         }
-        public override SObject GetDatum()
+        public override Value GetDatum()
         {
+            ValueList list = new ValueList();
 
-            Pair args = null;
-            Pair last = null;
+            list.AddLast(Keyword.AsDatum());
+            list.AddLast(ArgList.AsDatum());
+            list.AddLast(GetDatum(BodyExpression));
 
-            if (ArgList != null)
-            {
-                Pair req = ArgList.required;
-                Pair opt = ArgList.optional;
-                Pair key = ArgList.key;
-                Pair rst = ArgList.rest;
-
-                Pair.Duplicate(req, ref args, ref last);
-
-                if (opt != null)
-                {
-                    Pair.Duplicate(opt, ref last.Cdr, ref last);
-                }
-                if (key != null)
-                {
-                    Pair.Duplicate(key, ref last.Cdr, ref last);
-                }
-                if (rst != null)
-                {
-                    switch (rst.Count)
-                    {
-                        case 0:
-                            break;
-                        case 1:
-                            if (true)
-                                throw SchemeError.SyntaxError("duplicate", "lambda: too many &rest arguments: " , Expression, rst);
-                            else
-                                last.Cdr = rst.Car;
-                            break;
-                        case 2:
-                            Pair.Duplicate(rst, ref last.Cdr, ref last);
-                            break;
-                        default:
-                            throw SchemeError.SyntaxError("duplicate", "lambda: too many &rest arguments: ", Expression, rst);
-                    }
-                }
-            }
-            Pair list = Pair.ListFromArguments(ref last, Keyword.GetDatum(), GetDatum(args));
-            last.Cdr = GetDatum(BodyExpression);
-            return list;
-
+            return list.ToValue();
+     
         }
 
-        #region SObject Methods
+        #region ValueType Methods
         public override string AsString() { return base.ToString(); }
         public override string Inspect()
         {
@@ -360,18 +327,21 @@ namespace VARP.Scheme.Stx
     public sealed class AstSequence : AST
     {
         public Syntax Keyword;
-        public Pair BodyExpression;
-        public AstSequence(Syntax syntax, Syntax keyword, Pair expression) : base(syntax)
+        public ValueList BodyExpression;
+        public AstSequence(Syntax syntax, Syntax keyword, ValueList expression) : base(syntax)
         {
             this.Keyword = keyword;
             this.BodyExpression = expression;
         }
-        public override SObject GetDatum()
+        public override Value GetDatum()
         {
-            return new Pair(Keyword.GetDatum(), GetDatum(BodyExpression));
+            ValueList resut = new ValueList();
+            resut.AddLast(Keyword.AsDatum());
+            resut.Append(GetDatum(BodyExpression).AsValueList());
+            return resut.ToValue();
         }
 
-        #region SObject Methods
+        #region ValueType Methods
         public override string AsString() { return base.ToString(); }
         public override string Inspect()
         {

@@ -35,7 +35,7 @@ namespace VARP.Scheme.Tokenizing
     /// Using class instead of structure let you in future strip
     /// out of runtime debugging information
     /// </summary>
-    public sealed class Location : SObject
+    public sealed class Location : ValueClass
     {
         public int LineNumber; 
         public int ColNumber;

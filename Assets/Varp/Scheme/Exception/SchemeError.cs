@@ -153,9 +153,10 @@ namespace VARP.Scheme.Exception
             return string.Format("{0}{1}: contract violation\n   expected: {2}\n   given: {3}\n  argument position: {4}\n  other arguments...:\n{5}", loc, name, expected, badPos, badStr, argStr);
         }
 
-        public static string ArgumentErrorMessage(string name, string expected, int badPos, Pair vals)
+        public static string ArgumentErrorMessage(string name, string expected, int badPos, ValueList vals)
         {
-            SObject[] array = Pair.ToArray(vals);
+            Value[] array = new Value[vals.Count];
+            vals.CopyTo(array, 0);
             return ArgumentErrorMessage(name, expected, badPos, array);
         }
 
@@ -168,7 +169,7 @@ namespace VARP.Scheme.Exception
         {
             return new SchemeError(ResultErrorMessage(name, expected, badPos, vals));
         }
-        public static SchemeError ArgumentError(string name, string expected, int badPos, Pair val)
+        public static SchemeError ArgumentError(string name, string expected, int badPos, ValueList val)
         {
             return new SchemeError(ResultErrorMessage(name, expected, val));
         }
@@ -274,7 +275,7 @@ namespace VARP.Scheme.Exception
             /// <param name="argv">arguments</param>
             /// <param name="expression">the expression whenre happens error</param>
             /// <returns></returns>
-        public static string ArityErrorMessage(string name, string message, int expected, int given, Pair argv, Syntax expression)
+        public static string ArityErrorMessage(string name, string message, int expected, int given, ValueList argv, Syntax expression)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(GetLocationString(expression));
@@ -288,7 +289,7 @@ namespace VARP.Scheme.Exception
             return sb.ToString();
         }
 
-        public static SchemeError ArityError(string name, string message, int expected, int given, Pair argv, Syntax expression)
+        public static SchemeError ArityError(string name, string message, int expected, int given, ValueList argv, Syntax expression)
         {
             return new SchemeError(ArityErrorMessage(name, message, expected, given, argv, expression));
         }
@@ -306,9 +307,9 @@ namespace VARP.Scheme.Exception
         /// <param name="expression">expression where happen error</param>
         /// <param name="subexpression">exact token or syntax where happen error</param>
         /// <returns></returns>
-        public static string SyntaxErrorMessage(string name, string message, SObject expression, SObject subexpression = null)
+        public static string SyntaxErrorMessage(string name, string message, object expression, object subexpression = null)
         {
-            string expressionStr = Inspect(expression.GetDatum());
+            string expressionStr = Inspect(expression);
             if (subexpression == null)
             {
                 string loc = GetLocationString(expression);
@@ -317,12 +318,12 @@ namespace VARP.Scheme.Exception
             else
             {
                 string loc = GetLocationString(subexpression);
-                string subexpressionStr = Inspect(expression.GetDatum());
+                string subexpressionStr = Inspect(expression);
                 return string.Format("{0}: {1}: {2} in: {3}\n error syntax: {4}", loc, name, message, expressionStr);
             }
         }
 
-        public static SchemeError SyntaxError(string name, string message, SObject expression, SObject subexpression = null)
+        public static SchemeError SyntaxError(string name, string message, object expression, object subexpression = null)
         {
             return new SchemeError(SyntaxErrorMessage(name, message, expression, subexpression));
         }
@@ -342,8 +343,10 @@ namespace VARP.Scheme.Exception
         {
             if (o == null)
                 return "()";
-            if (o is SObject)
-                return (o as SObject).AsString();
+            if (o is Value)
+                return ((Value)o).AsString();
+            if (o is ValueClass)
+                return (o as ValueClass).AsString();
             return o.ToString();
         }
     }

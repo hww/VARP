@@ -36,29 +36,30 @@ namespace VARP.Scheme.Stx.Primitives
         // (cond () ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.GetList();    //< list of syntax objects
+            Pair list = stx.AsList();    //< list of syntax objects
             int argc = GetArgsCount(list);
 
-            Syntax keyword = list.Car as Syntax;
+            Syntax keyword = list.Car.AsSyntax();
             Pair elsecase = null;
             Pair first = null;
             Pair last = null;
 
-            foreach (Syntax conditional_stx in list.Cdr as Pair)
+            foreach (Value conditional_val in list.Cdr.ToPair())
             {
+                Syntax conditional_stx = conditional_val.AsSyntax();
                 if (elsecase != null) throw SchemeError.SyntaxError("cond", "unexpected expression after condition's else clause", conditional_stx);
-                if (conditional_stx.IsSyntaxExpression)
+                if (conditional_stx.IsExpression)
                 {
                     // Get single conditional expression
-                    Pair conditional_list = conditional_stx.GetList();
+                    Pair conditional_list = conditional_stx.AsList();
                     // Check arguments count, should be 2 for each condition
                     int size = Pair.Length(conditional_list);
                     if (size != 2) throw SchemeError.ArityError("cond", "arity missmach", 2, size, conditional_list, conditional_stx);
                     // Now get condition and it's expression
-                    Syntax var = conditional_list[0] as Syntax;
-                    Syntax val = conditional_list[1] as Syntax;
+                    Syntax var = conditional_list[0].AsSyntax();
+                    Syntax val = conditional_list[1].AsSyntax();
 
-                    if (var.IsSyntaxIdentifier && var.GetIdentifier() == Symbol.ELSE)
+                    if (var.IsIdentifier && var.AsIdentifier() == Symbol.ELSE)
                     {
                         elsecase = Pair.ListFromArguments(var, AstBuilder.Expand(val, env));
                     }
@@ -71,10 +72,10 @@ namespace VARP.Scheme.Stx.Primitives
                             first = last = new Pair();
                         else
                         {
-                            last.Cdr = new Pair();
-                            last = last.Cdr as Pair;
+                            last.Cdr.Set(new Pair());
+                            last = last.Cdr.ToPair();
                         }
-                        last.Car = single_cond;
+                        last.Car.Set(single_cond);
                     }
                 }
                 else

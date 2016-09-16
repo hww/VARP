@@ -42,7 +42,7 @@ namespace SchemeUnit
         //Parser terp = new Parser();
         Pair ParseScheme(string expression)
         {
-            return AstBuilder.Expand(expression, "PairTes.cs").GetDatum() as Pair;
+            return AstBuilder.Expand(expression, "PairTes.cs").GetDatum().ToPair();
         }
 
 		[Test]
@@ -121,16 +121,16 @@ namespace SchemeUnit
 
             Assert.AreEqual(null, shortList.GetLoopHead());
 
-			for (int x=0; x<9; x++) lastElement = (Pair)lastElement.Cdr;
-			for (int x=0; x<3; x++) loopElement = (Pair)loopElement.Cdr;
+			for (int x=0; x<9; x++) lastElement = lastElement.Cdr.ToPair();
+			for (int x=0; x<3; x++) loopElement = loopElement.Cdr.ToPair();
 
-			Assert.AreEqual(10, (SInteger)lastElement.Car);
-			Assert.AreEqual(4, (SInteger)loopElement.Car);
+			Assert.AreEqual(10, lastElement.Car);
+			Assert.AreEqual(4, loopElement.Car);
 
 			// Make a loop
 			lastElement.Cdr = loopElement;
 
-			Assert.AreEqual(4, (SInteger)(shortList.GetLoopHead().Car));
+			Assert.AreEqual(4, shortList.GetLoopHead().Car);
 			Assert.AreEqual(loopElement, shortList.GetLoopHead());
 		}
 
@@ -161,7 +161,7 @@ namespace SchemeUnit
 
             Assert.AreEqual(size0, size1);
             Assert.AreEqual(size1, size2);
-            Assert.AreEqual(10, (SInteger)last.Car);
+            Assert.AreEqual(10, last.Car);
 
             for (int x = 0; x < size1; x++)
                 Assert.AreNotEqual((list1.PairAtIndex(x) as object), (list2.PairAtIndex(x).GetHashCode() as object));

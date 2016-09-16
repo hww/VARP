@@ -37,7 +37,7 @@ namespace VARP.Scheme.Stx
     /// <summary>
     /// Class that reads symbols from a Tokenizer and turns them into an object
     /// </summary>
-    public sealed class Parser
+    public sealed class Parser : ValueClass
     {
 
         /// <summary>
@@ -84,23 +84,23 @@ namespace VARP.Scheme.Stx
                 //    return thisToken; //TODO maybe exception or symbol .
 
                 case TokenType.Character:
-                    return new Syntax(new SChar(thisToken.GetCharacter()), thisToken);
+                    return new Syntax(new Value(thisToken.GetCharacter()), thisToken);
 
                 case TokenType.Boolean:
-                    return new Syntax(new SBool(thisToken.GetBool()), thisToken);
+                    return new Syntax(new Value(thisToken.GetBool()), thisToken);
 
                 case TokenType.String:
-                    return new Syntax(new SString(thisToken.GetString()), thisToken);
+                    return new Syntax(new Value(thisToken.GetString()), thisToken);
 
                 case TokenType.Symbol:
                     return new Syntax(thisToken.GetSymbol(), thisToken);
 
                 case TokenType.Heximal:
                 case TokenType.Integer:
-                    return new Syntax(new SInteger(thisToken.GetInteger()), thisToken);
+                    return new Syntax(new Value(thisToken.GetInteger()), thisToken);
 
                 case TokenType.Floating:
-                    return new Syntax(new SFloat(thisToken.GetFloat()), thisToken);
+                    return new Syntax(new Value(thisToken.GetFloat()), thisToken);
 
                 case TokenType.OpenBracket:
                     return ParseList(thisToken, moreTokens);
@@ -137,8 +137,11 @@ namespace VARP.Scheme.Stx
             }
             Syntax quote_stx = new Syntax(quote, thisToken);
             Token nextToken = moreTokens.ReadToken();
-            SObject quoted = ParseToken(nextToken, moreTokens);
-            return new Syntax(new Pair(quote_stx, new Pair(quoted, null)), thisToken);
+            Syntax quoted = ParseToken(nextToken, moreTokens);
+            LinkedList<Syntax> list = new LinkedList<Syntax>();
+            list.AddLast(quote_stx);
+            list.AddLast(quoted);
+            return new Syntax(list, thisToken);
         }
 
         private static Syntax ParseDot(Token thisToken, Tokenizer moreTokens)
@@ -149,7 +152,7 @@ namespace VARP.Scheme.Stx
         private static Syntax ParseList(Token thisToken, Tokenizer moreTokens)
         {
             // Is a list/vector
-            List<SObject> listContents = new List<SObject>();
+            List<object> listContents = new List<object>();
             Token dotToken = null;
 
             Token nextToken = moreTokens.ReadToken();
@@ -163,7 +166,6 @@ namespace VARP.Scheme.Stx
                 if (nextToken == null)
                     throw SchemeError.SyntaxError("parser", "Improperly formed list.", dotToken);
 
-                //if (!improper && nextToken.Type == TokenType.Symbol && dotSymbol.Equals(nextToken.Value) && thisToken.Type == TokenType.OpenBracket)
                 if (nextToken.Type == TokenType.Dot)
                 {
                     if (dotToken != null || thisToken.Type != TokenType.OpenBracket)
@@ -190,21 +192,24 @@ namespace VARP.Scheme.Stx
 
             if (dotToken != null)
             {
-                return new Syntax(Pair.ListFromCollection(listContents, true), thisToken);
+                if (listContents.Count == 2)
+                    return new Syntax(new ValuePair(listContents[0], listContents[1]), thisToken);
+                else
+                    throw SchemeError.SyntaxError("parser", "improper dot syntax", thisToken);
             }
             else
             {
                 if (listContents.Count == 0)
                     return new Syntax(null, thisToken);
                 else
-                    return new Syntax(Pair.ListFromCollection(listContents), thisToken);
+                    return new Syntax(new ValueList(listContents), thisToken);
             }
 
         }
 
         private static Syntax ParseVector(Token thisToken, Tokenizer moreTokens)
         {
-            List<SObject> listContents = new List<SObject>();
+            List<object> listContents = new List<object>();
             Token dotToken = null;
 
             Token nextToken = moreTokens.ReadToken();
@@ -226,7 +231,7 @@ namespace VARP.Scheme.Stx
             if (nextToken == null) // Missing ')'
                 throw SchemeError.SyntaxError("parser", "Missing close parenthesis", thisToken);
 
-            return new Syntax(new SVector(listContents), thisToken);
+            return new Syntax(new ValueVector(listContents), thisToken);
         }
 
         /// <summary>

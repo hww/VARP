@@ -36,15 +36,15 @@ namespace VARP.Scheme.Stx.Primitives
         // (set! x (+ 1 2))
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.GetList();
+            Pair list = stx.AsList();
             int argc = GetArgsCount(list);
             AssertArgsEqual("set!", "arity mismatch", 2, argc, list, stx);
 
-            Syntax set_kwd = list[0] as Syntax;
-            Syntax var_stx = list[1] as Syntax;
-            Syntax val_stx = list[2] as Syntax;
+            Syntax set_kwd = list[0].AsSyntax();
+            Syntax var_stx = list[1].AsSyntax();
+            Syntax val_stx = list[2].AsSyntax();
 
-            Symbol var_id = var_stx.GetIdentifier();
+            Symbol var_id = var_stx.AsIdentifier();
             Binding binding = env.Lookup(var_id); // TODO! Maybe error when it is not defined
             if (binding == null) env.DefineVariable(var_id);
 

@@ -30,24 +30,51 @@ using System;
 
 namespace VARP.Scheme.Stx
 {
+    using DataStructures;
     using Data;
     using Exception;
     using REPL;
 
     public sealed class Arguments
     {
+        public Syntax expression; //< the expression where this arguments
+        public Syntax optionalStx;
+        public Syntax keyStx;
+        public Syntax restStx;
+        public Syntax bodyStx;
         // -------------------------------------------------------------
         //  Example: (lambda (v1 v2 :optional o1 (o2 1) :key k1 (k2 2) :rest r)
         // -------------------------------------------------------------
-        public Pair required;   //< (v1 v2)
-        public Pair optional;   //< (:optional o1 (o2 1))    
-        public Pair key;        //< (:key k1 (k2 2))    
-        public Pair rest;       //< (:rest r)
-        public Pair body;       //< ??
+        public ValueList required;   //< (v1 v2)
+        public ValueList optional;   //< (:optional o1 (o2 1))    
+        public ValueList key;        //< (:key k1 (k2 2))    
+        public ValueList rest;       //< (:rest r)
+        public AST body;       //< (:body b) TODO
         // -------------------------------------------------------------
         //  Example: (let ((x 1) (y 2)) ...)
         // -------------------------------------------------------------
-        public Pair values;     //< (1 2)
+        public ValueList values;     //< (1 2)
+
+        public Value AsDatum()
+        {
+            ValueList result = new ValueList();
+            result.Append(required);
+            if (optionalStx != null)
+            {
+                result.AddLast(optionalStx);
+                result.Append(optional);
+            }
+            if (keyStx != null)
+            {
+                result.AddLast(keyStx);
+                result.Append(key);
+            }
+            if (restStx != null)
+            {
+                result.AddLast(rest);
+            }
+            return result.ToValue();
+        }
     }
 
     public sealed class ArgumentsList
@@ -58,228 +85,175 @@ namespace VARP.Scheme.Stx
             Optionals,      // (lambda (x y #!optional z) ...)
             Key,            // (lambda (x y #!key z) ...)
             Rest,           // (lambda (x y #!rest z) ...)
+            Body,           // (lambda (x y #!body z) ...)
             End             // after #!res value
         }
 
+        delegate void AddDelegate(ref ValueList first, ref ValueList last, ValueClass obj);
 
-
-        delegate void AddDelegate(ref Pair first, ref Pair last, SObject obj);
-
-        // @arguments is the list of syntax objects: (syntax syntax syntax ...)
-        // result is the structure Arguments
-        // the variable names as syntaxes, but initializers as AST
-        public static void Parse(Pair arguments, Environment env, ref Arguments args)
+        /// <summary>
+        /// The result structure has lists of arguments where
+        /// the variable names as syntaxes, but initializers as AST
+        /// </summary>
+        /// <param name="expression">expression where this aregumens located</param>
+        /// <param name="arguments">the arguments list (syntax syntax syntax ...)</param>
+        /// <param name="env">environment</param>
+        /// <param name="args">destination arguments structure</param>
+        public static void Parse(Syntax expression, ValueList arguments, Environment env, ref Arguments args)
         {
-            if (arguments == null) return ;
+            args.expression = expression;
 
-            Pair curent = arguments;
+            args.required = new ValueList();
+            args.optional = new ValueList();
+            args.key = new ValueList();
+            args.rest = new ValueList();
 
-            Pair required = null;
-            Pair optional = null;
-            Pair key = null;
-            Pair rest = null;
-
-            Pair required_last = null;
-            Pair optional_last = null;
-            Pair key_last = null;
-            Pair rest_last = null;
+            if (arguments == null) return;
 
             ArgumentsList.Type arg_type = ArgumentsList.Type.Required;
 
-            AddDelegate Add = (ref Pair first, ref Pair last, SObject obj) =>
-            {
-                if (last == null)
-                {
-                    first = last = new Pair(obj, null);
-                    return;
-                }
-
-                last.Cdr = new Pair(obj, null);
-                last = last.Cdr as Pair;
-            };
-
+            /// ----------------------------------------------------------------------
+            /// Waiting for the DSSSL keywords, when found change mode and return true
+            /// ----------------------------------------------------------------------
             Func<Syntax, bool> SymbolToArgumentType = (Syntax stx) =>
             {
-                if (!(stx.GetDatum() is Symbol)) return false;
+                if (!stx.IsSymbol) return false;
 
-                Symbol symbol = stx.GetDatum<Symbol>();
+                Symbol symbol = stx.AsDatum().AsSymbol();
 
                 if (symbol == Symbol.OPTIONAL)
-                {
                     arg_type = Type.Optionals;
-                    if (optional == null) optional = optional_last = new Pair(stx, null);
-                }
                 else if (symbol == Symbol.KEY)
-                {
                     arg_type = Type.Key;
-                    if (key == null) key = key_last = new Pair(stx, null);
-                }
                 else if (symbol == Symbol.REST)
-                {
                     arg_type = Type.Rest;
-                    if (rest == null) rest = rest_last = new Pair(stx, null);
-                }
+                else if (symbol == Symbol.BODY)
+                    arg_type = Type.Body;
                 else
-                {
                     return false;
-                }
                 return true;
             };
 
-            while (curent != null)
+            foreach (var arg in arguments)
             {
-                Syntax arg = curent.Car as Syntax;
-                if (!SymbolToArgumentType(arg))
+                Syntax argstx = arg.AsSyntax();
+
+                if (!SymbolToArgumentType(argstx))
                 {
                     switch (arg_type)
                     {
                         case Type.Required:
-                            if (arg.IsSyntaxIdentifier)
-                                Add(ref required, ref required_last, arg);
+                            if (argstx.IsIdentifier)
+                                args.required.AddLast(arg);
                             else
-                                throw SchemeError.ArgumentError("lambda", "symbol?", arg);
+                                throw SchemeError.ArgumentError("lambda", "symbol?", argstx);
                             break;
 
                         case Type.Optionals:
-                            if (arg.IsSyntaxIdentifier)
-                                Add(ref optional, ref optional_last, MakeArgPair(arg, arg, env));
-                            else if (arg.IsSyntaxExpression)
-                                Add(ref optional, ref optional_last, MakeArgPair(arg, arg.GetList(), env));
+                            if (argstx.IsIdentifier)
+                                args.optional.AddLast(MakeArgPair("lambda", argstx, argstx, env));
+                            else if (argstx.IsExpression)
+                                args.optional.AddLast(MakeArgPair("lambda", argstx, argstx.AsList(), env));
                             else
-                                throw SchemeError.ArgumentError("lamba", "list?", arg);
+                                throw SchemeError.ArgumentError("lambda", "list?", argstx);
                             break;
 
                         case Type.Key:
-                            if (arg.IsSyntaxIdentifier)
-                                Add(ref optional, ref optional_last, MakeArgPair(arg, arg, env));
-                            else if (arg.IsSyntaxExpression)
-                                Add(ref key, ref key_last, MakeArgPair( arg, arg.GetList(), env));
+                            if (argstx.IsIdentifier)
+                                args.key.AddLast(MakeArgPair("lambda", argstx, argstx, env));
+                            else if (argstx.IsExpression)
+                                args.key.AddLast(MakeArgPair("lambda", argstx, argstx.AsList(), env));
                             else
-                                throw SchemeError.ArgumentError("lamba", "list?", arg);
+                                throw SchemeError.ArgumentError("lambda", "list?", argstx);
                             break;
 
                         case Type.Rest:
-                            if (arg.IsSyntaxIdentifier)
-                                Add(ref rest, ref rest_last, arg);
+                            if (argstx.IsIdentifier)
+                                args.rest.AddLast(arg);
                             else
-                                throw SchemeError.ArgumentError("lamba", "symbol?", arg);
+                                throw SchemeError.ArgumentError("lambda", "symbol?", argstx);
                             arg_type = Type.End;
                             break;
+
+                        case Type.Body:
+                            args.body = AstBuilder.Expand(argstx, env);
+                            arg_type = Type.End;
+                            break;
+
                         case Type.End:
-                            throw SchemeError.SyntaxError("lambda", "unexpected extra argument", arg);
+                            throw SchemeError.SyntaxError("lambda", "unexpected extra argument", argstx);
+                    }
+                } else
+                {
+                    switch (arg_type)
+                    {
+                        case Type.Optionals:
+                            args.optionalStx = argstx;
+                            break;
+                        case Type.Key:
+                            args.keyStx = argstx;
+                            break;
+                        case Type.Rest:
+                            args.restStx = argstx;
+                            break;
+                        case Type.Body:
+                            args.bodyStx = argstx;
+                            break;
+
                     }
                 }
-                    if (curent.Cdr == null) break;
-                    if (curent.Cdr is Data.Pair)
-                    {
-                        curent = curent.Cdr as Data.Pair;
-                    }
-                    else
-                    {
-                        if (true)
-                        {
-                            throw SchemeError.SyntaxError("lambda", "unexpected dot syntax in arguments",arg);
-                        }
-                        else
-                        {
-                            if (rest == null)
-                            {
-                                rest = Pair.ListFromArguments(new AstLiteral(curent.Cdr as Syntax), null);
-                            }
-                            else
-                                throw SchemeError.SyntaxError("lambda", "bad argument after '.'", curent.Cdr);
-                            curent = null;
-                        }
-                    }
-
-
             }
-            args.required = required;
-            args.optional = optional;
-            args.key = key;
-            args.rest = rest; 
         }
 
-        public static void ParseLetList(Pair arguments, Environment env, ref Arguments args)
+        public static void ParseLetList(Syntax expression, ValueList arguments, Environment env, ref Arguments args)
         {
+            args.expression = expression;
+
+            args.required = new ValueList();
+            args.values = new ValueList();
+
             if (arguments == null)
-            {
                 return;
-            }
 
-            Pair curent = arguments;
-
-            Pair vars = null;
-            Pair vals = null;
-
-            Pair vars_last = null;
-            Pair vals_last = null;
-
-            AddDelegate Add = (ref Pair first, ref Pair last, SObject obj) =>
+            foreach (var arg in arguments)
             {
-                if (last == null)
+                Syntax argstx = arg.AsSyntax();
+                if (argstx.IsExpression)
                 {
-                    first = last = new Pair(obj, null);
-                    return;
-                }
-
-                last.Cdr = new Pair(obj, null);
-                last = last.Cdr as Pair;
-            };
-
-            while (curent != null)
-            {
-                Syntax arg = curent.Car as Syntax;
-                if (arg.IsSyntaxExpression)
-                {
-                    Pair arg_pair = MakeArgPair(arg, arg.GetList(), env);
-                    Add(ref vars, ref vars_last, arg_pair[0]);
-                    Add(ref vals, ref vals_last, arg_pair[1]);
+                    ValuePair arg_pair = MakeArgPair("let", argstx, argstx.AsList(), env).AsValuePair();
+                    args.required.AddLast(arg_pair.Item1);
+                    args.values.AddLast(arg_pair.Item2);
                 }
                 else
-                    throw SchemeError.ArgumentError("let", "list?", arg);
-
-                if (curent.Cdr == null) break;
-                if (curent.Cdr is Data.Pair)
-                {
-                    curent = curent.Cdr as Data.Pair;
-                }
-                else
-                {
-                    throw SchemeError.SyntaxError("let", "unexpected dot syntax in arguments", arg);
-                }
+                    throw SchemeError.ArgumentError("let", "list?", argstx);
             }
-            args.required = vars;
-            args.values = vals;
         }
 
         /// <summary>
         /// Build argument pair from identifier and initializer only (lambda (:optional (x 1) (y 2) (z 3)) ...)
         /// </summary>
-        static Pair MakeArgPair(Syntax stx, Pair list, Environment env)
+        static Value MakeArgPair(string name, Syntax stx, ValueList list, Environment env)
         {
-            int argc = Data.Pair.Length(list);
+            int argc = list.Count;
             if (argc != 2) throw SchemeError.ArityError("let", "lambda: bad &key or &optional argument", 2, argc, list, stx);
 
-            Syntax a = list[0] as Syntax;
-            Syntax b = list[1] as Syntax;
+            Syntax a = list[0].AsSyntax();
+            Syntax b = list[1].AsSyntax();
 
-            if (!a.IsSyntaxIdentifier)
-                SchemeError.ArgumentError("lambda or let", "symbol?", a);
+            if (!a.IsIdentifier)
+                SchemeError.ArgumentError(name, "symbol?", a);
 
-            return Pair.ListFromArguments(a, AstBuilder.Expand(b, env));
+            return new Value(new ValuePair(a, AstBuilder.Expand(b, env)));
         }
         /// <summary>
         /// Build argument pair from identifier only (lambda (:optional x y z) ...)
         /// </summary>
-        static Pair MakeArgPair(Syntax stx, Syntax identifier, Environment env)
+        static Value MakeArgPair(string name, Syntax stx, Syntax identifier, Environment env)
         {
-            if (!identifier.IsSyntaxIdentifier)
-                SchemeError.ArgumentError("lambda", "symbol?", identifier);
+            if (!identifier.IsIdentifier)
+                SchemeError.ArgumentError(name, "symbol?", identifier);
 
-            Pair pair = Pair.ListFromArguments(identifier, new AstLiteral(Syntax.False));
-
-            return pair;
+            return new Value(new ValuePair(identifier, new AstLiteral(Syntax.False)));
         }
     }
 }

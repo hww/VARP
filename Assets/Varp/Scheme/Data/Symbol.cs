@@ -32,7 +32,7 @@ namespace VARP.Scheme.Data
     /// <summary>
     /// Class representing a scheme symbol
     /// </summary>
-    public sealed class Symbol : SObject, ISymbolic
+    public sealed class Symbol : ValueClass
     {
         private string name;    //< symbol's name
         private bool keyword;   //< is this symbol the keyword
@@ -53,19 +53,12 @@ namespace VARP.Scheme.Data
         /// </summary>
         public string Name { get { return name; } }
 
-        #region SObject Methods
+        #region ValueType Methods
 
-        public override SBool AsBool() { return SBool.True; }
+        public override bool AsBool() { return true; }
         public override string AsString() { return Name; }
-        public override bool IsLiteral { get { return keyword; } }
-        public override bool IsIdentifier { get { return !keyword; } }
-        #endregion
-
-        #region ISymbolic
-
-        Scheme.Data.Symbol Scheme.Data.ISymbolic.Symbol { get { return this; } }
-        public object HashValue { get { return GetHashCode(); } }
-
+        public bool IsLiteral { get { return keyword; } }
+        public bool IsIdentifier { get { return !keyword; } }
         #endregion
 
         #region Symbol Factory

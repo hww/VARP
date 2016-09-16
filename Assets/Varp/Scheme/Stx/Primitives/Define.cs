@@ -37,15 +37,15 @@ namespace VARP.Scheme.Stx.Primitives
         // (define (x) ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.GetList();
+            Pair list = stx.AsList();
             int argc = GetArgsCount(list);
             AssertArgsEqual("define", "arity mismatch", 2, argc, list, stx);
 
-            Syntax def_stx = list[0] as Syntax;
-            Syntax var_stx = list[1] as Syntax;
+            Syntax def_stx = list[0].AsSyntax();
+            Syntax var_stx = list[1].AsSyntax();
             Pair val_lst = list.PairAtIndex(2);
 
-            if (var_stx.IsSyntaxIdentifier)
+            if (var_stx.IsIdentifier)
             {
                 // ----------------------------------------------------------------
                 // identifier aka: (define x ...)
@@ -56,29 +56,29 @@ namespace VARP.Scheme.Stx.Primitives
                 if (after_identifier > 1)
                     throw SchemeError.SyntaxError("define", "multiple expressions after identifier in", stx, list);
 
-                AST value = Expand(val_lst.Car as Syntax, env);
+                AST value = Expand(val_lst.Car.AsSyntax(), env);
 
-                Symbol var_id = var_stx.GetIdentifier();
+                Symbol var_id = var_stx.AsIdentifier();
                 Binding bind = env.Lookup(var_id);
                 if (bind == null) env.DefineVariable(var_id);
 
                 return new AstDefine(stx, def_stx, var_stx, value, bind);
             }
-            else if (var_stx.IsSyntaxExpression)
+            else if (var_stx.IsExpression)
             {
                 // ----------------------------------------------------------------
                 // identifier aka: (define (x ...) ...) as result lambda expression
                 // ----------------------------------------------------------------
-                Pair args_list = var_stx.GetList();
+                Pair args_list = var_stx.AsList();
 
                 Arguments arguments = new Arguments();
-                ArgumentsList.Parse(args_list, env, ref arguments);
+                ArgumentsList.Parse(stx, args_list, env, ref arguments);
 
                 Pair lambda_body = AstBuilder.ExpandListElements(val_lst, env);
                 AstLambda lambda = new AstLambda(stx, def_stx, arguments, lambda_body);
 
-                Syntax identifier_stx = args_list.Car as Syntax;
-                Symbol identifier = (args_list.Car as Syntax).GetIdentifier();
+                Syntax identifier_stx = args_list.Car.AsSyntax();
+                Symbol identifier = (args_list.Car.AsSyntax()).GetIdentifier();
                 Binding binding = env.Lookup(identifier);
                 if (binding == null) env.DefineVariable(identifier);
 

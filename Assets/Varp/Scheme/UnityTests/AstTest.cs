@@ -80,7 +80,7 @@ public class AstTest : MonoBehaviour
             sb = new System.Text.StringBuilder();
             do
             {
-                SObject result = Parser.Parse(lexer);
+                ValueClass result = Parser.Parse(lexer);
                 if (result == null) break;
                 sb.AppendLine(result.Inspect());
             } while (lexer.LastToken != null);

@@ -33,7 +33,7 @@ using System.Globalization;
 
 namespace VARP.DataStructures
 {
-    static class Tuple
+    public static class Tuple
     {
         public static Tuple<T1, T2> Create<T1, T2>(T1 item1, T2 item2)
         {
@@ -42,10 +42,15 @@ namespace VARP.DataStructures
     }
 
     [DebuggerDisplay("Item1={Item1};Item2={Item2}")]
-    class Tuple<T1, T2> : System.Object, System.IFormattable
+    public class Tuple<T1, T2> : System.Object, System.IFormattable
     {
         public T1 Item1 { get; private set; }
         public T2 Item2 { get; private set; }
+
+        public Tuple()
+        {
+
+        }
 
         public Tuple(T1 item1, T2 item2)
         {

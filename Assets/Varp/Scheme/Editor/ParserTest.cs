@@ -42,7 +42,7 @@ public class ParserTest
         "'()","#<syntax:1:1 (quote ())>",
         "(()())","#<syntax:1:1 (() ())>", // Nested List
         // Numbers
-        "1 1.0 #xFF","#<syntax:1:1 1> #<syntax:1:3 1.0> #<syntax:1:7 255>",           
+        "1 1.1 #xFF","#<syntax:1:1 1> #<syntax:1:3 1.1> #<syntax:1:7 255>",           
         // Strings    
         "\"foo\" \"bar\"","#<syntax:1:1 \"foo\"> #<syntax:1:7 \"bar\">",  
         // Symbols
@@ -78,7 +78,7 @@ public class ParserTest
             bool assSpace = false;
             do
             {
-                SObject result = Parser.Parse(lexer);
+                ValueClass result = Parser.Parse(lexer);
                 if (result == null) break;
                 if (assSpace) sb.Append(" ");
                 sb.Append(result.Inspect());

@@ -30,9 +30,10 @@ namespace VARP.Scheme.Stx
     using Data;
     using Exception;
 
-    public sealed class AstBuilder
+    public sealed class AstBuilder : ValueClass
     {
         public static SystemEnvironemnt environment = new SystemEnvironemnt();
+
         #region Public Methods
         // Expand string @expression to abstract syntax tree in global environment
         public static AST Expand(string expression, string filepath)
@@ -58,11 +59,11 @@ namespace VARP.Scheme.Stx
         {
             if (syntax == null)
                 return null;
-            else if (syntax.IsSyntaxLiteral)
+            else if (syntax.IsLiteral)
                 return ExpandLiteral(syntax, env);
-            else if (syntax.IsSyntaxIdentifier)
+            else if (syntax.IsIdentifier)
                 return ExpandIdentifier(syntax, env);
-            else if (syntax.IsSyntaxExpression)
+            else if (syntax.IsExpression)
                 return ExpandExpression(syntax, env);
             else
                 throw SchemeError.SyntaxError("ast-builder-expand", "expected literal, identifier or list expression", syntax);
@@ -81,8 +82,8 @@ namespace VARP.Scheme.Stx
         // aka: x
         public static AST ExpandIdentifier(Syntax syntax, Environment env)
         {
-            if (!syntax.IsSyntaxIdentifier) throw SchemeError.SyntaxError("ast-builder-expand-identifier", "expected identifier", syntax);
-            Symbol varname = syntax.GetDatum<Symbol>();
+            if (!syntax.IsIdentifier) throw SchemeError.SyntaxError("ast-builder-expand-identifier", "expected identifier", syntax);
+            Symbol varname = syntax.AsDatum().AsSymbol();
             Binding binding = env.Lookup(varname);
             if (binding == null)
                 throw SchemeError.SyntaxError("ast-builder-expand-identifier", "Expected identifier", syntax);
@@ -92,12 +93,12 @@ namespace VARP.Scheme.Stx
         // aka: (...)
         public static AST ExpandExpression(Syntax syntax, Environment env)
         {
-            Pair list = syntax.GetList();
+            Pair list = syntax.AsList();
             if (list == null) return new AstApplication(syntax, null);
-            Syntax ident = list.Car as Syntax;
-            if (ident.IsSyntaxIdentifier)
+            Syntax ident = list.Car.AsSyntax();
+            if (ident.IsIdentifier)
             {
-                Binding binding = env.Lookup(ident.expression as Symbol);
+                Binding binding = env.Lookup(ident.expression.AsSymbol());
                 if (binding != null)
                 {
                     if (binding.IsPrimitive)
@@ -109,7 +110,7 @@ namespace VARP.Scheme.Stx
 
         // Expand list of syntax objects as: (#<syntax> #<syntax> ...)
         // aka: (...)
-        public static Pair ExpandListElements(Pair list, Environment env)
+        public static ValueList ExpandListElements(ValueList list, Environment env)
         {
             if (list == null) return null;
 
@@ -117,16 +118,16 @@ namespace VARP.Scheme.Stx
             Pair last = first;
             while (list != null)
             {
-                last.Car = Expand(list.Car as Syntax, env);
-                if (list.Cdr is Pair)
+                last.Car.Set(Expand(list.Car.AsSyntax(), env));
+                if (list.Cdr.IsPair)
                 {
-                    last.Cdr = new Pair();
-                    last = last.Cdr as Pair;
-                    list = list.Cdr as Pair;
+                    last.Cdr.Set(new Pair());
+                    last = last.Cdr.ToPair();
+                    list = list.Cdr.ToPair();
                 }
                 else
                 {
-                    last.Cdr = Expand(list.Cdr as Syntax, env);
+                    last.Cdr.Set(Expand(list.Cdr.AsSyntax(), env));
                     last = null;
                     break;
                 }

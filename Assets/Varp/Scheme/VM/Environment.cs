@@ -31,24 +31,71 @@ namespace VARP.Scheme.VM
 {
     using Data;
 
-    public struct Binding
+    public sealed class Binding
     {
         public Environment environment;
-        public SObject value;
+        public Value value;
     }
 
-    public sealed class Environment : SObject, IEnumerable<Binding>
+    public sealed class Environment : ValueClass, IEnumerable<Binding>
     {
+        // Create system environment
+        public static Environment Top = new Environment(null, Symbol.Intern("*SYSTEM-ENV*"), 1000);
+
         public Environment parent;        //< pointer to parent frame
         public Symbol name;               //< environment name
 
-        Dictionary<Symbol, Binding> Bindings = new Dictionary<Symbol, Binding>();
+        // Binding in this environment
+        private Dictionary<Symbol, Binding> Bindings = new Dictionary<Symbol, Binding>();
 
         public Environment(Environment parent, Symbol name, int size)
         {
             this.parent = parent;
             this.name = name;
             this.Bindings = new Dictionary<Symbol, Binding>(size);
+        }
+
+        public bool IsTop { get { return parent == null; } }
+
+        /// <summary>
+        /// Get definition by index. 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public Value this[Symbol name]
+        {
+            get { return Bindings[name].value; }
+            set { Bindings[name].value = value; }
+        }
+
+        /// <summary>
+        /// Safely return existing value. Does not produce 
+        /// exception if value is not exists.
+        /// Find only in this environment
+        /// </summary>
+        /// <param name="name">identifier</param>
+        /// <returns>Binding or null</returns>
+        public Binding LookupLocal(Symbol name)
+        {
+            Binding value;
+            if (Bindings.TryGetValue(name, out value))
+                return value;
+            return null;
+        }
+
+        /// <summary>
+        /// Safely return existing value. Does not produce 
+        /// exception if value is not exists
+        /// Find in this environment, then try parent one
+        /// </summary>
+        /// <param name="name">identifier</param>
+        /// <returns>Binding or null</returns>
+        public Binding Lookup(Symbol name)
+        {
+            Binding value;
+            if (Bindings.TryGetValue(name, out value))
+                return value;
+            return parent == null ? null : parent.Lookup(name);
         }
 
         #region IEnumerable<T> Members
@@ -71,8 +118,8 @@ namespace VARP.Scheme.VM
 
         #endregion
 
-        #region SObject Methods
-        public override SBool AsBool() { return SBool.True; }
+        #region Value Methods
+        public override bool AsBool() { return true; }
         public override string ToString() { return string.Format("#<lexical-environment size={0}>", Bindings.Count); }
         public override string AsString() { return base.ToString(); }
 

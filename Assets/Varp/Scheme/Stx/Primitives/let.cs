@@ -35,18 +35,18 @@ namespace VARP.Scheme.Stx.Primitives
         // (let () ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.GetList();
+            Pair list = stx.AsList();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("let", "arity mismatch", 2, argc, list, stx);
 
-            Syntax keyword = list[0] as Syntax;     // let arguments
-            Syntax arguments = list[1] as Syntax;   // let arguments
+            Syntax keyword = list[0].AsSyntax();     // let arguments
+            Syntax arguments = list[1].AsSyntax();   // let arguments
             Pair body = list.PairAtIndex(2);        // let body
 
-            if (!arguments.IsSyntaxExpression) throw SchemeError.SyntaxError("let", "bad syntax (missing name or binding pairs)", stx);
+            if (!arguments.IsExpression) throw SchemeError.SyntaxError("let", "bad syntax (missing name or binding pairs)", stx);
 
             Arguments letarguments = new Arguments();
-            ArgumentsList.ParseLetList(arguments.GetList(), env, ref letarguments);
+            ArgumentsList.ParseLetList(stx, arguments.AsList(), env, ref letarguments);
             Environment localEnv = env.CreateEnvironment(stx, letarguments);
 
             AST lambda = new AstLambda(stx, keyword, letarguments, AstBuilder.ExpandListElements(body, localEnv));

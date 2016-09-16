@@ -33,7 +33,7 @@ namespace VARP.Scheme.Stx
     using Data;
 
 
-    public sealed class Binding : SObject
+    public sealed class Binding : ValueClass
     {
         public delegate AST CompilerPrimitive(Syntax expression, Environment context);
 
@@ -64,8 +64,8 @@ namespace VARP.Scheme.Stx
         public bool IsPrimitive { get { return Primitive != null; } }
         public bool IsGlobal { get { return Index < 0; } }
 
-        #region SObject Methods
-        public override SBool AsBool() { return SBool.True; }
+        #region ValueType Methods
+        public override bool AsBool() { return true; }
         public override string AsString() { return base.ToString(); }
         #endregion
     }

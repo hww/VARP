@@ -37,7 +37,7 @@ namespace VARP.Scheme.Stx
     /// <summary>
     /// The lexical environment
     /// </summary>
-    public class Environment : SObject, IEnumerable<Binding>
+    public class Environment : ValueClass, IEnumerable<Binding>
     {
         // Pointer to the parent environment.
         // For global environment it is null
@@ -92,19 +92,20 @@ namespace VARP.Scheme.Stx
                 Keys = ExpandOptional(expression, arguments.key);
             if (arguments.rest != null)
             {
-                Syntax synt = arguments.rest[1] as Syntax;
-                DefineVariable(synt.GetIdentifier());
+                Syntax synt = arguments.rest[1].AsSyntax();
+                DefineVariable(synt.AsIdentifier());
                 Rest = 1;
             }
         }
-        private int ExpandRequired(Syntax expression, Pair arguments)
+        private int ExpandRequired(Syntax expression, ValueList arguments)
         {
             int count = 0;
             foreach (var arg in arguments)
             {
-                if (arg is Syntax && (arg as Syntax).IsSyntaxIdentifier)
+                Syntax astx = arg.AsSyntax();
+                if (astx != null && astx.IsIdentifier)
                 {
-                    DefineVariable((arg as Syntax).GetIdentifier());
+                    DefineVariable(astx.AsIdentifier());
                     count++;
                 }
                 else
@@ -112,17 +113,17 @@ namespace VARP.Scheme.Stx
             }
             return count;
         }
-        private int ExpandOptional(Syntax expression, Pair arguments)
+        private int ExpandOptional(Syntax expression, ValueList arguments)
         {
             int count = 0;
             foreach (var arg in arguments)
             {
-                if (arg is Syntax)
+                if (arg.IsSyntax)
                 {
-                    Syntax varname = arg as Syntax;
-                    if (varname.IsSyntaxIdentifier)
+                    Syntax varname = arg.AsSyntax();
+                    if (varname.IsIdentifier)
                     {
-                        Symbol ident = varname.GetIdentifier();
+                        Symbol ident = varname.AsIdentifier();
                         if (ident == Symbol.OPTIONAL) continue;
                         if (ident == Symbol.KEY) continue;
                         DefineVariable(ident);
@@ -130,16 +131,16 @@ namespace VARP.Scheme.Stx
                     else
                         throw SchemeError.ArgumentError("lambda", "identifier?", count, arguments);
                 }
-                else if (arg is Pair)
+                else if (arg.IsValueList)
                 {
-                    Pair p = arg as Pair;
-                    SObject v0 = p[0];
-                    SObject v1 = p[1];
+                    ValueList p = arg.AsValueList();
+                    object v0 = p[0].RefVal;
+                    object v1 = p[1].RefVal;
                     Symbol ident = null;
                     AST value = null;
 
-                    if (v0 is Syntax && (v0 as Syntax).IsSyntaxIdentifier)
-                        ident = (v0 as Syntax).GetIdentifier();
+                    if (v0 is Syntax && (v0 as Syntax).IsIdentifier)
+                        ident = (v0 as Syntax).AsIdentifier();
                     else
                         throw SchemeError.ArgumentError("lambda", "syntax?", count, arguments);
 
@@ -148,7 +149,7 @@ namespace VARP.Scheme.Stx
                     else
                         throw SchemeError.ArgumentError("lambda", "ast?", count, arguments);
 
-                    Syntax var = arg as Syntax;
+                    Syntax var = arg.AsSyntax();
 
                     DefineVariable(ident);
                 }
@@ -176,7 +177,7 @@ namespace VARP.Scheme.Stx
         /// Find only in this environment
         /// </summary>
         /// <param name="name">identifier</param>
-        /// <returns>Bidiing or null</returns>
+        /// <returns>Binding or null</returns>
         public Binding LookupLocal(Symbol name)
         {
             Binding value;
@@ -191,7 +192,7 @@ namespace VARP.Scheme.Stx
         /// Find in this environment, then try parent one
         /// </summary>
         /// <param name="name">identifier</param>
-        /// <returns>Bidiing or null</returns>
+        /// <returns>Binding or null</returns>
         public Binding Lookup(Symbol name)
         {
             Binding value;
@@ -328,8 +329,8 @@ namespace VARP.Scheme.Stx
 
         #endregion
 
-        #region SObject Methods
-        public override SBool AsBool() { return SBool.True; }
+        #region ValueType Methods
+        public override bool AsBool() { return true; }
         public override string ToString() { return string.Format("#<lexical-environment size={0}>", Bindings.Count); }
         public override string AsString() { return base.ToString(); }
 

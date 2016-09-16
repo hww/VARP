@@ -29,26 +29,36 @@ namespace VARP.Scheme.Stx.Primitives
 {
 
     using Data;
+    using DataStructures;
 
     public sealed class PrimitiveLambda : BasePrimitive
     {
         // (lambda () ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.GetList();
+            ValueList list = stx.AsList();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("lambda", "arity mismatch", 1, argc, list, stx);
 
-            Syntax kwdr = list[0] as Syntax;
-            Syntax args = list[1] as Syntax;
+            Syntax kwdr = list[0].AsSyntax();
+            Syntax args = list[1].AsSyntax();
 
             Arguments arguments = new Arguments();
-            ArgumentsList.Parse(args.GetList(), env, ref arguments);
+            ArgumentsList.Parse(stx, args.AsList(), env, ref arguments);
 
             Environment localEnv = env.CreateEnvironment(stx, arguments);
 
-            Pair bodylist = (list.Cdr as Pair).Cdr as Pair;
-            Pair body = AstBuilder.ExpandListElements(bodylist, localEnv);
+            ValueList body = new ValueList();
+
+            if (argc > 1)
+            {
+                LinkedListNode<Value> curent = list.GetNodeAtIndex(2);
+                while (curent != null)
+                {
+                    body.AddLast(AstBuilder.ExpandExpression(curent.Value.AsSyntax(), localEnv).ToValue());
+                    curent = curent.Next;
+                }
+            }
             return new AstLambda(stx, kwdr, arguments, body);
         }
     }

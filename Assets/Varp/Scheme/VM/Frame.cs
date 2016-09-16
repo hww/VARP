@@ -31,16 +31,20 @@ namespace VARP.Scheme.VM
 
     public sealed class Frame
     {
-        public Frame parent;        //< pointer to parent frame
-        public Template template;   //< pointer to template
-        public int pc;              //< program counter
-        public SObject[] variables; //< register set
+        public Environment environment;
+
+        public Frame parent;            //< pointer to parent frame
+        public Template template;       //< pointer to template
+        public uint PC;                 //< program counter
+        public ValueClass[] variables;     //< register set
+        public ValueClass[] upvariables;   //< upvariables
 
         public Frame(Frame parent, Template template, int size = 0)
         {
             this.parent = parent;
             this.template = template;
-            this.variables = new SObject[size];
+            this.variables = new ValueClass[size];
+            this.environment = parent==null ? Environment.Top : parent.environment;
         }
 
         /// <summary>
@@ -50,5 +54,7 @@ namespace VARP.Scheme.VM
         {
             get { return variables.Length; }
         }
+
+
     }
 }

@@ -32,7 +32,9 @@ namespace VARP.Scheme.Tokenizing
 {
     using Data;
     using Exception;
-    public sealed class Token : SObject
+    using Libs;
+
+    public sealed class Token : ValueClass
     { 
         public TokenType Type;
         public string Value;
@@ -56,10 +58,9 @@ namespace VARP.Scheme.Tokenizing
 
 
 
-        #region SObject Methods
-        public override SBool AsBool() { return SBool.True; }
-        public override string AsString() { return Value; }
-        public override bool IsLiteral { get { return true; } }
+        #region ValueType Methods
+        public override bool AsBool() { return true; }
+        public override string AsString() { return Value.ToString(); }
 
         #endregion
 
@@ -82,12 +83,11 @@ namespace VARP.Scheme.Tokenizing
                 switch (Type)
                 {
                     case TokenType.Integer:
-                        int val = int.Parse(Value, NumberStyles.AllowLeadingSign);
-                        return val;
+                        return StringLibs.GetInteger(Value);
+
                     case TokenType.Heximal:
-                        Debug.Assert(Value.Length > 2, "Error in hex literal");
-                        int hval = int.Parse(Value.Substring(2), NumberStyles.AllowHexSpecifier);
-                        return hval;
+                        return StringLibs.GetHexadecimal(Value);
+
                     default:
                         throw SchemeError.SyntaxError("get-integer", "wrong token type", this);
                 }
@@ -98,14 +98,10 @@ namespace VARP.Scheme.Tokenizing
             }
         }
 
-        public float GetFloat()
+        public double GetFloat()
         {
             Debug.Assert(Type == TokenType.Floating);
-
-            float val = 0;
-            if (float.TryParse(Value, out val))
-                return val;
-            throw SchemeError.SyntaxError("get-float", "improperly formed float value", this);
+            return StringLibs.GetFloat(Value);
         }
         public string GetString()
         {
@@ -129,7 +125,7 @@ namespace VARP.Scheme.Tokenizing
             else
             {
                 char c = (char)0;
-                if (SChar.NameToCharacter(Value, out c))
+                if (CharClass.NameToCharacter(Value, out c))
                     return c;
                 throw SchemeError.SyntaxError("get-character", "improperly formed char value", this);
             }

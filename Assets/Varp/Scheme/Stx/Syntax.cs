@@ -33,108 +33,105 @@ namespace VARP.Scheme.Stx
     using Data;
     using Exception;
     using Tokenizing;
+    using DataStructures;
 
-    public sealed class Syntax : SObject, IEnumerable<Syntax>
+    public sealed class Syntax : ValueClass
     {
-        public static Syntax False = new Syntax(SBool.False, null as Location);
-        public static Syntax Void = new Syntax(SVoid.Void, null as Location);
+        public readonly static Syntax False = new Syntax(Value.False, null as Location);
+        public readonly static Syntax Void = new Syntax(Value.Void, null as Location);
 
-        public SObject expression;
+        public Value expression;
         public Location location;
 
         public Syntax() : base()
         {
         }
-        public Syntax(SObject expression, Location location) 
+        public Syntax(Value expression, Location location)
         {
             this.expression = expression;
             this.location = location;
         }
-        public Syntax(SObject expression, Token token)
+        public Syntax(Value expression, Token token)
         {
             this.expression = expression;
             this.location = token == null ? null : token.location;
         }
-
-
-        #region List Methods
-        public Pair GetList() { return SObjectCast.GetPairOrNull(expression); }
-        public int Count { get { return Pair.Length(expression); } }
-        #endregion
-
-        #region IEnumerable
-        IEnumerator IEnumerable.GetEnumerator()
+        public Syntax(object expression, Location location)
         {
-            return GetEnumerator();
+            this.expression.Set(expression);
+            this.location = location;
         }
-        public IEnumerator<Syntax> GetEnumerator()
+        public Syntax(object expression, Token token)
         {
-            if (expression is Pair)
-            {
-                Pair c = expression as Pair;
-                while (c != null)
-                {
-                    yield return c.Car as Syntax;
-                    c = c.Cdr as Pair;
-                }
-            }
+            this.expression.Set(expression);
+            this.location = token == null ? null : token.location;
         }
-        #endregion
 
-        public override SObject GetDatum() { return SyntaxToDatum(expression); }
-        public T GetDatum<T>() where T:class { return SyntaxToDatum(expression) as T; }
-        public Symbol GetIdentifier()
+        #region Cast Syntax To ... Methods
+        /// <summary>
+        /// Get expression
+        /// </summary>
+        /// <returns></returns>
+        public ValueList AsList() { return expression.AsValueList(); }
+
+        /// <summary>
+        /// Get identifier (exception if syntax is not identifier)
+        /// </summary>
+        /// <returns></returns>
+        public Symbol AsIdentifier()
         {
-            if (expression is Symbol) return expression as Symbol;
+            if (expression.IsSymbol) return expression.AsSymbol();
             throw SchemeError.ArgumentError("get-identifier", "identifier?", this);
         }
-        static SObject SyntaxToDatum(SObject expression)
-        {
-            if (expression is Syntax)
-                return (expression as Syntax).GetDatum();
-            if (expression is Pair)
-            {
-                Pair curent = expression as Pair;
-                Pair first = new Pair(); 
-                Pair last = first;
-                while (curent != null)
-                {
-                    last.Car = SyntaxToDatum(curent.Car);
-                    if (curent.Cdr is Pair)
-                    {
-                        last.Cdr = new Pair();
-                        last = last.Cdr as Pair;
-                        curent = curent.Cdr as Pair;
-                    }
-                    else
-                    {
-                        last.Cdr = SyntaxToDatum(curent.Cdr);
-                        curent = null;
-                    }
-                }
-                return first;
 
-            }
-            if (expression is SVector)
+        /// <summary>
+        /// Get datum
+        /// </summary>
+        /// <returns></returns>
+        public Value AsDatum() { return ConvertToDatum(expression); }
+
+        /// <summary>
+        /// Method safely cast the syntax's expression to the Datum
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <returns></returns>
+        static Value ConvertToDatum(Value expression)
+        {
+            if (expression.IsSyntax)
+                return (expression.AsSyntax()).AsDatum();
+
+            if (expression.IsValueList)
             {
-                SVector src = expression as SVector;
-                SVector dst= new SVector(src.Count);
-                foreach (Syntax v in src)
+                ValueList result = new ValueList();
+                foreach (var val in expression.AsValueList())
+                    result.AddLast(ConvertToDatum(val));
+                return new Value(result);
+            }
+
+            if (expression.IsValueVector)
+            {
+                ValueVector src = expression.AsValueVector();
+                ValueVector dst = new ValueVector(src.Count);
+                foreach (var v in src)
                 {
-                    dst.Add(v.GetDatum());
+                    if (v.IsSyntax)
+                        dst.Add(v.AsSyntax().AsDatum());
+                    else
+                        throw SchemeError.ArgumentError("syntax->datum", "identifier?", v);
                 }
-                return dst;
+                return new Value(dst);
             }
             return expression;
         }
+        #endregion
 
-        public bool IsSyntax(System.Type type) { return this.GetType() == type; }
-        public bool IsSyntaxIdentifier { get { return (expression != null) && expression.IsIdentifier; } }
-        public bool IsSyntaxLiteral { get { return (expression != null) && expression.IsLiteral; } }
-        public bool IsSyntaxExpression { get { return (expression == null) || expression is Pair; } }
+        public bool IsSymbol { get { return expression.IsSymbol; } }
+        public bool IsIdentifier { get { return (expression.IsSymbol) && expression.AsSymbol().IsIdentifier; } }
+        public bool IsLiteral { get { return (expression.IsSymbol) && expression.AsSymbol().IsLiteral; } }
+        public bool IsExpression { get { return (expression == null) || expression.IsValueList; } }
 
-        #region SObject Methods
-        public override SBool AsBool() { return SBool.True; }
+        #region ValueType Methods
+        public override bool AsBool() { return true; }
         public override string AsString() { return expression == null ? "()" : expression.AsString(); }
 
         #endregion

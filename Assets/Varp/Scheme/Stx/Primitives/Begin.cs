@@ -35,10 +35,10 @@ namespace VARP.Scheme.Stx.Primitives
         // (begin ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair pair = stx.GetList();
-            Syntax kwdr = pair[0] as Syntax;
-            int argc = Pair.Length(stx.expression) - 1;
-            return new AstSequence(stx, kwdr, AstBuilder.ExpandListElements(pair.Cdr as Pair, env));
+            Pair pair = stx.AsList();
+            Syntax kwdr = pair[0].AsSyntax();
+            int argc = Pair.Length(stx.expression.ToPair()) - 1;
+            return new AstSequence(stx, kwdr, AstBuilder.ExpandListElements(pair.Cdr.ToPair(), env));
         }
     }
 }

@@ -27,15 +27,16 @@
 
 namespace VARP.Scheme.VM
 {
+    using Data;
     public sealed class Template
     {
-        public object[] Literals;
+        public ValueClass[] Literals;
         public Instruction[] Code;
 
-        public Template(object[] literals, Instruction[] code)
+        public Template(ValueClass[] literals, Instruction[] code)
         {
-            Literals = literals;
-            Code = code;
+            this.Literals = literals;
+            this.Code = code;
         }
     }
 }

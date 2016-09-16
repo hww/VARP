@@ -28,12 +28,15 @@
 using System;
 using System.Text;
 using System.Globalization;
-using VARP.Scheme.Data;
-using VARP.Scheme.Stx;
-using VARP.Scheme.Tokenizing;
+
 
 namespace VARP.Scheme.REPL
 {
+    using Data;
+    using DataStructures;
+    using Stx;
+    using Tokenizing;
+
     public interface Inspectable
     {
         string Inspect();
@@ -58,28 +61,34 @@ namespace VARP.Scheme.REPL
             if (x == null)
                 return "()";
 
-            if (x is SObject)
-                return InspectSchemeObject(x as SObject);
+            if (x is Value)
+                return InspectSchemeObject((Value)x, options);
+
+            if (x is ValueClass)
+                return InspectSchemeObject(x as ValueClass, options);
 
             if (x is Inspectable)
                 return (x as Inspectable).Inspect();
+
             return InspectMonoObject(x, options);
         }
 
-        static string InspectSchemeObject(SObject x, InspectOptions options = InspectOptions.Default)
+        static string InspectSchemeObject(Value x, InspectOptions options = InspectOptions.Default)
+        {
+            if (x.IsNil || x.IsBool || x.IsNumber)
+                return x.AsString();
+            return Inspect(x.RefVal, options);
+        }
+        static string InspectSchemeObject(ValueClass x, InspectOptions options = InspectOptions.Default)
         {
             if (x is Location)
                 return InspectSchemeObjectIntern(x as Location, options);
             if (x is Token)
                 return InspectSchemeObjectIntern(x as Token, options);
-            if (x is Pair)
-                return InspectSchemeObjectIntern(x as Pair);
+            if (x is ValuePair)
+                return InspectSchemeObjectIntern(x as ValuePair, options);
             if (x is Syntax)
                 return InspectSchemeObjectIntern(x as Syntax);
-            if (x is SString)
-                return string.Format("\"{0}\"", x.AsString());
-            if (x is SVector)
-                return InspectSchemeObjectIntern(x as SVector, options);
             if (x is AST)
                 return (x as AST).Inspect();
             if (x is Binding)
@@ -109,7 +118,7 @@ namespace VARP.Scheme.REPL
             if (loc == null)
                 return string.Format("#<syntax {0}>", x.AsString());
             else
-                return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.GetDatum(), options));
+                return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.AsDatum(), options));
         }
         static string InspectSchemeObjectIntern(Binding bind, InspectOptions options = InspectOptions.Default)
         {
@@ -132,14 +141,10 @@ namespace VARP.Scheme.REPL
             }
             return sb.ToString();
         }
-        static bool IsSpecialForm(SObject obj)
+        static bool IsSpecialForm(Symbol sym)
         {
-            if (obj is Symbol)
-            {
-                Symbol x = obj as Symbol;
-                return x == Symbol.QUOTE || x == Symbol.QUASIQUOTE || x == Symbol.UNQUOTE || x == Symbol.UNQUOTESPLICE;
-            }
-            return false;
+            if (sym == null) return false;
+            return sym == Symbol.QUOTE || sym == Symbol.QUASIQUOTE || sym == Symbol.UNQUOTE || sym == Symbol.UNQUOTESPLICE;
         }
         static string InspectSpecialReaderForm(Symbol x, InspectOptions options = InspectOptions.Default)
         {
@@ -159,39 +164,29 @@ namespace VARP.Scheme.REPL
             }
             return x.Name;
         }
-        static string InspectSchemeObjectIntern(Pair cons, InspectOptions options = InspectOptions.Default, bool encloseList = true)
+        static string InspectSchemeObjectIntern(ValuePair x, InspectOptions options = InspectOptions.Default)
+        {
+            return string.Format("({0} . {1})", Inspect(x.Item1, options), Inspect(x.Item2));
+        }
+        static string InspectSchemeObjectIntern(ValueList list, InspectOptions options = InspectOptions.Default, bool encloseList = true)
         {
             StringBuilder sb = new StringBuilder();
 
             if (encloseList)
                 sb.Append("(");
 
-            Pair curent = cons;
+            LinkedListNode<Value> curent = list.First;
             int consLen = 0;
             while (curent != null && ++consLen < Inspector.MAX_CONS_PRINT_LEN)
             {
-                if (IsSpecialForm(curent.Car))
-                    sb.Append(InspectSpecialReaderForm(curent.Car as Symbol, options));
+                Symbol sym = curent.Value.AsSymbol();
+                if (IsSpecialForm(sym))
+                    sb.Append(InspectSpecialReaderForm(sym, options));
                 else
-                    sb.Append(Inspector.Inspect(curent.Car, options));
+                    sb.Append(Inspector.Inspect(curent.Value, options));
 
-                if (curent.Cdr == null)
-                {
-                    curent = null;
-                    break;
-                }
-                if (curent.Cdr is Pair)
-                {
-                    sb.Append(" ");
-                }
-                else if (curent.Cdr != null)
-                {
-                    sb.Append(" . ");
-                    sb.Append(Inspector.Inspect(curent.Cdr, options));
-                    curent = null;
-                    break;
-                }
-                curent = curent.Cdr as Pair;
+                curent = curent.Next;
+                if (curent != null) sb.Append(" ");
             }
 
             if (curent != null)
@@ -202,12 +197,12 @@ namespace VARP.Scheme.REPL
 
             return sb.ToString();
         }
-        static string InspectSchemeObjectIntern(SVector vector, InspectOptions options = InspectOptions.Default)
+        static string InspectSchemeObjectIntern(ValueVector vector, InspectOptions options = InspectOptions.Default)
         {
             StringBuilder sb = new StringBuilder();
             bool appendSpace = false;
             sb.Append("#(");
-            foreach (SObject v in vector.Value)
+            foreach (var v in vector)
             {
                 if (appendSpace) sb.Append(" ");
                 sb.Append(Inspect(v, options));
@@ -217,6 +212,20 @@ namespace VARP.Scheme.REPL
             return sb.ToString();
         }
 
+        static string InspectSchemeObjectIntern(ValueTable table, InspectOptions options = InspectOptions.Default)
+        {
+            StringBuilder sb = new StringBuilder();
+            bool appendSpace = false;
+            sb.Append("#(");
+            foreach (var v in table)
+            {
+                if (appendSpace) sb.Append(" ");
+                sb.Append(string.Format("#<pair {0} {1}>", Inspect(v.Key, options), Inspect(v.Value, options)));
+                appendSpace |= true;
+            }
+            sb.Append(")");
+            return sb.ToString();
+        }
 
         #region Inspect Mono Classes
 
@@ -227,6 +236,15 @@ namespace VARP.Scheme.REPL
 
             if (x is char)
                 return string.Format(CultureInfo.CurrentCulture, "#\\{0}", x);
+
+            if (x is ValueList)
+                return InspectSchemeObjectIntern(x as ValueList);
+
+            if (x is ValueVector)
+                return InspectSchemeObjectIntern(x as ValueVector);
+
+            if (x is ValueTable)
+                return InspectSchemeObjectIntern(x as ValueTable);
 
             if (x is Array)
                 return InspectArray((Array)x, options);

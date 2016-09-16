@@ -35,14 +35,14 @@ namespace VARP.Scheme.Stx.Primitives
         // (if () ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.GetList();
+            Pair list = stx.AsList();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("if", "arity mismatch", 2, argc, list, stx);
 
-            Syntax keyword = list[0] as Syntax;
-            Syntax cond = list[1] as Syntax;
-            Syntax then = list[2] as Syntax;
-            Syntax elsc = argc < 3 ? null : list[3] as Syntax;
+            Syntax keyword = list[0].AsSyntax();
+            Syntax cond = list[1].AsSyntax();
+            Syntax then = list[2].AsSyntax();
+            Syntax elsc = argc < 3 ? null : list[3].AsSyntax();
 
             AST cond_ast = AstBuilder.Expand(cond, env);
             AST then_ast = AstBuilder.Expand(then, env);
