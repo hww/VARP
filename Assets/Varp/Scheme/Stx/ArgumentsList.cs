@@ -153,7 +153,7 @@ namespace VARP.Scheme.Stx
                             if (argstx.IsIdentifier)
                                 args.optional.AddLast(MakeArgPair("lambda", argstx, argstx, env));
                             else if (argstx.IsExpression)
-                                args.optional.AddLast(MakeArgPair("lambda", argstx, argstx.AsList(), env));
+                                args.optional.AddLast(MakeArgPair("lambda", argstx, argstx.AsValueList(), env));
                             else
                                 throw SchemeError.ArgumentError("lambda", "list?", argstx);
                             break;
@@ -162,7 +162,7 @@ namespace VARP.Scheme.Stx
                             if (argstx.IsIdentifier)
                                 args.key.AddLast(MakeArgPair("lambda", argstx, argstx, env));
                             else if (argstx.IsExpression)
-                                args.key.AddLast(MakeArgPair("lambda", argstx, argstx.AsList(), env));
+                                args.key.AddLast(MakeArgPair("lambda", argstx, argstx.AsValueList(), env));
                             else
                                 throw SchemeError.ArgumentError("lambda", "list?", argstx);
                             break;
@@ -220,7 +220,7 @@ namespace VARP.Scheme.Stx
                 Syntax argstx = arg.AsSyntax();
                 if (argstx.IsExpression)
                 {
-                    ValuePair arg_pair = MakeArgPair("let", argstx, argstx.AsList(), env).AsValuePair();
+                    ValuePair arg_pair = MakeArgPair("let", argstx, argstx.AsValueList(), env).AsValuePair();
                     args.required.AddLast(arg_pair.Item1);
                     args.values.AddLast(arg_pair.Item2);
                 }

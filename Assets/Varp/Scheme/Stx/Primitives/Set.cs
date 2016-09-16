@@ -36,7 +36,7 @@ namespace VARP.Scheme.Stx.Primitives
         // (set! x (+ 1 2))
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.AsList();
+            ValueList list = stx.AsValueList();
             int argc = GetArgsCount(list);
             AssertArgsEqual("set!", "arity mismatch", 2, argc, list, stx);
 

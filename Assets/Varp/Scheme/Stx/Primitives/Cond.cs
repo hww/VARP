@@ -29,6 +29,7 @@ namespace VARP.Scheme.Stx.Primitives
 {
 
     using Data;
+    using DataStructures;
     using Exception;
 
     public sealed class PrimitiveCond : BasePrimitive
@@ -36,55 +37,52 @@ namespace VARP.Scheme.Stx.Primitives
         // (cond () ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.AsList();    //< list of syntax objects
+            ValueList list = stx.AsValueList();    //< list of syntax objects
             int argc = GetArgsCount(list);
 
-            Syntax keyword = list.Car.AsSyntax();
-            Pair elsecase = null;
-            Pair first = null;
-            Pair last = null;
+            Syntax keyword = list[0].AsSyntax();
+            ValueList allcases = null;
+            ValueList elsecase = null;
 
-            foreach (Value conditional_val in list.Cdr.ToPair())
+            LinkedListNode<Value> curent = list.GetNodeAtIndex(1);
+
+            while (curent!=null)
             {
-                Syntax conditional_stx = conditional_val.AsSyntax();
+                Syntax conditional_stx = curent.Value.AsSyntax();
                 if (elsecase != null) throw SchemeError.SyntaxError("cond", "unexpected expression after condition's else clause", conditional_stx);
                 if (conditional_stx.IsExpression)
                 {
                     // Get single conditional expression
-                    Pair conditional_list = conditional_stx.AsList();
+                    ValueList conditional_list = conditional_stx.AsValueList();
+                    
                     // Check arguments count, should be 2 for each condition
-                    int size = Pair.Length(conditional_list);
-                    if (size != 2) throw SchemeError.ArityError("cond", "arity missmach", 2, size, conditional_list, conditional_stx);
+                    int size = conditional_list.Count;
+                    if (size != 2) throw SchemeError.ArityError("cond", "arity mismatch", 2, size, conditional_list, conditional_stx);
+                    
                     // Now get condition and it's expression
                     Syntax var = conditional_list[0].AsSyntax();
                     Syntax val = conditional_list[1].AsSyntax();
 
                     if (var.IsIdentifier && var.AsIdentifier() == Symbol.ELSE)
                     {
-                        elsecase = Pair.ListFromArguments(var, AstBuilder.Expand(val, env));
+                        elsecase = ValueList.ListFromArguments(var, AstBuilder.Expand(val, env));
                     }
                     else
                     {
                         AST cond_ = AstBuilder.Expand(var, env);
                         AST then_ = AstBuilder.Expand(val, env);
-                        Pair single_cond = Pair.ListFromArguments(cond_, then_);
-                        if (last == null)
-                            first = last = new Pair();
-                        else
-                        {
-                            last.Cdr.Set(new Pair());
-                            last = last.Cdr.ToPair();
-                        }
-                        last.Car.Set(single_cond);
+                        ValueList single_cond = ValueList.ListFromArguments(cond_, then_);
+                        allcases.AddLast(single_cond);
                     }
                 }
                 else
                 {
                     throw SchemeError.SyntaxError("cond", "Expected condition's expression list", conditional_stx);
                 }
+                curent = curent.Next;
             }
 
-            return new AstConditionCond(stx, keyword, first, elsecase);
+            return new AstConditionCond(stx, keyword, allcases, elsecase);
         }
     }
 }

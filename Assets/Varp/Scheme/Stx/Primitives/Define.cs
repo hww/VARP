@@ -30,6 +30,7 @@ namespace VARP.Scheme.Stx.Primitives
     using Exception;
     using REPL;
     using Data;
+    using DataStructures;
 
     public sealed class PrimitiveDefine : BasePrimitive
     {
@@ -37,26 +38,22 @@ namespace VARP.Scheme.Stx.Primitives
         // (define (x) ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.AsList();
+            ValueList list = stx.AsValueList();
             int argc = GetArgsCount(list);
-            AssertArgsEqual("define", "arity mismatch", 2, argc, list, stx);
+            AssertArgsMinimum("define", "arity mismatch", 2, argc, list, stx);
 
-            Syntax def_stx = list[0].AsSyntax();
-            Syntax var_stx = list[1].AsSyntax();
-            Pair val_lst = list.PairAtIndex(2);
+            Syntax def_stx = list[0].AsSyntax();        // define
+            Syntax var_stx = list[1].AsSyntax();        // ()
 
             if (var_stx.IsIdentifier)
             {
+                AssertArgsMaximum("define", "arity mismatch", 2, argc, list, stx);
+                Syntax val_stx = list[2].AsSyntax();
+
                 // ----------------------------------------------------------------
                 // identifier aka: (define x ...)
                 // ----------------------------------------------------------------
-                int after_identifier = Pair.Length(val_lst);
-                if (after_identifier == 0)
-                    throw SchemeError.SyntaxError("define", "missing expression after identifier in", stx, list);
-                if (after_identifier > 1)
-                    throw SchemeError.SyntaxError("define", "multiple expressions after identifier in", stx, list);
-
-                AST value = Expand(val_lst.Car.AsSyntax(), env);
+                AST value = Expand(val_stx, env);
 
                 Symbol var_id = var_stx.AsIdentifier();
                 Binding bind = env.Lookup(var_id);
@@ -69,16 +66,16 @@ namespace VARP.Scheme.Stx.Primitives
                 // ----------------------------------------------------------------
                 // identifier aka: (define (x ...) ...) as result lambda expression
                 // ----------------------------------------------------------------
-                Pair args_list = var_stx.AsList();
+                ValueList args_list = var_stx.AsValueList();
 
                 Arguments arguments = new Arguments();
                 ArgumentsList.Parse(stx, args_list, env, ref arguments);
 
-                Pair lambda_body = AstBuilder.ExpandListElements(val_lst, env);
+                ValueList lambda_body = AstBuilder.ExpandListElements(list, 2, env);
                 AstLambda lambda = new AstLambda(stx, def_stx, arguments, lambda_body);
 
-                Syntax identifier_stx = args_list.Car.AsSyntax();
-                Symbol identifier = (args_list.Car.AsSyntax()).GetIdentifier();
+                Syntax identifier_stx = args_list[0].AsSyntax();
+                Symbol identifier = identifier_stx.AsIdentifier();
                 Binding binding = env.Lookup(identifier);
                 if (binding == null) env.DefineVariable(identifier);
 

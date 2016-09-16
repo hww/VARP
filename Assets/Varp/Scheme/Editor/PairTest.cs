@@ -29,119 +29,32 @@ using UnityEngine;
 using NUnit.Framework;
 using VARP.Scheme.Stx;
 using VARP.Scheme.Data;
+using VARP.Scheme.REPL;
 
 namespace SchemeUnit
 {
 	/// <summary>
 	/// Some tests for Pairs
 	/// </summary>
-	public class ParserTest
+	public class ListTest
     {
 
         //Interpreter terp = new Interpreter();
         //Parser terp = new Parser();
-        Pair ParseScheme(string expression)
+        ValueList ParseScheme(string expression)
         {
-            return AstBuilder.Expand(expression, "PairTes.cs").GetDatum().ToPair();
+            return AstBuilder.Expand(expression, "PairTes.cs").GetDatum().AsValueList();
         }
 
-		[Test]
-		public void TestLoop()
-		{
-			Pair shortList = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-			Pair lastElement = shortList;
-			Pair loopElement = shortList;
-
-			Assert.False(shortList.HasLoop());
-
-			for (int x=0; x<9; x++) lastElement = (Pair)lastElement.Cdr;
-			for (int x=0; x<3; x++) loopElement = (Pair)loopElement.Cdr;
-
-			// Make a loop
-			lastElement.Cdr = loopElement;
-
-			Assert.True(shortList.HasLoop());
-		}
-
-		[Test]
-		public void TestImproper()
-		{
-			Pair shortList = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-
-			Assert.False(shortList.IsImproper());
-
-			Pair improperList = ParseScheme("(1 2 3 4 5 6 7 8 9 . 10)");
-
-			Assert.True(improperList.IsImproper());
-		}
-
-		[Test]
-		public void TestImproperWithLoop()
-		{
-			Pair shortList = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-			Pair lastElement = shortList;
-			Pair loopElement = shortList;
-
-			for (int x=0; x<9; x++) lastElement = (Pair)lastElement.Cdr;
-			for (int x=0; x<3; x++) loopElement = (Pair)loopElement.Cdr;
-
-			// Make a loop
-			lastElement.Cdr = loopElement;
-
-			Assert.False(shortList.IsImproper());
-		}
-
-		[Test]
-		public void TestLoopOrImproper()
-		{
-			Pair shortList = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-			Pair lastElement = shortList;
-			Pair loopElement = shortList;
-
-			Assert.False(shortList.IsImproperOrLoop());
-			
-			Pair improperList = ParseScheme("(1 2 3 4 5 6 7 8 9 . 10)");
-			Assert.True(improperList.IsImproperOrLoop());
-
-			for (int x=0; x<9; x++) lastElement = (Pair)lastElement.Cdr;
-			for (int x=0; x<3; x++) loopElement = (Pair)loopElement.Cdr;
-
-			// Make a loop
-			lastElement.Cdr = loopElement;
-
-			Assert.True(shortList.IsImproperOrLoop());
-		}
-
-		[Test]
-		public void FindLoopHead()
-		{
-			Pair shortList = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-			Pair lastElement = shortList;
-			Pair loopElement = shortList;
-
-            Assert.AreEqual(null, shortList.GetLoopHead());
-
-			for (int x=0; x<9; x++) lastElement = lastElement.Cdr.ToPair();
-			for (int x=0; x<3; x++) loopElement = loopElement.Cdr.ToPair();
-
-			Assert.AreEqual(10, lastElement.Car);
-			Assert.AreEqual(4, loopElement.Car);
-
-			// Make a loop
-			lastElement.Cdr = loopElement;
-
-			Assert.AreEqual(4, shortList.GetLoopHead().Car);
-			Assert.AreEqual(loopElement, shortList.GetLoopHead());
-		}
 
         [Test]
         public void Reverse()
         {
-            Pair list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            Pair list2 = Pair.Reverse(list1);
+            ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
+            ValueList list2 = list1.DuplicateReverse(0,-1) as ValueList;
 
-            int size1 = Pair.Length(list1);
-            int size2 = Pair.Length(list2);
+            int size1 = list1.Count;
+            int size2 = list2.Count;
 
             Assert.AreEqual(size1, size2);
 
@@ -151,20 +64,17 @@ namespace SchemeUnit
         [Test]
         public void Duplicate()
         {
-            Pair list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            Pair list2 = null;
-            Pair last = null;
-            int size0 = Pair.Duplicate(list1, ref list2, ref last);
+            ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
+            ValueList list2 = list1.Duplicate(0, -1) as ValueList;
 
-            int size1 = Pair.Length(list1);
-            int size2 = Pair.Length(list2);
+            int size1 = list1.Count;
+            int size2 = list2.Count;
 
-            Assert.AreEqual(size0, size1);
             Assert.AreEqual(size1, size2);
-            Assert.AreEqual(10, last.Car);
+            Assert.AreEqual(10, list2[0]);
 
             for (int x = 0; x < size1; x++)
-                Assert.AreNotEqual((list1.PairAtIndex(x) as object), (list2.PairAtIndex(x).GetHashCode() as object));
+                Assert.AreNotEqual((list1.GetNodeAtIndex(x) as object), (list2.GetNodeAtIndex(x).GetHashCode() as object));
 
             for (int x = 0; x < size1; x++)
                 Assert.AreEqual(list1[x], list2[x]);
@@ -173,23 +83,20 @@ namespace SchemeUnit
         [Test]
         public void Sublist()
         {
-            Pair list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            Pair list2 = null;
-            Pair last = null;
-            int res_size = Pair.Sublist(list1, 1, 3, ref list2, ref last);
+            ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
+            ValueList list2 = list1.Duplicate(1, 3) as ValueList;
 
-            int size2 = Pair.Length(list2);
+            int size1 = list1.Count;
+            int size2 = list2.Count;
 
-            Assert.AreEqual(res_size, size2);
-            Assert.AreEqual(list2.AsString(), "(2 3 4)");
+            Assert.AreEqual(3, size2);
+            Assert.AreEqual(Inspector.Inspect(list2), "(2 3 4)");
 
 
-            res_size = Pair.Sublist(list1, -4, -2, ref list2, ref last);
+            list2 = list1.DuplicateReverse(1, 3) as ValueList; 
 
-            size2 = Pair.Length(list2);
-
-            Assert.AreEqual(res_size, size2);
-            Assert.AreEqual(list2.AsString(), "(7 8 9)");
+            Assert.AreEqual(3, size2);
+            Assert.AreEqual(Inspector.Inspect(list2), "(4 3 2)");
 
         }
 

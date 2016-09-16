@@ -35,7 +35,7 @@ namespace VARP.Scheme.Stx.Primitives
         // '(foo ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.AsList();
+            ValueList list = stx.AsValueList();
             int argc = GetArgsCount(list);
             AssertArgsEqual("quote", "arity mismatch", 1, argc, list, stx);
             Syntax lit = list[0].AsSyntax();

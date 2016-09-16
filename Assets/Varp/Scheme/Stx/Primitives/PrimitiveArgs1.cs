@@ -37,11 +37,11 @@ namespace VARP.Scheme.Stx.Primitives
         // (foo 1)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.AsList();
+            ValueList list = stx.AsValueList();
             int argc = GetArgsCount(list);
             AssertArgsEqual("primitive1", "arity mismatch", 1, argc, list, stx);
             Syntax set_kwd = list[0].AsSyntax();
-            Pair arguments = AstBuilder.ExpandListElements(list.Cdr.ToPair(), env);
+            ValueList arguments = AstBuilder.ExpandListElements(list, 1, env);
             return new AstPrimitive(stx, set_kwd, arguments);
         }
     }

@@ -573,13 +573,13 @@ namespace VARP.DataStructures
         {
             Debug.Assert(index >= 0);
             Debug.Assert(index < count);
-            LinkedListNode<T> curet = First;
+            LinkedListNode<T> current = First;
             while (index>0)
             {
-                curet = curet.Next;
+                current = current.Next;
                 index--;
             }
-            return curet;
+            return current;
         }
 
         public T this[int index]
@@ -621,16 +621,54 @@ namespace VARP.DataStructures
             Debug.Assert(index >= 0);
             LinkedList<T> result = new LinkedList<T>();
             if (index >= Count) return result;
-            LinkedListNode<T> curent = GetNodeAtIndex(index);
-            while (curent != null && (size < 0 || size > 0))
+            LinkedListNode<T> current = GetNodeAtIndex(index);
+            while (current != null && (size < 0 || size > 0))
             {
-                LinkedListNode<T> n = new LinkedListNode<T>(curent.Value);
+                LinkedListNode<T> n = new LinkedListNode<T>(current.Value);
                 result.AddLast(n);
                 size--;
             }
             return result;
         }
 
+        /// <summary>
+        /// Make sublist from give index, and up to size
+        /// </summary>
+        /// <param name="index"></param>
+        /// <param name="size">if -1 then up to end of list</param>
+        /// <returns></returns>
+        public LinkedList<T> DuplicateReverse(int index, int size)
+        {
+            Debug.Assert(index >= 0);
+            LinkedList<T> result = new LinkedList<T>();
+            if (index >= Count) return result;
+            LinkedListNode<T> current = GetNodeAtIndex(index);
+            while (current != null && (size < 0 || size > 0))
+            {
+                LinkedListNode<T> n = new LinkedListNode<T>(current.Value);
+                result.AddFirst(n);
+                size--;
+            }
+            return result;
+        }
+
+        public void Reverse()
+        {
+            LinkedListNode<T> temp = null;
+            LinkedListNode<T> current = First;
+            LinkedListNode<T> last = current; // will last
+            while (current != null)
+            {
+                temp = current.Previous;
+                current.prev = current.Next;
+                current.next = temp;
+                current = current.Previous;
+            }
+            if (temp != null)
+                head.next = temp.Previous;
+
+            head.prev = last;
+        }
         #endregion
     }
 

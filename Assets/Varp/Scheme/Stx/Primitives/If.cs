@@ -35,7 +35,7 @@ namespace VARP.Scheme.Stx.Primitives
         // (if () ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.AsList();
+            ValueList list = stx.AsValueList();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("if", "arity mismatch", 2, argc, list, stx);
 

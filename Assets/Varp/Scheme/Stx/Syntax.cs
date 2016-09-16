@@ -72,7 +72,7 @@ namespace VARP.Scheme.Stx
         /// Get expression
         /// </summary>
         /// <returns></returns>
-        public ValueList AsList() { return expression.AsValueList(); }
+        public ValueList AsValueList() { return expression.AsValueList(); }
 
         /// <summary>
         /// Get identifier (exception if syntax is not identifier)

@@ -37,11 +37,11 @@ namespace VARP.Scheme.Stx.Primitives
         // (foo 1 2)
         public static AST Expand(Syntax stx, Environment env)
         {
-            Pair list = stx.AsList();
+            ValueList list = stx.AsValueList();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("primitive2", "arity mismatch", 2, argc, list, stx);
             Syntax set_kwd = list[0].AsSyntax();
-            Pair arguments = AstBuilder.ExpandListElements(list.Cdr.ToPair(), env);
+            ValueList arguments = AstBuilder.ExpandListElements(list, 1, env);
             if (argc == 2)
             {
                 return new AstPrimitive(stx, set_kwd, arguments);
@@ -49,11 +49,13 @@ namespace VARP.Scheme.Stx.Primitives
             else
             {
                 // for expression (+ 1 2 3 4)
-                Pair args = Pair.Reverse(arguments);    //< (+ 4 3 2 1)
-                AST rightarg = args.Car.ToAST();         //< 4
-                foreach (Value leftarg in args.Cdr.ToPair()) //< 3, 2, 1, 
+                ValueList args = arguments.DuplicateReverse(0,-1) as ValueList;     //< (+ 4 3 2 1)
+                AST rightarg = args[0].AsAST();                                     //< 4
+                int skip = 1;
+                foreach (Value leftarg in args)                                     //< 3, 2, 1, 
                 {
-                    rightarg = new AstPrimitive(stx, set_kwd, new Pair(leftarg, new Pair(rightarg, null)));
+                    if (skip-- > 0) continue;
+                    rightarg = new AstPrimitive(stx, set_kwd, ValueList.ListFromArguments(leftarg, rightarg));
                 }
                 return rightarg;
             }

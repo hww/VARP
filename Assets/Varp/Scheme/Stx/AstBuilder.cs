@@ -93,9 +93,9 @@ namespace VARP.Scheme.Stx
         // aka: (...)
         public static AST ExpandExpression(Syntax syntax, Environment env)
         {
-            Pair list = syntax.AsList();
+            ValueList list = syntax.AsValueList();
             if (list == null) return new AstApplication(syntax, null);
-            Syntax ident = list.Car.AsSyntax();
+            Syntax ident = list[0].AsSyntax();
             if (ident.IsIdentifier)
             {
                 Binding binding = env.Lookup(ident.expression.AsSymbol());
@@ -105,34 +105,27 @@ namespace VARP.Scheme.Stx
                         return binding.Primitive(syntax, env);
                 }
             }
-            return new AstApplication(syntax, ExpandListElements(list, env));
+            // we do not find priitive. expand all expression with keyword at firs element
+            return new AstApplication(syntax, ExpandListElements(list, 0, env));
         }
 
         // Expand list of syntax objects as: (#<syntax> #<syntax> ...)
         // aka: (...)
-        public static ValueList ExpandListElements(ValueList list, Environment env)
+        public static ValueList ExpandListElements(ValueList list, int index, Environment env)
         {
             if (list == null) return null;
 
-            Pair first = new Pair();
-            Pair last = first;
-            while (list != null)
+            ValueList result = new ValueList();
+
+            foreach (var v in list)
             {
-                last.Car.Set(Expand(list.Car.AsSyntax(), env));
-                if (list.Cdr.IsPair)
-                {
-                    last.Cdr.Set(new Pair());
-                    last = last.Cdr.ToPair();
-                    list = list.Cdr.ToPair();
-                }
+                if (index == 0)
+                    result.AddLast(Expand(v.AsSyntax(), env));
                 else
-                {
-                    last.Cdr.Set(Expand(list.Cdr.AsSyntax(), env));
-                    last = null;
-                    break;
-                }
+                    index--;
             }
-            return first;
+
+            return result;
         }
 
         #endregion
