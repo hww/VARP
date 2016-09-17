@@ -83,6 +83,11 @@ namespace VARP.Scheme.Data
             return RefVal is NumberClass && (int)NumVal == value;
         }
 
+        public bool Equals(uint value)
+        {
+            return RefVal is NumberClass && (uint)NumVal == value;
+        }
+
         public bool Equals(double value)
         {
             return RefVal is NumberClass && NumVal == value;
@@ -114,6 +119,9 @@ namespace VARP.Scheme.Data
 
             if (a.RefVal is ValueClass)
                 return (a.RefVal as ValueClass).Equals(b);
+
+            if (a.RefVal is string)
+                return (a.RefVal as string).Equals(b.RefVal as string);
 
             return false;
         }

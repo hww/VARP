@@ -45,9 +45,9 @@ namespace VARP.Scheme.Data
 
         public static explicit operator bool(Value value)
         {
-            if (value.RefVal == BoolClass.True)
+            if (value.RefVal is TrueClass)
                 return true;
-            if (value.RefVal == BoolClass.False)
+            if (value.RefVal is FalseClass)
                 return false;
 
             throw new InvalidCastException();
@@ -55,34 +55,32 @@ namespace VARP.Scheme.Data
 
         public static explicit operator int(Value value)
         {
-            if (value.RefVal != FloatClass.Instance)
-                throw new InvalidCastException();
-
-            return (int)value.NumVal;
+            if (value.RefVal is NumberClass)
+                return (int)value.NumVal;
+            throw new InvalidCastException();
         }
 
         public static explicit operator uint(Value value)
         {
-            if (value.RefVal != FloatClass.Instance)
-                throw new InvalidCastException();
+            if (value.RefVal is NumberClass)
+                return (uint)value.NumVal;
+            throw new InvalidCastException();
 
-            return (uint)value.NumVal;
+
         }
 
         public static explicit operator double(Value value)
         {
-            if (value.RefVal != FloatClass.Instance)
-                throw new InvalidCastException();
-
-            return value.NumVal;
+            if (value.RefVal is NumberClass)
+                return value.NumVal;
+            throw new InvalidCastException();
         }
 
         public static explicit operator float(Value value)
         {
-            if (value.RefVal != FloatClass.Instance)
-                throw new InvalidCastException();
-
-            return (float)value.NumVal;
+            if (value.RefVal is NumberClass)
+                return (float)value.NumVal;
+            throw new InvalidCastException();
         }
 
         public static explicit operator string(Value value)

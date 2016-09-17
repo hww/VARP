@@ -58,7 +58,7 @@ namespace VARP.Scheme.Data
 
         public Value(bool value)
         {
-            RefVal = value;
+            RefVal = value ? BoolClass.True : BoolClass.False;
             NumVal = 0;
         }
 

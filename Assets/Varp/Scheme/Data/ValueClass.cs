@@ -91,7 +91,7 @@ namespace VARP.Scheme.Data
     }
 
     public sealed class TrueClass : BoolClass {
-        public override string ToString() { return "#f"; }
+        public override string ToString() { return "#t"; }
         public override bool AsBool() { return true; }
 
     }
