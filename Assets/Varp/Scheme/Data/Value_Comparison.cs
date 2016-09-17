@@ -78,6 +78,11 @@ namespace VARP.Scheme.Data
             return value ? RefVal is TrueClass : RefVal is FalseClass;
         }
 
+        public bool Equals(int value)
+        {
+            return RefVal is NumberClass && (int)NumVal == value;
+        }
+
         public bool Equals(double value)
         {
             return RefVal is NumberClass && NumVal == value;
@@ -101,8 +106,11 @@ namespace VARP.Scheme.Data
 
         public static bool Equals(Value a, Value b)
         {
+            if (a.RefVal is NumberClass && b.RefVal is NumberClass)
+                return a.NumVal == b.NumVal;
+
             if (a.RefVal == b.RefVal)
-                return a.RefVal != FloatClass.Instance || a.NumVal == b.NumVal;
+                return true;
 
             if (a.RefVal is ValueClass)
                 return (a.RefVal as ValueClass).Equals(b);

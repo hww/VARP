@@ -41,6 +41,12 @@ namespace VARP.Scheme.Data
         {
         }
 
+        public ValueList(LinkedList<Value> list) : base()
+        {
+            head = list.head;
+            count = list.count;
+        }
+
         public static ValueList ListFromArguments(params Value[] args)
         {
             return new ValueList(args);

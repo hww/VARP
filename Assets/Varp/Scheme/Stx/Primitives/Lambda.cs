@@ -57,7 +57,7 @@ namespace VARP.Scheme.Stx.Primitives
                 LinkedListNode<Value> curent = list.GetNodeAtIndex(2);
                 while (curent != null)
                 {
-                    body.AddLast(AstBuilder.ExpandExpression(curent.Value.AsSyntax(), localEnv).ToValue());
+                    body.AddLast(AstBuilder.Expand(curent.Value.AsSyntax(), localEnv).ToValue());
                     curent = curent.Next;
                 }
             }

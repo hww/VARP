@@ -25,18 +25,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using UnityEngine;
-using NUnit.Framework;
-using VARP.Scheme.Stx;
-using VARP.Scheme.Data;
-using VARP.Scheme.REPL;
 
 namespace SchemeUnit
 {
-	/// <summary>
-	/// Some tests for Pairs
-	/// </summary>
-	public class ListTest
+    using VARP.Scheme.Stx;
+    using VARP.Scheme.Data;
+    using VARP.Scheme.REPL;
+    using NUnit.Framework;
+
+    /// <summary>
+    /// Some tests for Pairs
+    /// </summary>
+    public class PairTest
     {
 
         //Interpreter terp = new Interpreter();
@@ -45,13 +45,25 @@ namespace SchemeUnit
         {
             return AstBuilder.Expand(expression, "PairTes.cs").GetDatum().AsValueList();
         }
-
-
         [Test]
         public void Reverse()
         {
             ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            ValueList list2 = list1.DuplicateReverse(0,-1) as ValueList;
+            list1.Reverse();
+
+            int size1 = list1.Count;
+
+            Assert.AreEqual(size1, 10);
+
+            for (int x = 0; x < size1; x++)
+                Assert.AreEqual(list1[x], 10-x);
+        }
+
+        [Test]
+        public void DuplicateReverse()
+        {
+            ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
+            ValueList list2 = list1.DuplicateReverse(0, -1).AsValueList();
 
             int size1 = list1.Count;
             int size2 = list2.Count;
@@ -65,16 +77,16 @@ namespace SchemeUnit
         public void Duplicate()
         {
             ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            ValueList list2 = list1.Duplicate(0, -1) as ValueList;
+            ValueList list2 = list1.Duplicate(0, -1).AsValueList();
 
             int size1 = list1.Count;
             int size2 = list2.Count;
 
             Assert.AreEqual(size1, size2);
-            Assert.AreEqual(10, list2[0]);
+            Assert.AreEqual(1, list2[0].AsInt32());
 
             for (int x = 0; x < size1; x++)
-                Assert.AreNotEqual((list1.GetNodeAtIndex(x) as object), (list2.GetNodeAtIndex(x).GetHashCode() as object));
+                Assert.AreNotSame(list1.GetNodeAtIndex(x), list2.GetNodeAtIndex(x));
 
             for (int x = 0; x < size1; x++)
                 Assert.AreEqual(list1[x], list2[x]);
@@ -84,19 +96,19 @@ namespace SchemeUnit
         public void Sublist()
         {
             ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            ValueList list2 = list1.Duplicate(1, 3) as ValueList;
+            ValueList list2 = list1.Duplicate(1, 3).AsValueList();
 
             int size1 = list1.Count;
             int size2 = list2.Count;
 
             Assert.AreEqual(3, size2);
-            Assert.AreEqual(Inspector.Inspect(list2), "(2 3 4)");
+            Assert.AreEqual("(2 3 4)", Inspector.Inspect(list2));
 
 
-            list2 = list1.DuplicateReverse(1, 3) as ValueList; 
+            list2 = list1.DuplicateReverse(1, 3).AsValueList();
 
             Assert.AreEqual(3, size2);
-            Assert.AreEqual(Inspector.Inspect(list2), "(4 3 2)");
+            Assert.AreEqual("(4 3 2)", Inspector.Inspect(list2));
 
         }
 

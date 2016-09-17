@@ -27,6 +27,7 @@
 
 namespace VARP.DataStructures
 {
+    using Scheme.Data;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -642,6 +643,7 @@ namespace VARP.DataStructures
                 LinkedListNode<T> n = new LinkedListNode<T>(current.Value);
                 result.AddLast(n);
                 size--;
+                current = current.Next;
             }
             return result;
         }
@@ -655,35 +657,50 @@ namespace VARP.DataStructures
         public LinkedList<T> DuplicateReverse(int index, int size)
         {
             Debug.Assert(index >= 0);
+            Debug.Assert(index < Count);
+            Debug.Assert(index+size < Count);
+
             LinkedList<T> result = new LinkedList<T>();
-            if (index >= Count) return result;
             LinkedListNode<T> current = GetNodeAtIndex(index);
+
             while (current != null && (size < 0 || size > 0))
             {
                 LinkedListNode<T> n = new LinkedListNode<T>(current.Value);
                 result.AddFirst(n);
                 size--;
+                current = current.Next;
             }
             return result;
         }
 
         public void Reverse()
         {
-            LinkedListNode<T> temp = null;
-            LinkedListNode<T> current = First;
-            LinkedListNode<T> last = current; // will last
-            while (current != null)
-            {
-                temp = current.Previous;
-                current.prev = current.Next;
-                current.next = temp;
-                current = current.Previous;
-            }
-            if (temp != null)
-                head.next = temp.Previous;
+            if (count < 2) return;
 
-            head.prev = last;
+            LinkedListNode<T> temp = null;
+            LinkedListNode<T> last = First; // this will be last
+            LinkedListNode<T> start = First; // this is iterator
+            head = Last;
+            while (start != null)
+            {
+                temp = start.next;
+                start.next= start.prev;
+                start.prev = temp;
+                start = start.Previous;
+            }
+
         }
+        #endregion
+
+
+        #region Casting Methods
+
+        public ValueList AsValueList()
+        {
+            return new ValueList(this as LinkedList<Value>);
+        }
+
+
         #endregion
     }
 
