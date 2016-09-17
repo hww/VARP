@@ -25,6 +25,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -35,12 +36,13 @@ namespace VARP.Scheme.Stx
     using Tokenizing;
     using DataStructures;
 
+
     public sealed class Syntax : ValueClass
     {
         public readonly static Syntax False = new Syntax(Value.False, null as Location);
         public readonly static Syntax Void = new Syntax(Value.Void, null as Location);
 
-        public Value expression;
+        public Value Expression;
         public Location location;
 
         public Syntax() : base()
@@ -48,22 +50,22 @@ namespace VARP.Scheme.Stx
         }
         public Syntax(Value expression, Location location)
         {
-            this.expression = expression;
+            this.Expression = expression;
             this.location = location;
         }
         public Syntax(Value expression, Token token)
         {
-            this.expression = expression;
+            this.Expression = expression;
             this.location = token == null ? null : token.location;
         }
         public Syntax(object expression, Location location)
         {
-            this.expression.Set(expression);
+            this.Expression.Set(expression);
             this.location = location;
         }
         public Syntax(object expression, Token token)
         {
-            this.expression.Set(expression);
+            this.Expression.Set(expression);
             this.location = token == null ? null : token.location;
         }
 
@@ -72,7 +74,7 @@ namespace VARP.Scheme.Stx
         /// Get expression
         /// </summary>
         /// <returns></returns>
-        public ValueList AsValueList() { return expression.AsValueList(); }
+        public ValueList AsValueList() { return Expression.AsValueList(); }
 
         /// <summary>
         /// Get identifier (exception if syntax is not identifier)
@@ -80,7 +82,7 @@ namespace VARP.Scheme.Stx
         /// <returns></returns>
         public Symbol AsIdentifier()
         {
-            if (expression.IsSymbol) return expression.AsSymbol();
+            if (Expression.IsSymbol) return Expression.AsSymbol();
             throw SchemeError.ArgumentError("get-identifier", "identifier?", this);
         }
 
@@ -88,23 +90,26 @@ namespace VARP.Scheme.Stx
         /// Get datum
         /// </summary>
         /// <returns></returns>
-        public Value AsDatum() { return ConvertToDatum(expression); }
+        public Value GetDatum() { return GetDatum(Expression); }
 
+        #endregion
+
+        #region Datum Extractor Methods
         /// <summary>
         /// Method safely cast the syntax's expression to the Datum
         /// </summary>
         /// <param name="expression"></param>
         /// <returns></returns>
-        static Value ConvertToDatum(Value expression)
+        static Value GetDatum(Value expression)
         {
             if (expression.IsSyntax)
-                return (expression.AsSyntax()).AsDatum();
+                expression = (expression.AsSyntax()).Expression;
 
             if (expression.IsValueList)
             {
                 ValueList result = new ValueList();
                 foreach (var val in expression.AsValueList())
-                    result.AddLast(ConvertToDatum(val));
+                    result.AddLast(GetDatum(val));
                 return new Value(result);
             }
 
@@ -115,7 +120,7 @@ namespace VARP.Scheme.Stx
                 foreach (var v in src)
                 {
                     if (v.IsSyntax)
-                        dst.Add(v.AsSyntax().AsDatum());
+                        dst.Add(GetDatum(v.AsSyntax()));
                     else
                         throw SchemeError.ArgumentError("syntax->datum", "identifier?", v);
                 }
@@ -125,14 +130,14 @@ namespace VARP.Scheme.Stx
         }
         #endregion
 
-        public bool IsSymbol { get { return expression.IsSymbol; } }
-        public bool IsIdentifier { get { return (expression.IsSymbol) && expression.AsSymbol().IsIdentifier; } }
-        public bool IsLiteral { get { return (expression.IsSymbol) && expression.AsSymbol().IsLiteral; } }
-        public bool IsExpression { get { return (expression == null) || expression.IsValueList; } }
+        public bool IsSymbol { get { return Expression.IsSymbol; } }
+        public bool IsIdentifier { get { return (Expression.IsSymbol) && Expression.AsSymbol().IsIdentifier; } }
+        public bool IsLiteral { get { return !IsExpression && !IsIdentifier; } }
+        public bool IsExpression { get { return (Expression == null) || Expression.IsValueList; } }
 
         #region ValueType Methods
         public override bool AsBool() { return true; }
-        public override string AsString() { return expression == null ? "()" : expression.AsString(); }
+        public override string ToString() { return Expression == null ? "()" : Expression.ToString(); }
 
         #endregion
 

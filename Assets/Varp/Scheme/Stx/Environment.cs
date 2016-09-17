@@ -92,7 +92,7 @@ namespace VARP.Scheme.Stx
                 Keys = ExpandOptional(expression, arguments.key);
             if (arguments.rest != null)
             {
-                Syntax synt = arguments.rest[1].AsSyntax();
+                Syntax synt = arguments.rest;
                 DefineVariable(synt.AsIdentifier());
                 Rest = 1;
             }
@@ -332,7 +332,6 @@ namespace VARP.Scheme.Stx
         #region ValueType Methods
         public override bool AsBool() { return true; }
         public override string ToString() { return string.Format("#<lexical-environment size={0}>", Bindings.Count); }
-        public override string AsString() { return base.ToString(); }
 
         #endregion
     }

@@ -31,12 +31,16 @@ namespace VARP.Scheme.Stx
     using Exception;
     using REPL;
 
+    public interface IDatum
+    {
+        Value GetDatum();
+    }
     /// <summary>
     /// This structure have to be used as shortcuts to already existing type such as
     /// Syntax and Pair. Use the data in existing data structure and do not make copy
     /// values without reason. It will make more loaded GC but at same time simpify code.
     /// </summary>
-    public class AST : ValueClass
+    public abstract class AST : ValueClass
     {
         /// <summary>
         /// This is location of the expression
@@ -52,38 +56,48 @@ namespace VARP.Scheme.Stx
             this.Expression = syntax;
         }
 
-        // n.b. will be reimplemented for most of types.
-        public virtual Value GetDatum() { return Value.Nill; }
-        public T GetDatum<T>() where T:class { return GetDatum(this) as T; }
-        public Value GetDatum(AST ast)
+        /// <summary>
+        /// Extract datum from this AST object
+        /// </summary>
+        /// <returns></returns>
+        public abstract Value GetDatum();
+
+        #region Datum Extractor Methods
+        public static Value GetDatum(AST ast)
         {
-            return ast.GetDatum();
+            return GetDatum(ast.Expression);
         }
-        public Value GetDatum(Syntax syn)
+        public static Value GetDatum(Syntax syn)
         {
-            return syn.AsDatum();
+            return syn.GetDatum();
         }
-        public Value GetDatum(Value value)
+        public static Value GetDatum(Value value)
         {
             if (value == null) return Value.Nill;
-            if (value.IsSyntax)
-                return value.AsSyntax().AsDatum();
             if (value.IsAST)
-                return value.AsAST().GetDatum();
+                return GetDatum(value.AsAST());
+            if (value.IsSyntax)
+                return GetDatum(value.AsSyntax());
             if (value.IsValueList)
                 return GetDatum(value.AsValueList());
             if (value.IsValueVector)
                 return GetDatum(value.AsValueVector());
             return new Value(value);
         }
-        public Value GetDatum(ValueList list)
+        public static Value GetDatum(ValueList list)
         {
             ValueList result = new ValueList();
-            foreach (var curent in list)
-                result.AddLast(curent.AsAST().GetDatum());
+            if (list == null) return Value.Nill;
+            foreach (Value curent in list)
+            {
+                string s = curent.DebuggerDisplay;
+                AST ast = curent.AsAST();
+                Value datum = ast.GetDatum();
+                result.AddLast(datum);
+            }
             return new Value(result);
         }
-        public Value GetDatum(ValueVector vector)
+        public static Value GetDatum(ValueVector vector)
         {
             ValueVector result = new ValueVector(vector.Count);
             foreach (var curent in vector)
@@ -91,9 +105,11 @@ namespace VARP.Scheme.Stx
             return new Value(result);
         }
 
+        #endregion
+
         #region ValueType Methods
         public override bool AsBool() { return true; }
-        public override string AsString() { return base.ToString(); }
+        public override string ToString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast{0}>", GetLocationString()); }
         #endregion
         protected string GetLocationString()
@@ -113,7 +129,7 @@ namespace VARP.Scheme.Stx
         public override Value GetDatum() { return GetDatum(Expression); }
 
         #region ValueType Methods
-        public override string AsString() { return Expression.AsString(); }
+        public override string ToString() { return Inspector.Inspect(Expression); }
         public override string Inspect()
         {
             return string.Format("#<ast-lit{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum(Expression)));
@@ -132,7 +148,7 @@ namespace VARP.Scheme.Stx
         public override Value GetDatum() { return GetDatum(Expression); }
 
         #region ValueType Methods
-        public override string AsString() { return base.ToString(); }
+        public override string ToString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast-ref{0} {1}>", GetLocationString(), Binding.Identifier); }
         #endregion
     }
@@ -151,11 +167,11 @@ namespace VARP.Scheme.Stx
             this.Value = value;
             this.Binding = binding;
         }
-        public override Value GetDatum() { return ValueList.ListFromArguments(Expression.AsDatum(), Variable.AsDatum(), GetDatum(Value)).ToValue(); }
+        public override Value GetDatum() { return ValueList.ListFromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value)).ToValue(); }
 
         #region ValueType Methods
-        public override string AsString() { return base.ToString(); }
-        public override string Inspect() { return string.Format("#<ast-set{0} {1} {2}>", GetLocationString(), Variable.AsString(), Inspector.Inspect(Value)); }
+        public override string ToString() { return base.ToString(); }
+        public override string Inspect() { return string.Format("#<ast-set{0} {1} {2}>", GetLocationString(), Variable.ToString(), Inspector.Inspect(Value)); }
         #endregion
     }
 
@@ -174,11 +190,11 @@ namespace VARP.Scheme.Stx
             this.Value = value;
             this.Binding = binding;
         }
-        public override Value GetDatum() { return ValueList.ListFromArguments(Expression.AsDatum(), Variable.AsDatum(), GetDatum(Value)).ToValue(); }
+        public override Value GetDatum() { return ValueList.ListFromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value)).ToValue(); }
 
         #region ValueType Methods
-        public override string AsString() { return base.ToString(); }
-        public override string Inspect() { return string.Format("#<ast-def{0} {1} {2}>", GetLocationString(), Variable.AsString(), Inspector.Inspect(GetDatum(Value))); }
+        public override string ToString() { return base.ToString(); }
+        public override string Inspect() { return string.Format("#<ast-def{0} {1} {2}>", GetLocationString(), Variable.ToString(), Inspector.Inspect(GetDatum(Value))); }
         #endregion
     }
 
@@ -200,12 +216,12 @@ namespace VARP.Scheme.Stx
         public override Value GetDatum()
         {
             if (elseExpression == null)
-                return ValueList.ListFromArguments(Keyword.AsDatum(), GetDatum(condExpression), GetDatum(thenExperssion)).ToValue();
+                return ValueList.ListFromArguments(Keyword.GetDatum(), GetDatum(condExpression), GetDatum(thenExperssion)).ToValue();
             else
-                return ValueList.ListFromArguments(Keyword.AsDatum(), GetDatum(condExpression), GetDatum(thenExperssion), GetDatum(elseExpression)).ToValue();
+                return ValueList.ListFromArguments(Keyword.GetDatum(), GetDatum(condExpression), GetDatum(thenExperssion), GetDatum(elseExpression)).ToValue();
         }
         #region ValueType Methods
-        public override string AsString() { return base.ToString(); }
+        public override string ToString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast-if{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum())); }
         #endregion
     }
@@ -226,14 +242,14 @@ namespace VARP.Scheme.Stx
         public override Value GetDatum()
         {
             ValueList resut = new ValueList();
-            resut.AddLast(Keyword.AsDatum());
+            resut.AddLast(Keyword.GetDatum());
             resut.Append(GetDatum(Conditions).AsValueList());
             resut.Append(GetDatum(ElseCase).AsValueList());
             return resut.ToValue();
         }
 
         #region ValueType Methods
-        public override string AsString() { return base.ToString(); }
+        public override string ToString() { return base.ToString(); }
         public override string Inspect()
         {
             return string.Format("#<ast-if{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum()));
@@ -254,13 +270,13 @@ namespace VARP.Scheme.Stx
         public override Value GetDatum()
         {
             ValueList resut = new ValueList();
-            resut.AddLast(Identifier.AsDatum());
+            resut.AddLast(Identifier.GetDatum());
             resut.Append(GetDatum(Arguments).AsValueList());
             return resut.ToValue();
         }
 
         #region ValueType Methods
-        public override string AsString() { return base.ToString(); }
+        public override string ToString() { return base.ToString(); }
         public override string Inspect() { return string.Format("#<ast-prim{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum())); }
         #endregion
     }
@@ -278,7 +294,7 @@ namespace VARP.Scheme.Stx
             return GetDatum(expression);
         }
         #region ValueType Methods
-        public override string AsString() { return base.ToString(); }
+        public override string ToString() { return base.ToString(); }
         public override string Inspect()
         {
             return string.Format("#<ast-app{0} {1}>", GetLocationString(),
@@ -297,7 +313,7 @@ namespace VARP.Scheme.Stx
         {
             this.ArgList = arguments;
             this.BodyExpression = expression;
-            if (keyword.AsDatum() == Symbol.LAMBDA)
+            if (keyword.GetDatum() == Symbol.LAMBDA)
                 this.Keyword = keyword;
             else
                 this.Keyword = new Syntax(Symbol.LAMBDA, keyword.location);
@@ -305,17 +321,19 @@ namespace VARP.Scheme.Stx
         public override Value GetDatum()
         {
             ValueList list = new ValueList();
+            Value body = GetDatum(BodyExpression);
 
-            list.AddLast(Keyword.AsDatum());
+            list.AddLast(Keyword.GetDatum());
             list.AddLast(ArgList.AsDatum());
-            list.AddLast(GetDatum(BodyExpression));
+
+            list.Append(body.AsValueList());
 
             return list.ToValue();
      
         }
 
         #region ValueType Methods
-        public override string AsString() { return base.ToString(); }
+        public override string ToString() { return base.ToString(); }
         public override string Inspect()
         {
             return string.Format("#<ast-lam{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum()));
@@ -336,13 +354,13 @@ namespace VARP.Scheme.Stx
         public override Value GetDatum()
         {
             ValueList resut = new ValueList();
-            resut.AddLast(Keyword.AsDatum());
+            resut.AddLast(Keyword.GetDatum());
             resut.Append(GetDatum(BodyExpression).AsValueList());
             return resut.ToValue();
         }
 
         #region ValueType Methods
-        public override string AsString() { return base.ToString(); }
+        public override string ToString() { return base.ToString(); }
         public override string Inspect()
         {
             return string.Format("#<ast-seq{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum()));

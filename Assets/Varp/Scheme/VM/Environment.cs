@@ -121,7 +121,6 @@ namespace VARP.Scheme.VM
         #region Value Methods
         public override bool AsBool() { return true; }
         public override string ToString() { return string.Format("#<lexical-environment size={0}>", Bindings.Count); }
-        public override string AsString() { return base.ToString(); }
 
         #endregion
 

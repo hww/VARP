@@ -66,7 +66,7 @@ namespace VARP.Scheme.Stx
 
         #region ValueType Methods
         public override bool AsBool() { return true; }
-        public override string AsString() { return base.ToString(); }
+        public override string ToString() { return base.ToString(); }
         #endregion
     }
 

@@ -38,6 +38,7 @@ namespace VARP.Scheme.Data
     /// <summary>
     /// Value constructors
     /// </summary>
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public partial struct Value
     {
         #region Convert to
@@ -168,7 +169,7 @@ namespace VARP.Scheme.Data
         {
             var val = RefVal;
 
-            if (val == FloatClass.Instance || val is BoolClass)
+            if (val is NumberClass || val is BoolClass)
                 return null;
 
             return val as T;
@@ -184,16 +185,25 @@ namespace VARP.Scheme.Data
         public override string ToString()
         {
             if (RefVal == null)
-                return "()";
+                return "nil";
             if (RefVal is string)
                 return RefVal as string;
             if (RefVal is INumeric)
                 return (RefVal as INumeric).ToString(NumVal);
             if (RefVal is ValueClass)
-                return (RefVal as ValueClass).AsString();
+                return (RefVal as ValueClass).ToString();
             return RefVal.ToString();
         }
 
+        #region DebuggerDisplay 
+        public string DebuggerDisplay
+        {
+            get
+            {
+                return string.Format("#<Value Ref={0} Num={1}>", RefVal==null ? "null" : RefVal, NumVal);
+            }
+        }
+        #endregion
     }
 
 }

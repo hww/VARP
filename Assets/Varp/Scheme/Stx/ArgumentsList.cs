@@ -48,8 +48,8 @@ namespace VARP.Scheme.Stx
         public ValueList required;   //< (v1 v2)
         public ValueList optional;   //< (:optional o1 (o2 1))    
         public ValueList key;        //< (:key k1 (k2 2))    
-        public ValueList rest;       //< (:rest r)
-        public AST body;       //< (:body b) TODO
+        public Syntax rest;          //< (:rest r)
+        public AST body;             //< (:body b) TODO
         // -------------------------------------------------------------
         //  Example: (let ((x 1) (y 2)) ...)
         // -------------------------------------------------------------
@@ -58,7 +58,7 @@ namespace VARP.Scheme.Stx
         public Value AsDatum()
         {
             ValueList result = new ValueList();
-            result.Append(required);
+            if (required != null) result.Append(required);
             if (optionalStx != null)
             {
                 result.AddLast(optionalStx);
@@ -103,10 +103,9 @@ namespace VARP.Scheme.Stx
         {
             args.expression = expression;
 
-            args.required = new ValueList();
-            args.optional = new ValueList();
-            args.key = new ValueList();
-            args.rest = new ValueList();
+            args.required = null;
+            args.optional = null;
+            args.key = null;
 
             if (arguments == null) return;
 
@@ -119,7 +118,7 @@ namespace VARP.Scheme.Stx
             {
                 if (!stx.IsSymbol) return false;
 
-                Symbol symbol = stx.AsDatum().AsSymbol();
+                Symbol symbol = stx.GetDatum().AsSymbol();
 
                 if (symbol == Symbol.OPTIONAL)
                     arg_type = Type.Optionals;
@@ -143,6 +142,7 @@ namespace VARP.Scheme.Stx
                     switch (arg_type)
                     {
                         case Type.Required:
+                            if (args.required == null) args.required = new ValueList();
                             if (argstx.IsIdentifier)
                                 args.required.AddLast(arg);
                             else
@@ -169,7 +169,7 @@ namespace VARP.Scheme.Stx
 
                         case Type.Rest:
                             if (argstx.IsIdentifier)
-                                args.rest.AddLast(arg);
+                                args.rest = arg.AsSyntax();
                             else
                                 throw SchemeError.ArgumentError("lambda", "symbol?", argstx);
                             arg_type = Type.End;
@@ -189,9 +189,11 @@ namespace VARP.Scheme.Stx
                     {
                         case Type.Optionals:
                             args.optionalStx = argstx;
+                            args.optional = new ValueList();
                             break;
                         case Type.Key:
                             args.keyStx = argstx;
+                            args.key = new ValueList();
                             break;
                         case Type.Rest:
                             args.restStx = argstx;

@@ -346,7 +346,7 @@ namespace VARP.Scheme.Exception
             if (o is Value)
                 return ((Value)o).AsString();
             if (o is ValueClass)
-                return (o as ValueClass).AsString();
+                return (o as ValueClass).ToString();
             return o.ToString();
         }
     }

@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using VARP.Scheme.REPL;
 using VARP.Scheme.Stx;
 
@@ -39,15 +40,15 @@ namespace VARP.Scheme.Data
     /// <summary>
     /// Any object reference by the Value have to be inherit from this class
     /// </summary>
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public class ValueClass
     {
         public ValueClass()
         {
         }
 
-        public override string ToString() { return Inspect(); }
         public virtual bool AsBool() { return false; }
-        public virtual string AsString() { return base.ToString(); }
+        public override string ToString() { return base.ToString(); }
         public virtual string Inspect() { return Inspector.Inspect(this); }
 
         public Value ToValue()
@@ -57,6 +58,10 @@ namespace VARP.Scheme.Data
             // info
             return new Value(this); 
         }
+
+        #region DebuggerDisplay 
+        public string DebuggerDisplay { get { return string.Format("#<{0}>", this.GetType().ToString()); } }
+        #endregion
     }
 
     // =================================================================================
@@ -73,7 +78,7 @@ namespace VARP.Scheme.Data
     /// </summary>
     public sealed class NillClass : ValueClass {
         public static readonly NillClass Instance = new NillClass();
-        public override string AsString() { return "()"; }
+        public override string ToString() { return "nil"; }
         public override bool AsBool() { return false; }
     }
 
@@ -86,12 +91,12 @@ namespace VARP.Scheme.Data
     }
 
     public sealed class TrueClass : BoolClass {
-        public override string AsString() { return "#f"; }
+        public override string ToString() { return "#f"; }
         public override bool AsBool() { return true; }
 
     }
     public sealed class FalseClass : BoolClass {
-        public override string AsString() { return "#f"; }
+        public override string ToString() { return "#f"; }
         public override bool AsBool() { return false; }
     }
 
@@ -137,7 +142,7 @@ namespace VARP.Scheme.Data
     /// </summary>
     public sealed class VoidClass : ValueClass {
         public static readonly VoidClass Instance = new VoidClass();
-        public override string AsString() { return "void"; }
+        public override string ToString() { return "void"; }
         public override bool AsBool() { return false; }
     }
 

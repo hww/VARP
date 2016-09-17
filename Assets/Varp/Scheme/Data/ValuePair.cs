@@ -33,7 +33,7 @@ namespace VARP.Scheme.Data
 {
     using DataStructures;
 
-    [DebuggerDisplay("Item1={Item1};Item2={Item2}")]
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public sealed class ValuePair : ValueClass
     {
         public Value Item1;
@@ -77,6 +77,16 @@ namespace VARP.Scheme.Data
         public string ToString(string format, System.IFormatProvider formatProvider)
         {
             return string.Format(formatProvider, format ?? "{0},{1}", Item1, Item2);
+        }
+        #endregion
+
+        #region DebuggerDisplay 
+        public string DebuggerDisplay
+        {
+            get
+            {
+                return string.Format("#<ValuePair ({0} . {1})>", Item1.DebuggerDisplay, Item1.DebuggerDisplay);
+            }
         }
         #endregion
     }

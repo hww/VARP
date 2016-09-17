@@ -76,7 +76,7 @@ namespace VARP.Scheme.REPL
         static string InspectSchemeObject(Value x, InspectOptions options = InspectOptions.Default)
         {
             if (x.IsNil || x.IsBool || x.IsNumber)
-                return x.AsString();
+                return x.ToString();
             return Inspect(x.RefVal, options);
         }
         static string InspectSchemeObject(ValueClass x, InspectOptions options = InspectOptions.Default)
@@ -96,7 +96,7 @@ namespace VARP.Scheme.REPL
             if (x is Stx.Environment)
                 return InspectSchemeObjectIntern(x as Stx.Environment, options);
             // all another just convert to string
-            return x.AsString();
+            return x.ToString();
 
         }
 
@@ -108,17 +108,17 @@ namespace VARP.Scheme.REPL
         {
             Location loc = x.location;
             if (loc == null)
-                return string.Format("#<token \"{0}\">", x.AsString());
+                return string.Format("#<token \"{0}\">", x.ToString());
             else
-                return string.Format("#<token:{0}:{1} \"{2}\">", loc.LineNumber, loc.ColNumber, x.AsString());
+                return string.Format("#<token:{0}:{1} \"{2}\">", loc.LineNumber, loc.ColNumber, x.ToString());
         }
         static string InspectSchemeObjectIntern(Syntax x, InspectOptions options = InspectOptions.Default)
         {
             Location loc = x.location;
             if (loc == null)
-                return string.Format("#<syntax {0}>", x.AsString());
+                return string.Format("#<syntax {0}>", x.ToString());
             else
-                return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.AsDatum(), options));
+                return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.GetDatum(), options));
         }
         static string InspectSchemeObjectIntern(Binding bind, InspectOptions options = InspectOptions.Default)
         {

@@ -200,7 +200,7 @@ namespace VARP.Scheme.Stx
             else
             {
                 if (listContents.Count == 0)
-                    return new Syntax(null, thisToken);
+                    return new Syntax(Value.Nill, thisToken);
                 else
                     return new Syntax(new ValueList(listContents), thisToken);
             }

@@ -60,7 +60,7 @@ namespace VARP.Scheme.Tokenizing
 
         #region ValueType Methods
         public override bool AsBool() { return true; }
-        public override string AsString() { return Value.ToString(); }
+        public override string ToString() { return Value.ToString(); }
 
         #endregion
 

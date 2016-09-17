@@ -39,7 +39,9 @@ namespace VARP.Scheme.Stx.Primitives
             ValueList list = stx.AsValueList();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("lambda", "arity mismatch", 1, argc, list, stx);
-
+            var x = list[0];
+            var xs = x.ToString();
+            xs = x.DebuggerDisplay;
             Syntax kwdr = list[0].AsSyntax();
             Syntax args = list[1].AsSyntax();
 

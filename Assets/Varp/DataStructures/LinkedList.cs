@@ -36,6 +36,7 @@ namespace VARP.DataStructures
     // =============================================================================
 
     [System.Serializable]
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public sealed class LinkedListNode<T> 
     {
         [System.NonSerialized]
@@ -104,6 +105,16 @@ namespace VARP.DataStructures
             Debug.Assert(list != null);
             list.AddBefore(this, newNode);
         }
+
+        #region DebuggerDisplay 
+        public string DebuggerDisplay
+        {
+            get
+            {
+                return string.Format("#<LinkedListNode {0}>", Value);
+            }
+        }
+        #endregion
     }
 
     // =============================================================================
@@ -596,7 +607,11 @@ namespace VARP.DataStructures
         {
             Debug.Assert(other != null);
             while (other.Count > 0)
-                AddLast(other.First);
+            {
+                LinkedListNode<T> first = other.First;
+                other.Remove(first);
+                AddLast(first);
+            }
         }
 
         public LinkedList<T> Duplicate()

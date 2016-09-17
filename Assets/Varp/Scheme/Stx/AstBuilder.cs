@@ -83,7 +83,7 @@ namespace VARP.Scheme.Stx
         public static AST ExpandIdentifier(Syntax syntax, Environment env)
         {
             if (!syntax.IsIdentifier) throw SchemeError.SyntaxError("ast-builder-expand-identifier", "expected identifier", syntax);
-            Symbol varname = syntax.AsDatum().AsSymbol();
+            Symbol varname = syntax.GetDatum().AsSymbol();
             Binding binding = env.Lookup(varname);
             if (binding == null)
                 throw SchemeError.SyntaxError("ast-builder-expand-identifier", "Expected identifier", syntax);
@@ -98,7 +98,7 @@ namespace VARP.Scheme.Stx
             Syntax ident = list[0].AsSyntax();
             if (ident.IsIdentifier)
             {
-                Binding binding = env.Lookup(ident.expression.AsSymbol());
+                Binding binding = env.Lookup(ident.Expression.AsSymbol());
                 if (binding != null)
                 {
                     if (binding.IsPrimitive)

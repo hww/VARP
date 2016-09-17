@@ -56,7 +56,7 @@ namespace VARP.Scheme.Data
         #region ValueType Methods
 
         public override bool AsBool() { return true; }
-        public override string AsString() { return Name; }
+        public override string ToString() { return Name; }
         public bool IsLiteral { get { return keyword; } }
         public bool IsIdentifier { get { return !keyword; } }
         #endregion

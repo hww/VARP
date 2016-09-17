@@ -27,10 +27,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace VARP.Scheme.Data
 {
     using DataStructures;
+    using REPL;
+
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public sealed class ValueList : LinkedList<Value>
     {
         public ValueList() : base()
@@ -69,5 +73,14 @@ namespace VARP.Scheme.Data
             return new Value(this);
         }
 
+        #region DebuggerDisplay 
+        public string DebuggerDisplay
+        {
+            get
+            {
+                return string.Format("#<ValueList Count={0}>", Count);
+            }
+        }
+        #endregion
     }
 }
