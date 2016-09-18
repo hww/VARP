@@ -50,7 +50,7 @@ namespace VARP.Scheme.Stx.Primitives
 
             AST lambda = new AstLambda(stx, keyword, letarguments, AstBuilder.ExpandListElements(list, 2, localEnv));
             ValueList result = new ValueList();
-            result.AddLast(lambda);
+            result.AddLast(lambda.ToValue());
             result.Append(letarguments.values);
             return new AstApplication(stx, result);
         }

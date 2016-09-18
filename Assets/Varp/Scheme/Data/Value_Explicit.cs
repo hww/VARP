@@ -53,6 +53,13 @@ namespace VARP.Scheme.Data
             throw new InvalidCastException();
         }
 
+        public static explicit operator char(Value value)
+        {
+            if (value.RefVal is CharClass)
+                return (char)value.NumVal;
+            throw new InvalidCastException();
+        }
+
         public static explicit operator int(Value value)
         {
             if (value.RefVal is NumberClass)
@@ -101,6 +108,11 @@ namespace VARP.Scheme.Data
         public static explicit operator ValueList(Value value)
         {
             return (ValueList)value.RefVal;
+        }
+
+        public static explicit operator Symbol(Value value)
+        {
+            return (Symbol)value.RefVal;
         }
 
         //        public static explicit operator Thread(Value value)

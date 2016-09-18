@@ -37,19 +37,19 @@ namespace VARP.Scheme.Stx
 
     public sealed class Arguments
     {
-        public Syntax expression; //< the expression where this arguments
-        public Syntax optionalStx;
-        public Syntax keyStx;
-        public Syntax restStx;
-        public Syntax bodyStx;
+        public Value expression; //< the expression where this arguments
+        public Value optionalKwd;
+        public Value keyKwd;
+        public Value restKwd;
+        public Value bodyKwd;
         // -------------------------------------------------------------
         //  Example: (lambda (v1 v2 :optional o1 (o2 1) :key k1 (k2 2) :rest r)
         // -------------------------------------------------------------
         public ValueList required;   //< (v1 v2)
         public ValueList optional;   //< (:optional o1 (o2 1))    
         public ValueList key;        //< (:key k1 (k2 2))    
-        public Syntax rest;          //< (:rest r)
-        public AST body;             //< (:body b) TODO
+        public Value restIdent;      //< (:rest r)
+        public Value bodyAst;        //< (:body b) TODO
         // -------------------------------------------------------------
         //  Example: (let ((x 1) (y 2)) ...)
         // -------------------------------------------------------------
@@ -59,19 +59,19 @@ namespace VARP.Scheme.Stx
         {
             ValueList result = new ValueList();
             if (required != null) result.Append(required);
-            if (optionalStx != null)
+            if (optionalKwd.IsNotNil)
             {
-                result.AddLast(optionalStx);
+                result.AddLast(optionalKwd);
                 result.Append(optional);
             }
-            if (keyStx != null)
+            if (keyKwd.IsNotNil)
             {
-                result.AddLast(keyStx);
+                result.AddLast(keyKwd);
                 result.Append(key);
             }
-            if (restStx != null)
+            if (restKwd.IsNotNil)
             {
-                result.AddLast(rest);
+                result.AddLast(restIdent);
             }
             return result.ToValue();
         }
@@ -101,7 +101,7 @@ namespace VARP.Scheme.Stx
         /// <param name="args">destination arguments structure</param>
         public static void Parse(Syntax expression, ValueList arguments, Environment env, ref Arguments args)
         {
-            args.expression = expression;
+            args.expression.Set(expression);
 
             args.required = null;
             args.optional = null;
@@ -169,14 +169,14 @@ namespace VARP.Scheme.Stx
 
                         case Type.Rest:
                             if (argstx.IsIdentifier)
-                                args.rest = arg.AsSyntax();
+                                args.restIdent.Set(arg.AsSyntax());
                             else
                                 throw SchemeError.ArgumentError("lambda", "symbol?", argstx);
                             arg_type = Type.End;
                             break;
 
                         case Type.Body:
-                            args.body = AstBuilder.Expand(argstx, env);
+                            args.bodyAst.Set(AstBuilder.Expand(argstx, env));
                             arg_type = Type.End;
                             break;
 
@@ -188,18 +188,18 @@ namespace VARP.Scheme.Stx
                     switch (arg_type)
                     {
                         case Type.Optionals:
-                            args.optionalStx = argstx;
+                            args.optionalKwd.Set(argstx);
                             args.optional = new ValueList();
                             break;
                         case Type.Key:
-                            args.keyStx = argstx;
+                            args.keyKwd.Set(argstx);
                             args.key = new ValueList();
                             break;
                         case Type.Rest:
-                            args.restStx = argstx;
+                            args.restKwd.Set(argstx);
                             break;
                         case Type.Body:
-                            args.bodyStx = argstx;
+                            args.bodyKwd.Set(argstx);
                             break;
 
                     }
@@ -209,7 +209,7 @@ namespace VARP.Scheme.Stx
 
         public static void ParseLetList(Syntax expression, ValueList arguments, Environment env, ref Arguments args)
         {
-            args.expression = expression;
+            args.expression.Set(expression);
 
             args.required = new ValueList();
             args.values = new ValueList();

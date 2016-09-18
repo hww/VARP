@@ -38,60 +38,60 @@ namespace VARP.Scheme.Data
     {
         #region implicit operator
 
-        public static implicit operator Value(char value)
-        {
-            return new Value(value);
-        }
-
-        public static implicit operator Value(bool value)
-        {
-            return new Value(value);
-        }
-        
-        public static implicit operator Value(int value)
-        {
-            return new Value(value);
-        }
-        
-        public static implicit operator Value(uint value)
-        {
-            return new Value(value);
-        }
-        
-        public static implicit operator Value(double value)
-        {
-            return new Value(value);
-        }
-        
-        public static implicit operator Value(ValueClass value)
-        {
-            return new Value(value);
-        }
-
-        public static implicit operator Value(string value)
-        {
-            return new Value(value);
-        }
-
-        public static implicit operator Value(ValuePair value)
-        {
-            return new Value(value);
-        }
-
-        public static implicit operator Value(ValueList value)
-        {
-            return new Value(value);
-        }
-
-        public static implicit operator Value(ValueTable value)
-        {
-            return new Value(value);
-        }
-
-        public static implicit operator Value(ValueVector value)
-        {
-            return new Value(value);
-        }
+        //public static implicit operator Value(char value)
+        //{
+        //    return new Value(value);
+        //}
+        //
+        //public static implicit operator Value(bool value)
+        //{
+        //    return new Value(value);
+        //}
+        //
+        //public static implicit operator Value(int value)
+        //{
+        //    return new Value(value);
+        //}
+        //
+        //public static implicit operator Value(uint value)
+        //{
+        //    return new Value(value);
+        //}
+        //
+        //public static implicit operator Value(double value)
+        //{
+        //    return new Value(value);
+        //}
+        //
+        //public static implicit operator Value(ValueClass value)
+        //{
+        //    return new Value(value);
+        //}
+        //
+        //public static implicit operator Value(string value)
+        //{
+        //    return new Value(value);
+        //}
+        //
+        //public static implicit operator Value(ValuePair value)
+        //{
+        //    return new Value(value);
+        //}
+        //
+        //public static implicit operator Value(ValueList value)
+        //{
+        //    return new Value(value);
+        //}
+        //
+        //public static implicit operator Value(ValueTable value)
+        //{
+        //    return new Value(value);
+        //}
+        //
+        //public static implicit operator Value(ValueVector value)
+        //{
+        //    return new Value(value);
+        //}
 
         #endregion
     }

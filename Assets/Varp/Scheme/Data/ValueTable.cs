@@ -26,10 +26,11 @@
  */
 
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace VARP.Scheme.Data
 {
-    public sealed class ValueTable : Dictionary<object,Value>
+    public sealed class ValueTable : Dictionary<object, Value>
     {
         public ValueTable() : base() { }
         public ValueTable(IEqualityComparer<object> comparer) : base(comparer)
@@ -52,9 +53,35 @@ namespace VARP.Scheme.Data
         {
 
         }
+        public ValueTable(IEnumerable<ValuePair> collection) : base()
+        {
+            foreach (var o in collection)
+            {
+                this.Add(o.Item1, o.Item2);
+            }
+        }
+
         public Value ToValue()
         {
             return new Value(this);
+        }
+
+
+        public static ValueTable TableFromArguments(params Value[] args)
+        {
+            Debug.Assert((args.Length & 1) == 0);
+            ValuePair[] list = new ValuePair[args.Length / 2];
+            for (int i = 0; i < args.Length; i += 2)
+                list[i / 2] = new ValuePair(args[i], args[i + 1]);
+            return new ValueTable(list);
+        }
+        public static ValueTable TableFromArguments(params object[] args)
+        {
+            Debug.Assert((args.Length & 1) == 0);
+            ValuePair[] list = new ValuePair[args.Length / 2];
+            for (int i = 0; i < args.Length; i += 2)
+                list[i / 2] = new ValuePair(args[i], args[i + 1]);
+            return new ValueTable(list);
         }
     }
 }

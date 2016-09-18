@@ -49,7 +49,10 @@ namespace VARP.Scheme.Stx.Primitives
             while (curent!=null)
             {
                 Syntax conditional_stx = curent.Value.AsSyntax();
-                if (elsecase != null) throw SchemeError.SyntaxError("cond", "unexpected expression after condition's else clause", conditional_stx);
+
+                if (elsecase != null)
+                    throw SchemeError.SyntaxError("cond", "unexpected expression after condition's else clause", conditional_stx);
+
                 if (conditional_stx.IsExpression)
                 {
                     // Get single conditional expression
@@ -72,7 +75,7 @@ namespace VARP.Scheme.Stx.Primitives
                         AST cond_ = AstBuilder.Expand(var, env);
                         AST then_ = AstBuilder.Expand(val, env);
                         ValueList single_cond = ValueList.ListFromArguments(cond_, then_);
-                        allcases.AddLast(single_cond);
+                        allcases.AddLast(new Value(single_cond));
                     }
                 }
                 else

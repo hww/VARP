@@ -47,5 +47,14 @@ namespace VARP.Scheme.Data
         {
             return new Value(this);
         }
+
+        public static ValueVector VectorFromArguments(params Value[] args)
+        {
+            return new ValueVector(args);
+        }
+        public static ValueVector VectorFromArguments(params object[] args)
+        {
+            return new ValueVector(args);
+        }
     }
 }

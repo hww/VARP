@@ -120,7 +120,7 @@ namespace VARP.Scheme.Stx
             foreach (var v in list)
             {
                 if (index == 0)
-                    result.AddLast(Expand(v.AsSyntax(), env));
+                    result.AddLast(new Value( Expand(v.AsSyntax(), env)));
                 else
                     index--;
             }

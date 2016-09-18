@@ -120,7 +120,7 @@ namespace VARP.Scheme.Stx
                 foreach (var v in src)
                 {
                     if (v.IsSyntax)
-                        dst.Add(GetDatum(v.AsSyntax()));
+                        dst.Add(GetDatum(v.AsSyntax().ToValue()));
                     else
                         throw SchemeError.ArgumentError("syntax->datum", "identifier?", v);
                 }
