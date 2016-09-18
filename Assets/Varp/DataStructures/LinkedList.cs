@@ -25,12 +25,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text;
+using VARP.Scheme.Data;
+
 namespace VARP.DataStructures
 {
-    using Scheme.Data;
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
 
     // =============================================================================
     // This LinkedListNode for a doubly-Linked circular list.
@@ -692,16 +694,23 @@ namespace VARP.DataStructures
         }
         #endregion
 
-
-        #region Casting Methods
-
-        public ValueList AsValueList()
+        public override string ToString()
         {
-            return new ValueList(this as LinkedList<Value>);
+            StringBuilder sb = new StringBuilder();
+            sb.Append("(");
+
+            LinkedListNode<T> curent = First;
+            while (curent != null)
+            {
+                sb.Append(ValueString.ToString(curent.Value));
+
+                curent = curent.Next;
+                if (curent != null) sb.Append(" ");
+            }
+            sb.Append(")");
+            return sb.ToString();
         }
 
-
-        #endregion
     }
 
 

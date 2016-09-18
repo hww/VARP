@@ -25,12 +25,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
+
 namespace VARP.Scheme.Stx
 {
     using Data;
     using Exception;
     using REPL;
-
+    using ValueVector = List<Data.Value>;
     public interface IDatum
     {
         Value GetDatum();

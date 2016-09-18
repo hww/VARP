@@ -51,13 +51,13 @@ namespace VARP.Scheme.Data
 
         public void Set(int value)
         {
-            RefVal = FloatClass.Instance;
+            RefVal = FixnumClass.Instance;
             NumVal = value;
         }
 
         public void Set(uint value)
         {
-            RefVal = FloatClass.Instance;
+            RefVal = FixnumClass.Instance;
             NumVal = value;
         }
 

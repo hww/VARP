@@ -43,7 +43,8 @@ namespace VARP.Scheme.Data
         /// The keywords are literals
         /// </summary>
         /// <param name="name">symbol name</param>
-        private Symbol(string name) {
+        private Symbol(string name)
+        {
             this.name = name;
             this.keyword = name[0] == ':';
         }
@@ -59,6 +60,34 @@ namespace VARP.Scheme.Data
         public override string ToString() { return Name; }
         public bool IsLiteral { get { return keyword; } }
         public bool IsIdentifier { get { return !keyword; } }
+
+        public bool IsSpecialForm
+        {
+            get
+            {
+                return this == Symbol.QUOTE ||
+                        this == Symbol.QUASIQUOTE ||
+                        this == Symbol.UNQUOTE ||
+                        this == Symbol.UNQUOTESPLICE;
+            }
+        }
+
+        public string ToSpecialFormString()
+        {
+            if (this == Symbol.QUOTE)
+                return "'";
+
+            if (this == Symbol.QUASIQUOTE)
+                return "`";
+
+            if (this == Symbol.UNQUOTE)
+                return ",";
+
+            if (this == Symbol.UNQUOTESPLICE)
+                return ",@";
+            return Name;
+        }
+
         #endregion
 
         #region Symbol Factory

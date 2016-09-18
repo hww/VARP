@@ -38,9 +38,9 @@ public class ParserTest
     string[] tests = new string[]
     {
         // List
-        "()","#<syntax:1:1 ()>",
-        "'()","#<syntax:1:1 (quote ())>",
-        "(()())","#<syntax:1:1 (() ())>", // Nested List
+        "()","#<syntax:1:1 nil>",
+        "'()","#<syntax:1:1 (quote nil)>",
+        "(()())","#<syntax:1:1 (nil nil)>", // Nested List
         // Numbers
         "1 1.1 #xFF","#<syntax:1:1 1> #<syntax:1:3 1.1> #<syntax:1:7 255>",           
         // Strings    

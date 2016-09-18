@@ -38,10 +38,10 @@ namespace VARP.Scheme.Data
     /// These strings may contain nulls and are not null-terminated.
     /// </remarks>
     [Serializable]
-    public sealed class CharClass : NumberClass
+    public sealed class CharClass : NumberClass, INumeric
     {
         public static CharClass Instance = new CharClass();
-        public string ToString(double value) { return CharacterToName(Convert.ToChar(value)); }
+        public string ToString(double value) { return CharacterToName((char)value); }
 
         #region Named Characters
 

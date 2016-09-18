@@ -85,7 +85,7 @@ namespace VARP.Scheme.Data
         {
             get
             {
-                return string.Format("#<ValuePair ({0} . {1})>", Item1.DebuggerDisplay, Item1.DebuggerDisplay);
+                return string.Format("#<ValuePair ({0} . {1})>", ValueString.ToString(Item1.DebuggerDisplay), ValueString.ToString(Item1.DebuggerDisplay));
             }
         }
         #endregion

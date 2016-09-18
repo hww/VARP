@@ -28,12 +28,13 @@
 
 using System;
 using System.Diagnostics;
-
+using System.Collections.Generic;
 
 namespace VARP.Scheme.Data
 {
     using DataStructures;
     using Stx;
+    using ValueVector = List<Value>;
 
     /// <summary>
     /// Value constructors

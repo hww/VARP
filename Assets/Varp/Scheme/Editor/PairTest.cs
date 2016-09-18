@@ -63,7 +63,7 @@ namespace SchemeUnit
         public void DuplicateReverse()
         {
             ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            ValueList list2 = list1.DuplicateReverse(0, -1).AsValueList();
+            ValueList list2 = new ValueList(list1.DuplicateReverse(0, -1));
 
             int size1 = list1.Count;
             int size2 = list2.Count;
@@ -77,7 +77,7 @@ namespace SchemeUnit
         public void Duplicate()
         {
             ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            ValueList list2 = list1.Duplicate(0, -1).AsValueList();
+            ValueList list2 = new ValueList(list1.Duplicate(0, -1));
 
             int size1 = list1.Count;
             int size2 = list2.Count;
@@ -96,7 +96,7 @@ namespace SchemeUnit
         public void Sublist()
         {
             ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            ValueList list2 = list1.Duplicate(1, 3).AsValueList();
+            ValueList list2 = new ValueList(list1.Duplicate(1, 3));
 
             int size1 = list1.Count;
             int size2 = list2.Count;
@@ -105,7 +105,7 @@ namespace SchemeUnit
             Assert.AreEqual("(2 3 4)", Inspector.Inspect(list2));
 
 
-            list2 = list1.DuplicateReverse(1, 3).AsValueList();
+            list2 = new ValueList(list1.DuplicateReverse(1, 3));
 
             Assert.AreEqual(3, size2);
             Assert.AreEqual("(4 3 2)", Inspector.Inspect(list2));

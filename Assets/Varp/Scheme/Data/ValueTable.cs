@@ -27,6 +27,7 @@
 
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 namespace VARP.Scheme.Data
 {
@@ -82,6 +83,21 @@ namespace VARP.Scheme.Data
             for (int i = 0; i < args.Length; i += 2)
                 list[i / 2] = new ValuePair(args[i], args[i + 1]);
             return new ValueTable(list);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            bool appendSpace = false;
+            sb.Append("#hash(");
+            foreach (var v in this)
+            {
+                if (appendSpace) sb.Append(" ");
+                sb.Append(string.Format("({0} . {1})", ValueString.ToString(v.Key), ValueString.ToString(v.Value)));
+                appendSpace |= true;
+            }
+            sb.Append(")");
+            return sb.ToString();
         }
     }
 }

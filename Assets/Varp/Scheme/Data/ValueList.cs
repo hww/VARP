@@ -33,6 +33,7 @@ namespace VARP.Scheme.Data
 {
     using DataStructures;
     using REPL;
+    using System.Text;
 
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public sealed class ValueList : LinkedList<Value>
@@ -77,6 +78,26 @@ namespace VARP.Scheme.Data
         public Value ToValue()
         {
             return new Value(this);
+        }
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("(");
+
+            LinkedListNode<Value> curent = First;
+            while (curent != null)
+            {
+                Symbol sym = curent.Value.AsSymbol();
+                if (sym!=null && sym.IsSpecialForm)
+                    sb.Append(sym.ToSpecialFormString());
+                else
+                    sb.Append(ValueString.ToString(curent.Value));
+
+                curent = curent.Next;
+                if (curent != null) sb.Append(" ");
+            }
+            sb.Append(")");
+            return sb.ToString();
         }
 
         #region DebuggerDisplay 

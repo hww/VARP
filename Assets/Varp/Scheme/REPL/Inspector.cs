@@ -28,14 +28,15 @@
 using System;
 using System.Text;
 using System.Globalization;
-
+using System.Collections.Generic;
 
 namespace VARP.Scheme.REPL
 {
-    using Data;
     using DataStructures;
+    using Data;
     using Stx;
     using Tokenizing;
+    using ValueVector = List<Data.Value>;
 
     public interface Inspectable
     {
@@ -141,29 +142,7 @@ namespace VARP.Scheme.REPL
             }
             return sb.ToString();
         }
-        static bool IsSpecialForm(Symbol sym)
-        {
-            if (sym == null) return false;
-            return sym == Symbol.QUOTE || sym == Symbol.QUASIQUOTE || sym == Symbol.UNQUOTE || sym == Symbol.UNQUOTESPLICE;
-        }
-        static string InspectSpecialReaderForm(Symbol x, InspectOptions options = InspectOptions.Default)
-        {
-            if (options == InspectOptions.PrettyPrint)
-            {
-                if (x == Symbol.QUOTE)
-                    return "'";
 
-                if (x == Symbol.QUASIQUOTE)
-                    return "`";
-
-                if (x == Symbol.UNQUOTE)
-                    return ",";
-
-                if (x == Symbol.UNQUOTESPLICE)
-                    return ",@";
-            }
-            return x.Name;
-        }
         static string InspectSchemeObjectIntern(ValuePair x, InspectOptions options = InspectOptions.Default)
         {
             return string.Format("({0} . {1})", Inspect(x.Item1, options), Inspect(x.Item2));
@@ -180,8 +159,13 @@ namespace VARP.Scheme.REPL
             while (curent != null && ++consLen < Inspector.MAX_CONS_PRINT_LEN)
             {
                 Symbol sym = curent.Value.AsSymbol();
-                if (IsSpecialForm(sym))
-                    sb.Append(InspectSpecialReaderForm(sym, options));
+                if (sym != null && sym.IsSpecialForm)
+                {
+                    if (options == InspectOptions.PrettyPrint)
+                        sb.Append(sym.ToSpecialFormString());
+                    else
+                        sb.Append(sym.ToString());
+                }
                 else
                     sb.Append(Inspector.Inspect(curent.Value, options));
 
