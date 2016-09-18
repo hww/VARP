@@ -33,6 +33,8 @@ using System.Text;
 namespace VARP.Scheme.Data
 {
     using Data;
+    using DataStructures;
+
     public static class ValueList
     {
         public static List<Value> FromArguments(params Value[] args)

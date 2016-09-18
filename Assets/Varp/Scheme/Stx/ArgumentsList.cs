@@ -58,24 +58,54 @@ namespace VARP.Scheme.Stx
         public Value AsDatum()
         {
             LinkedList<Value> result = new LinkedList<Value>();
-            if (required != null) result.Append(required);
+            if (required != null)
+                result.Append(GetDatum(required));
             if (optionalKwd.IsNotNil)
             {
-                result.AddLast(optionalKwd);
-                result.Append(optional);
+                result.AddLast(optionalKwd.AsSyntax().GetDatum());
+                result.Append(GetDatum(optional));
             }
             if (keyKwd.IsNotNil)
             {
-                result.AddLast(keyKwd);
-                result.Append(key);
+                result.AddLast(keyKwd.AsSyntax().GetDatum());
+                result.Append(GetDatum(key));
             }
             if (restKwd.IsNotNil)
             {
-                result.AddLast(restIdent);
+                result.AddLast(restKwd.AsSyntax().GetDatum());
+                result.AddLast(GetDatum(restIdent));
             }
             return new Value(result);
         }
+
+        Value GetDatum(Value value)
+        {
+            if (value.IsAST)
+                return value.AsAST().GetDatum();
+            else if (value.IsSyntax)
+                return value.AsSyntax().GetDatum();
+            else if (value.IsValuePair)
+            {
+                ValuePair pair = value.AsValuePair();
+                LinkedList<Value> newPair = ValueLinkedList.FromArguments(GetDatum(pair.Item1), GetDatum(pair.Item2));
+                return new Value(newPair);
+            }
+            else
+                return value;
+        }
+
+        LinkedList<Value> GetDatum(LinkedList<Value> list)
+        {
+            LinkedList<Value> newlist = new LinkedList<Value>();
+            foreach (var v in list)
+            {
+                newlist.AddLast(GetDatum(v));
+            }
+            return newlist;
+        }
     }
+
+
 
     public sealed class ArgumentsList
     {

@@ -40,9 +40,9 @@ namespace VARP.Scheme.Test
         string[] tests = new string[]
         {
         // List
-        "()","()",
-        "'()","(quote ())",
-        "(()())","(() ())", // Nested List
+        "()","nil",
+        "'()","(quote nil)",
+        "(()())","(nil nil)", // Nested List
         // Numbers
         "1 1.0 #xFF","1 1.0 255",           
         // Strings    
@@ -58,7 +58,7 @@ namespace VARP.Scheme.Test
         // Dot syntax
         "'(1 . 2)","(quote (1 . 2))",
         // Quotes
-        "'(,() `() ,@())","(quote ((unquote ()) (quasiquote ()) (unquote-splicing ())))",
+        "'(,() `() ,@())","(quote ((unquote nil) (quasiquote nil) (unquote-splicing nil)))",
         // Lambda
         "(lambda (x y) (+ x y) (- x y))","(lambda (x y) (+ x y) (- x y))",
         "(lambda (x y &optional (o 1) (o 2) &key (k 1) (k 2) &rest r))","(lambda (x y &optional (o 1) (o 2) &key (k 1) (k 2) &rest r))",
