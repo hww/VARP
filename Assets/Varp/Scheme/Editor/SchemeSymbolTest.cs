@@ -32,29 +32,31 @@ using System.Collections;
 
 using VARP.DataStructures;
 using VARP.Scheme.Data;
-
-public class SchemeSymbolTest
+namespace VARP.Scheme.Test
 {
-
-    [Test]
-    public void SchemeSymbolTestRun()
+    public class SchemeSymbolTest
     {
-        int quantity = 100;
 
-        Symbol sym1 = Symbol.Intern("QWERTYUIOP{{{{SDFGHJKL");
-        Symbol[] syms = new Symbol[quantity];
-        for (int i = 0; i < quantity; i++)
+        [Test]
+        public void SchemeSymbolTestRun()
         {
-            syms[i] = Symbol.Intern(i.ToString());
-        }
+            int quantity = 100;
 
-        for (int i = 0; i < quantity; i++)
-        {
-            string s = i.ToString();
-            Symbol sym = Symbol.Intern(s);
-            Debug.Assert(sym == syms[i]);
-            Debug.Assert(sym != sym1);
-            Debug.Assert(sym.Name == s);
+            Symbol sym1 = Symbol.Intern("QWERTYUIOP{{{{SDFGHJKL");
+            Symbol[] syms = new Symbol[quantity];
+            for (int i = 0; i < quantity; i++)
+            {
+                syms[i] = Symbol.Intern(i.ToString());
+            }
+
+            for (int i = 0; i < quantity; i++)
+            {
+                string s = i.ToString();
+                Symbol sym = Symbol.Intern(s);
+                Debug.Assert(sym == syms[i]);
+                Debug.Assert(sym != sym1);
+                Debug.Assert(sym.Name == s);
+            }
         }
     }
 }

@@ -27,6 +27,7 @@
 
 namespace VARP.Scheme.Stx.Primitives
 {
+    using DataStructures;
     using Exception;
     using Data;
 
@@ -35,7 +36,7 @@ namespace VARP.Scheme.Stx.Primitives
         // (let () ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            ValueList list = stx.AsValueList();
+            LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("let", "arity mismatch", 2, argc, list, stx);
 
@@ -45,11 +46,11 @@ namespace VARP.Scheme.Stx.Primitives
             if (!arguments.IsExpression) throw SchemeError.SyntaxError("let", "bad syntax (missing name or binding pairs)", stx);
 
             Arguments letarguments = new Arguments();
-            ArgumentsList.ParseLetList(stx, arguments.AsValueList(), env, ref letarguments);
+            ArgumentsList.ParseLetList(stx, arguments.AsLinkedList<Value>(), env, ref letarguments);
             Environment localEnv = env.CreateEnvironment(stx, letarguments);
 
             AST lambda = new AstLambda(stx, keyword, letarguments, AstBuilder.ExpandListElements(list, 2, localEnv));
-            ValueList result = new ValueList();
+            LinkedList<Value> result = new LinkedList<Value>();
             result.AddLast(lambda.ToValue());
             result.Append(letarguments.values);
             return new AstApplication(stx, result);

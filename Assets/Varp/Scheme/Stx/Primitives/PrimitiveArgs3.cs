@@ -28,6 +28,7 @@
 namespace VARP.Scheme.Stx.Primitives
 {
 
+    using DataStructures;
     using Data;
 
     public sealed class PrimitiveArgs3 : BasePrimitive
@@ -37,7 +38,7 @@ namespace VARP.Scheme.Stx.Primitives
         // (foo 1 2 3)
         public static AST Expand(Syntax stx, Environment env)
         {
-            ValueList list = stx.AsValueList();
+            LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
             AssertArgsEqual("primitive3", "arity mismatch", 3, argc, list, stx);
             Syntax set_kwd = list[0].AsSyntax();

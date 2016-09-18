@@ -38,7 +38,7 @@ namespace VARP.Scheme.Stx.Primitives
         // (define (x) ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            ValueList list = stx.AsValueList();
+            LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("define", "arity mismatch", 2, argc, list, stx);
 
@@ -66,12 +66,12 @@ namespace VARP.Scheme.Stx.Primitives
                 // ----------------------------------------------------------------
                 // identifier aka: (define (x ...) ...) as result lambda expression
                 // ----------------------------------------------------------------
-                ValueList args_list = var_stx.AsValueList();
+                LinkedList<Value> args_list = var_stx.AsLinkedList<Value>();
 
                 Arguments arguments = new Arguments();
                 ArgumentsList.Parse(stx, args_list, env, ref arguments);
 
-                ValueList lambda_body = AstBuilder.ExpandListElements(list, 2, env);
+                LinkedList<Value> lambda_body = AstBuilder.ExpandListElements(list, 2, env);
                 AstLambda lambda = new AstLambda(stx, def_stx, arguments, lambda_body);
 
                 Syntax identifier_stx = args_list[0].AsSyntax();

@@ -36,7 +36,7 @@ namespace VARP.Scheme.Stx.Primitives
         // (lambda () ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            ValueList list = stx.AsValueList();
+            LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("lambda", "arity mismatch", 1, argc, list, stx);
             var x = list[0];
@@ -46,11 +46,11 @@ namespace VARP.Scheme.Stx.Primitives
             Syntax args = list[1].AsSyntax();
 
             Arguments arguments = new Arguments();
-            ArgumentsList.Parse(stx, args.AsValueList(), env, ref arguments);
+            ArgumentsList.Parse(stx, args.AsLinkedList<Value>(), env, ref arguments);
 
             Environment localEnv = env.CreateEnvironment(stx, arguments);
 
-            ValueList body = new ValueList();
+            LinkedList<Value> body = new LinkedList<Value>();
 
             if (argc > 1)
             {

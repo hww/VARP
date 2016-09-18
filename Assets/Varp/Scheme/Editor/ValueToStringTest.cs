@@ -26,12 +26,14 @@
  */
 
 using NUnit.Framework;
+using System.Collections.Generic;
 
-namespace SchemeUnit
+namespace VARP.Scheme.Test
 {
     using VARP.Scheme.Stx;
     using VARP.Scheme.Data;
     using VARP.Scheme.REPL;
+    using VARP.DataStructures;
 
 
     /// <summary>
@@ -99,28 +101,28 @@ namespace SchemeUnit
         }
 
         [Test]
-        public void ValueListTest()
+        public void LinkedListTest()
         {
             string expect = "(1 2 3.1)";
-            ValueList x1 = ValueList.ListFromArguments(1, 2, 3.1);
+            LinkedList<Value> x1 = ValueLinkedList.FromArguments(1, 2, 3.1);
             Value a1 = new Value(x1);
             Assert.AreEqual(expect, x1.ToString());
             Assert.AreEqual(expect, a1.ToString());
         }
 
         [Test]
-        public void ValueVectorTest()
+        public void ValueListTest()
         {
             string expect = "#(1 2 3.1 \"4\")";
 
-            ValueVector x1 = ValueVector.VectorFromArguments(1, 2, 3.1, "4");
+            List<Value> x1 = ValueList.FromArguments(1, 2, 3.1, "4");
             Value a1 = new Value(x1);
-            Assert.AreEqual(expect, x1.ToString());
+            Assert.AreEqual(expect, ValueString.ToString(x1));
             Assert.AreEqual(expect, a1.ToString());
         }
 
         [Test]
-        public void ValueTableTest()
+        public void DictionaryTest()
         {
             string expect = "#hash((a1 . 1) (a2 . 2) (\"b1\" . \"1\") (\"b2\" . 2.2))";
 
@@ -129,9 +131,9 @@ namespace SchemeUnit
             string b1 = "b1";
             string b2 = "b2";
 
-            ValueTable table1 = ValueTable.TableFromArguments(a1, 1, a2, 2, b1, "1", b2, 2.2);
+            Dictionary<object, Value> table1 = ValueDictionary.FromArguments(a1, 1, a2, 2, b1, "1", b2, 2.2);
             Value t1 = new Value(table1);
-            Assert.AreEqual(expect, table1.ToString());
+            Assert.AreEqual(expect, ValueString.ToString(table1));
             Assert.AreEqual(expect, t1.ToString());
 
         }

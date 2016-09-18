@@ -27,47 +27,62 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Text;
+using System.Diagnostics;
 
 namespace VARP.Scheme.Data
 {
-    using Data;
-    public static class ValueList
+    using DataStructures;
+    using REPL;
+    using System.Text;
+
+    public static class ValueLinkedList 
     {
-        public static List<Value> FromArguments(params Value[] args)
+        public static LinkedList<Value> FromArguments(params Value[] args)
         {
-            return new List<Value>(args);
+            return new LinkedList<Value>(args);
         }
-        public static List<Value> FromArguments(params object[] args)
+        public static LinkedList<Value> FromArguments(params object[] args)
         {
-            List<Value> list = new List<Value>(args.Length);
+            LinkedList<Value> list = new LinkedList<Value>();
             foreach (var o in args)
-                list.Add(new Value(o));
-            return list;
-        }
-        public static List<Value> FromList<T>(List<T> args)
-        {
-            List<Value> list = new List<Value>(args.Count);
-            foreach (var o in args)
-                list.Add(new Value(o));
+                list.AddLast(new Value(o));
             return list;
         }
 
-        public static string ToString<T>(List<T> list)
+        public static LinkedList<Value> FromArray<T>(T[] args)
+        {
+            LinkedList<Value> list = new LinkedList<Value>();
+            foreach (var o in args)
+                list.AddLast(new Value(o));
+            return list;
+        }
+        public static LinkedList<Value> FromList<T>(List<T> args)
+        {
+            LinkedList<Value> list = new LinkedList<Value>();
+            foreach (var o in args)
+                list.AddLast(new Value(o));
+            return list;
+        }
+
+        public static string ToString<T>(LinkedList<T> list)
         {
             StringBuilder sb = new StringBuilder();
-            bool appendSpace = false;
-            sb.Append("#(");
-            foreach (var v in list)
+            sb.Append("(");
+
+
+            LinkedListNode<T> curent = list.First;
+            while (curent != null)
             {
-                if (appendSpace) sb.Append(" ");
-                sb.Append(ValueString.ToString(v));
-                appendSpace |= true;
+                sb.Append(ValueString.ToString(curent.Value));
+
+                curent = curent.Next;
+                if (curent != null) sb.Append(" ");
             }
             sb.Append(")");
             return sb.ToString();
         }
-
+        public static string ToString(LinkedList<Value> list) {
+            return ToString<Value>(list);
+        }
     }
 }

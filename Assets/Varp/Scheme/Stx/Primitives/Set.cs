@@ -27,7 +27,7 @@
 
 namespace VARP.Scheme.Stx.Primitives
 {
-
+    using DataStructures;
     using Data;
 
     public sealed class PrimitiveSet : BasePrimitive
@@ -36,7 +36,7 @@ namespace VARP.Scheme.Stx.Primitives
         // (set! x (+ 1 2))
         public static AST Expand(Syntax stx, Environment env)
         {
-            ValueList list = stx.AsValueList();
+            LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
             AssertArgsEqual("set!", "arity mismatch", 2, argc, list, stx);
 

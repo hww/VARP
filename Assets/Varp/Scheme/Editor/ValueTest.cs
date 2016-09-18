@@ -26,13 +26,14 @@
  */
 
 using NUnit.Framework;
+using System.Collections.Generic;
 
-namespace SchemeUnit
+namespace VARP.Scheme.Test
 {
     using VARP.Scheme.Stx;
     using VARP.Scheme.Data;
     using VARP.Scheme.REPL;
-
+    using VARP.DataStructures;
 
     /// <summary>
     /// Some tests for Value class
@@ -143,53 +144,53 @@ namespace SchemeUnit
         }
 
         [Test]
-        public void ValueListTest()
+        public void LinkedListTest()
         {
-            ValueList x1 = ValueList.ListFromArguments(1, 2, 3);
-            ValueList x2 = ValueList.ListFromArguments(4, 5, 6);
+            LinkedList<Value> x1 = ValueLinkedList.FromArguments(1, 2, 3);
+            LinkedList<Value> x2 = ValueLinkedList.FromArguments(4, 5, 6);
             Value a1 = new Value(x1);
             Value a2 = new Value(x2);
             Value b1 = new Value(x1);
             Value b2 = new Value(x2);
-            Assert.AreEqual(x1, (ValueList)a1);
-            Assert.AreEqual(x2, (ValueList)a2);
+            Assert.AreEqual(x1, (LinkedList<Value>)a1);
+            Assert.AreEqual(x2, (LinkedList<Value>)a2);
             Assert.AreEqual(a1, b1);
             Assert.AreEqual(a2, b2);
             Assert.AreNotEqual(a1, a2);
             Assert.AreNotEqual(b1, b2);
-            Assert.AreNotEqual(x1, (ValueList)a2);
-            Assert.AreNotEqual(x2, (ValueList)a1);
+            Assert.AreNotEqual(x1, (LinkedList<Value>)a2);
+            Assert.AreNotEqual(x2, (LinkedList<Value>)a1);
         }
 
         [Test]
-        public void ValueVectorTest()
+        public void ValueListTest()
         {
-            ValueVector x1 = ValueVector.VectorFromArguments(1, 2, 3);
-            ValueVector x2 = ValueVector.VectorFromArguments(4, 5, 6);
+            List<Value> x1 = ValueList.FromArguments(1, 2, 3);
+            List<Value> x2 = ValueList.FromArguments(4, 5, 6);
             Value a1 = new Value(x1);
             Value a2 = new Value(x2);
             Value b1 = new Value(x1);
             Value b2 = new Value(x2);
-            Assert.AreEqual(x1, (ValueVector)a1);
-            Assert.AreEqual(x2, (ValueVector)a2);
+            Assert.AreEqual(x1, (List<Value>)a1);
+            Assert.AreEqual(x2, (List<Value>)a2);
             Assert.AreEqual(a1, b1);
             Assert.AreEqual(a2, b2);
             Assert.AreNotEqual(a1, a2);
             Assert.AreNotEqual(b1, b2);
-            Assert.AreNotEqual(x1, (ValueVector)a2);
-            Assert.AreNotEqual(x2, (ValueVector)a1);
+            Assert.AreNotEqual(x1, (List<Value>)a2);
+            Assert.AreNotEqual(x2, (List<Value>)a1);
         }
         [Test]
-        public void ValueTableTest()
+        public void DictionaryTest()
         {
             Symbol a1 = Symbol.Intern("a1");
             Symbol a2 = Symbol.Intern("a2");
             Symbol b1 = Symbol.Intern("b1");
             Symbol b2 = Symbol.Intern("b2");
 
-            ValueTable table1 = ValueTable.TableFromArguments(a1, 1, a2, 2, b1, 1, b2, 2);
-            ValueTable table2 = ValueTable.TableFromArguments(a1, 1, a2, 2, b1, 1, b2, 2);
-            ValueTable table3 = ValueTable.TableFromArguments(a1, 0, a2, 2, b1, 1, b2, 2);
+            Dictionary<object, Value> table1 = ValueDictionary.FromArguments(a1, 1, a2, 2, b1, 1, b2, 2);
+            Dictionary<object, Value> table2 = ValueDictionary.FromArguments(a1, 1, a2, 2, b1, 1, b2, 2);
+            Dictionary<object, Value> table3 = ValueDictionary.FromArguments(a1, 0, a2, 2, b1, 1, b2, 2);
 
             Assert.AreEqual(1, (int)table1[a1]);
             Assert.AreEqual(2, (int)table1[a2]);

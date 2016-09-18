@@ -30,80 +30,85 @@ using UnityEditor;
 using NUnit.Framework;
 
 using VARP.DataStructures;
-public class DoubleLinkedListTest {
 
-    class MyClass
+namespace VARP.DataStructures.Test
+{
+    public class DoubleLinkedListTest
     {
-        public LinkedListNode<MyClass> link;
-        public int value;
-        public MyClass(int val) 
+
+        class MyClass
         {
-            value = val;
-            link = new LinkedListNode<MyClass>(this);
-        }
+            public LinkedListNode<MyClass> link;
+            public int value;
+            public MyClass(int val)
+            {
+                value = val;
+                link = new LinkedListNode<MyClass>(this);
+            }
 
-        public override int GetHashCode()
+            public override int GetHashCode()
+            {
+                return value.GetHashCode();
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj == null) return false;
+                return value.Equals((obj as MyClass).value);
+            }
+
+            public override string ToString()
+            {
+                return value.ToString();
+            }
+
+        };
+
+        [Test]
+        public void DoubleLinkedListTestRun()
         {
-            return value.GetHashCode();
+            LinkedList<string> stringsList = new LinkedList<string>();
+            stringsList.AddLast(new LinkedListNode<string>("1"));
+            stringsList.AddLast(new LinkedListNode<string>("2"));
+            stringsList.AddFirst(new LinkedListNode<string>("0"));
+            Debug.Log(stringsList.ToString());
+            string[] stringArray = stringsList.ToArray();
+            Debug.Assert(stringArray[0] == "0");
+            Debug.Assert(stringArray[1] == "1");
+            Debug.Assert(stringArray[2] == "2");
+            Debug.Assert(stringsList.ToList().ToArray().ToString() == new string[] { "0", "1", "2" }.ToString());
+            Debug.Assert(stringsList.ToArray().ToString() == new string[] { "0", "1", "2" }.ToString());
+            string iteratorString = "";
+            foreach (string v in stringsList)
+            {
+                iteratorString += v.ToString();
+            }
+            Debug.Assert(iteratorString == "012");
+
+            LinkedList<int> intList = new LinkedList<int>();
+            intList.AddLast(new LinkedListNode<int>(1));
+            intList.AddLast(new LinkedListNode<int>(2));
+            intList.AddFirst(new LinkedListNode<int>(0));
+            Debug.Log(stringsList.ToString());
+            int[] intArray = intList.ToArray();
+            Debug.Assert(intArray[0] == 0);
+            Debug.Assert(intArray[1] == 1);
+            Debug.Assert(intArray[2] == 2);
+            Debug.Assert(intList.ToList().ToArray().ToString() == new int[] { 0, 1, 2 }.ToString());
+            Debug.Assert(intList.ToArray().ToString() == new int[] { 0, 1, 2 }.ToString());
+
+
+            LinkedList<MyClass> intusiveList = new LinkedList<MyClass>();
+            intusiveList.AddLast(new MyClass(1).link);
+            intusiveList.AddLast(new MyClass(2).link);
+            intusiveList.AddFirst(new MyClass(0).link);
+            Debug.Log(stringsList.ToString());
+            MyClass[] classArray = intusiveList.ToArray();
+            Debug.Assert(classArray[0].value == 0);
+            Debug.Assert(classArray[1].value == 1);
+            Debug.Assert(classArray[2].value == 2);
+            Debug.Assert(intusiveList.ToList().ToArray().ToString() == new MyClass[] { new MyClass(0), new MyClass(1), new MyClass(2) }.ToString());
+            Debug.Assert(intusiveList.ToArray().ToString() == new MyClass[] { new MyClass(0), new MyClass(1), new MyClass(2) }.ToString());
         }
-
-        public override bool Equals(object obj)
-        {
-            if (obj == null) return false;
-            return value.Equals((obj as MyClass).value);
-        }
-
-        public override string ToString()
-        {
-            return value.ToString();
-        }
-
-    };
-
-	[Test]
-	public void DoubleLinkedListTestRun()
-	{
-        LinkedList<string> stringsList = new LinkedList<string>();
-        stringsList.AddLast(new LinkedListNode<string>("1"));
-        stringsList.AddLast(new LinkedListNode<string>("2"));
-        stringsList.AddFirst(new LinkedListNode<string>("0"));
-        Debug.Log(stringsList.ToString());
-        string[] stringArray = stringsList.ToArray();
-        Debug.Assert(stringArray[0] == "0");
-        Debug.Assert(stringArray[1] == "1");
-        Debug.Assert(stringArray[2] == "2");
-        Debug.Assert(stringsList.ToList().ToArray().ToString() == new string[] { "0", "1", "2" }.ToString());
-        Debug.Assert(stringsList.ToArray().ToString() == new string[] { "0", "1", "2" }.ToString());
-        string iteratorString = "";
-        foreach (string v in stringsList)
-        {
-            iteratorString += v.ToString();
-        }
-        Debug.Assert(iteratorString == "012");
-
-        LinkedList<int> intList = new LinkedList<int>();
-        intList.AddLast(new LinkedListNode<int>(1));
-        intList.AddLast(new LinkedListNode<int>(2));
-        intList.AddFirst(new LinkedListNode<int>(0));
-        Debug.Log(stringsList.ToString());
-        int[] intArray = intList.ToArray();
-        Debug.Assert(intArray[0] == 0);
-        Debug.Assert(intArray[1] == 1);
-        Debug.Assert(intArray[2] == 2);
-        Debug.Assert(intList.ToList().ToArray().ToString() == new int[] { 0, 1, 2 }.ToString());
-        Debug.Assert(intList.ToArray().ToString() == new int[] { 0, 1, 2 }.ToString());
-
-
-        LinkedList<MyClass> intusiveList = new LinkedList<MyClass>();
-        intusiveList.AddLast(new MyClass(1).link);
-        intusiveList.AddLast(new MyClass(2).link);
-        intusiveList.AddFirst(new MyClass(0).link);
-        Debug.Log(stringsList.ToString());
-        MyClass[] classArray = intusiveList.ToArray();
-        Debug.Assert(classArray[0].value == 0);
-        Debug.Assert(classArray[1].value == 1);
-        Debug.Assert(classArray[2].value == 2);
-        Debug.Assert(intusiveList.ToList().ToArray().ToString() == new MyClass[] { new MyClass(0), new MyClass(1), new MyClass(2) }.ToString());
-        Debug.Assert(intusiveList.ToArray().ToString() == new MyClass[] { new MyClass(0), new MyClass(1), new MyClass(2) }.ToString());
     }
 }

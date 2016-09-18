@@ -25,30 +25,35 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using NUnit.Framework;
 
-namespace SchemeUnit
+namespace VARP.Scheme.Test
 {
     using VARP.Scheme.Stx;
     using VARP.Scheme.Data;
     using VARP.Scheme.REPL;
-    using NUnit.Framework;
+    using VARP.DataStructures;
 
     /// <summary>
     /// Some tests for Pairs
     /// </summary>
-    public class PairTest
+    public class ValueListTest
     {
 
         //Interpreter terp = new Interpreter();
         //Parser terp = new Parser();
-        ValueList ParseScheme(string expression)
+        LinkedList<Value> ParseScheme(string expression)
         {
-            return AstBuilder.Expand(expression, "PairTes.cs").GetDatum().AsValueList();
+            AST ast = AstBuilder.Expand(expression, "PairTes.cs");
+            Value datum = ast.GetDatum();
+
+            return datum.AsLinkedList<Value>();
         }
+
         [Test]
         public void Reverse()
         {
-            ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
+            LinkedList<Value> list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
             list1.Reverse();
 
             int size1 = list1.Count;
@@ -62,8 +67,8 @@ namespace SchemeUnit
         [Test]
         public void DuplicateReverse()
         {
-            ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            ValueList list2 = new ValueList(list1.DuplicateReverse(0, -1));
+            LinkedList<Value> list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
+            LinkedList<Value> list2 = list1.DuplicateReverse(0, -1);
 
             int size1 = list1.Count;
             int size2 = list2.Count;
@@ -76,8 +81,8 @@ namespace SchemeUnit
         [Test]
         public void Duplicate()
         {
-            ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            ValueList list2 = new ValueList(list1.Duplicate(0, -1));
+            LinkedList<Value> list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
+            LinkedList<Value> list2 = list1.Duplicate(0, -1);
 
             int size1 = list1.Count;
             int size2 = list2.Count;
@@ -95,8 +100,8 @@ namespace SchemeUnit
         [Test]
         public void Sublist()
         {
-            ValueList list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
-            ValueList list2 = new ValueList(list1.Duplicate(1, 3));
+            LinkedList<Value> list1 = ParseScheme("(1 2 3 4 5 6 7 8 9 10)");
+            LinkedList<Value> list2 = list1.Duplicate(1, 3);
 
             int size1 = list1.Count;
             int size2 = list2.Count;
@@ -105,7 +110,7 @@ namespace SchemeUnit
             Assert.AreEqual("(2 3 4)", Inspector.Inspect(list2));
 
 
-            list2 = new ValueList(list1.DuplicateReverse(1, 3));
+            list2 = new LinkedList<Value>(list1.DuplicateReverse(1, 3));
 
             Assert.AreEqual(3, size2);
             Assert.AreEqual("(4 3 2)", Inspector.Inspect(list2));

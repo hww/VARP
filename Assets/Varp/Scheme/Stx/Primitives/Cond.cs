@@ -37,12 +37,12 @@ namespace VARP.Scheme.Stx.Primitives
         // (cond () ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            ValueList list = stx.AsValueList();    //< list of syntax objects
+            LinkedList<Value> list = stx.AsLinkedList<Value>();    //< list of syntax objects
             int argc = GetArgsCount(list);
 
             Syntax keyword = list[0].AsSyntax();
-            ValueList allcases = null;
-            ValueList elsecase = null;
+            LinkedList<Value> allcases = null;
+            LinkedList<Value> elsecase = null;
 
             LinkedListNode<Value> curent = list.GetNodeAtIndex(1);
 
@@ -56,7 +56,7 @@ namespace VARP.Scheme.Stx.Primitives
                 if (conditional_stx.IsExpression)
                 {
                     // Get single conditional expression
-                    ValueList conditional_list = conditional_stx.AsValueList();
+                    LinkedList<Value> conditional_list = conditional_stx.AsLinkedList<Value>();
                     
                     // Check arguments count, should be 2 for each condition
                     int size = conditional_list.Count;
@@ -68,13 +68,13 @@ namespace VARP.Scheme.Stx.Primitives
 
                     if (var.IsIdentifier && var.AsIdentifier() == Symbol.ELSE)
                     {
-                        elsecase = ValueList.ListFromArguments(var, AstBuilder.Expand(val, env));
+                        elsecase = ValueLinkedList.FromArguments(var, AstBuilder.Expand(val, env));
                     }
                     else
                     {
                         AST cond_ = AstBuilder.Expand(var, env);
                         AST then_ = AstBuilder.Expand(val, env);
-                        ValueList single_cond = ValueList.ListFromArguments(cond_, then_);
+                        LinkedList<Value> single_cond = ValueLinkedList.FromArguments(cond_, then_);
                         allcases.AddLast(new Value(single_cond));
                     }
                 }

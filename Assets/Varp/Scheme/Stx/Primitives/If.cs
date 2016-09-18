@@ -27,7 +27,7 @@
 
 namespace VARP.Scheme.Stx.Primitives
 {
-
+    using DataStructures;
     using Data;
 
     public sealed class PrimitiveIf : BasePrimitive
@@ -35,7 +35,7 @@ namespace VARP.Scheme.Stx.Primitives
         // (if () ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            ValueList list = stx.AsValueList();
+            LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("if", "arity mismatch", 2, argc, list, stx);
 

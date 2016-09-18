@@ -27,7 +27,7 @@
 
 namespace VARP.Scheme.Stx.Primitives
 {
-
+    using DataStructures;
     using Data;
 
     public sealed class PrimitiveBegin : BasePrimitive
@@ -35,10 +35,10 @@ namespace VARP.Scheme.Stx.Primitives
         // (begin ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            ValueList pair = stx.AsValueList();
-            Syntax kwdr = pair[0].AsSyntax();
-            int argc = pair.Count - 1;
-            return new AstSequence(stx, kwdr, AstBuilder.ExpandListElements(pair, 1, env));
+            LinkedList<Value> list = stx.AsLinkedList<Value>();
+            Syntax kwdr = list[0].AsSyntax();
+            int argc = list.Count - 1;
+            return new AstSequence(stx, kwdr, AstBuilder.ExpandListElements(list, 1, env));
         }
     }
 }

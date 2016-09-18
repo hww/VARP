@@ -30,6 +30,7 @@ using System.Diagnostics;
 
 namespace VARP.Scheme.Stx
 {
+    using DataStructures;
     using Data;
     using Exception;
     using REPL;
@@ -97,7 +98,7 @@ namespace VARP.Scheme.Stx
                 Rest = 1;
             }
         }
-        private int ExpandRequired(Syntax expression, ValueList arguments)
+        private int ExpandRequired(Syntax expression, LinkedList<Value> arguments)
         {
             int count = 0;
             foreach (var arg in arguments)
@@ -113,7 +114,7 @@ namespace VARP.Scheme.Stx
             }
             return count;
         }
-        private int ExpandOptional(Syntax expression, ValueList arguments)
+        private int ExpandOptional(Syntax expression, LinkedList<Value> arguments)
         {
             int count = 0;
             foreach (var arg in arguments)
@@ -131,9 +132,9 @@ namespace VARP.Scheme.Stx
                     else
                         throw SchemeError.ArgumentError("lambda", "identifier?", count, arguments);
                 }
-                else if (arg.IsValueList)
+                else if (arg.IsLinkedList<Value>())
                 {
-                    ValueList p = arg.AsValueList();
+                    LinkedList<Value> p = arg.AsLinkedList<Value>();
                     object v0 = p[0].RefVal;
                     object v1 = p[1].RefVal;
                     Symbol ident = null;

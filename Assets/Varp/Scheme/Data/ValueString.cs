@@ -63,8 +63,26 @@ namespace VARP.Scheme.Data
                 return ToString(val as string);
             if (val is Value)
                 return ToString((Value)val);
+            if (val is Symbol)
+                return ToString((Symbol)val);
+            if (val is List<Value>)
+                return ToString(val as List<Value>);
+            if (val is LinkedList<Value>)
+                return ToString(val as LinkedList<Value>);
+            if (val is Dictionary<object, Value>)
+                return ToString(val as Dictionary<object, Value>);
             return val.ToString();
         }
+
+        public static string ToString(Symbol sym)
+        {
+            Debug.Assert(sym != null);
+            if (sym != null && sym.IsSpecialForm)
+                return sym.ToSpecialFormString();
+            else
+                return sym.ToString();
+        }
+
         public static string ToString(string val)
         {
             Debug.Assert(val != null);
@@ -79,9 +97,24 @@ namespace VARP.Scheme.Data
         public static string ToString(ValueClass val)
         {
             Debug.Assert(val != null);
-            if (val is NumberClass)
+            if (val is NumericalClass)
                 throw SchemeError.Error("to-string", "can't inspect number-class", val);
             return val.ToString();
+        }
+        public static string ToString(List<Value> list)
+        {
+            Debug.Assert(list != null);
+            return ValueList.ToString(list);
+        }
+        public static string ToString(LinkedList<Value> list)
+        {
+            Debug.Assert(list != null);
+            return ValueLinkedList.ToString(list);
+        }
+        public static string ToString(Dictionary<object, Value> list)
+        {
+            Debug.Assert(list != null);
+            return ValueDictionary.ToString(list);
         }
     }
 

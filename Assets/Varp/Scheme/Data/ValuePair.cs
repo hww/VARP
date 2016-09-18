@@ -40,9 +40,22 @@ namespace VARP.Scheme.Data
         public Value Item2;
         public ValuePair(Value item1, Value item2) 
         {
+            Item1.Set(item1);
+            Item2.Set(item2);
         }
 
         public ValuePair(object item1, object item2)
+        {
+            Item1.Set(item1);
+            Item2.Set(item2);
+        }
+
+        public ValuePair(int item1, int item2)
+        {
+            Item1.Set(item1);
+            Item2.Set(item2);
+        }
+        public ValuePair(double item1, double item2)
         {
             Item1.Set(item1);
             Item2.Set(item2);
@@ -73,7 +86,11 @@ namespace VARP.Scheme.Data
         #endregion
 
         #region String-based formatting
-        public override string ToString() { return ToString(null, CultureInfo.CurrentCulture); }
+        public override string ToString()
+        {
+            return string.Format("({0} . {1})", Item1.ToString(), Item2.ToString());
+            // { return ToString(null, CultureInfo.CurrentCulture); }
+        }
         public string ToString(string format, System.IFormatProvider formatProvider)
         {
             return string.Format(formatProvider, format ?? "{0},{1}", Item1, Item2);

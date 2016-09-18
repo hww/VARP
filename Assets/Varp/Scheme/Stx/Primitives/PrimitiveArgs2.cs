@@ -27,7 +27,7 @@
 
 namespace VARP.Scheme.Stx.Primitives
 {
-
+    using DataStructures;
     using Data;
 
     public sealed class PrimitiveArgs2 : BasePrimitive
@@ -37,11 +37,11 @@ namespace VARP.Scheme.Stx.Primitives
         // (foo 1 2)
         public static AST Expand(Syntax stx, Environment env)
         {
-            ValueList list = stx.AsValueList();
+            LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("primitive2", "arity mismatch", 2, argc, list, stx);
             Syntax set_kwd = list[0].AsSyntax();
-            ValueList arguments = AstBuilder.ExpandListElements(list, 1, env);
+            LinkedList<Value> arguments = AstBuilder.ExpandListElements(list, 1, env);
             if (argc == 2)
             {
                 return new AstPrimitive(stx, set_kwd, arguments);
@@ -49,13 +49,13 @@ namespace VARP.Scheme.Stx.Primitives
             else
             {
                 // for expression (+ 1 2 3 4)
-                ValueList args = arguments.DuplicateReverse(0,-1) as ValueList;     //< (+ 4 3 2 1)
+                LinkedList<Value> args = arguments.DuplicateReverse(0,-1) as LinkedList<Value>;     //< (+ 4 3 2 1)
                 AST rightarg = args[0].AsAST();                                     //< 4
                 int skip = 1;
                 foreach (Value leftarg in args)                                     //< 3, 2, 1, 
                 {
                     if (skip-- > 0) continue;
-                    rightarg = new AstPrimitive(stx, set_kwd, ValueList.ListFromArguments(leftarg, rightarg));
+                    rightarg = new AstPrimitive(stx, set_kwd, ValueLinkedList.FromArguments(leftarg, rightarg));
                 }
                 return rightarg;
             }

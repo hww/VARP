@@ -80,17 +80,17 @@ namespace VARP.Scheme.Data
 
         public bool Equals(int value)
         {
-            return RefVal is NumberClass && (int)NumVal == value;
+            return RefVal is NumericalClass && (int)NumVal == value;
         }
 
         public bool Equals(uint value)
         {
-            return RefVal is NumberClass && (uint)NumVal == value;
+            return RefVal is NumericalClass && (uint)NumVal == value;
         }
 
         public bool Equals(double value)
         {
-            return RefVal is NumberClass && NumVal == value;
+            return RefVal is NumericalClass && NumVal == value;
         }
 
         public bool Equals(string str)
@@ -111,7 +111,7 @@ namespace VARP.Scheme.Data
 
         public static bool Equals(Value a, Value b)
         {
-            if (a.RefVal is NumberClass && b.RefVal is NumberClass)
+            if (a.RefVal is NumericalClass && b.RefVal is NumericalClass)
                 return a.NumVal == b.NumVal;
 
             if (a.RefVal == b.RefVal)

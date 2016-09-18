@@ -58,7 +58,7 @@ using System.Collections.Generic;
 
 namespace VARP.Scheme.Data
 {
-    using ValueVector = List<Value>;
+    using DataStructures;
 
     /// <summary>
     /// Value constructors
@@ -91,14 +91,14 @@ namespace VARP.Scheme.Data
 
         public static explicit operator int(Value value)
         {
-            if (value.RefVal is NumberClass)
+            if (value.RefVal is NumericalClass)
                 return (int)value.NumVal;
             throw new InvalidCastException();
         }
 
         public static explicit operator uint(Value value)
         {
-            if (value.RefVal is NumberClass)
+            if (value.RefVal is NumericalClass)
                 return (uint)value.NumVal;
             throw new InvalidCastException();
 
@@ -107,14 +107,14 @@ namespace VARP.Scheme.Data
 
         public static explicit operator double(Value value)
         {
-            if (value.RefVal is NumberClass)
+            if (value.RefVal is NumericalClass)
                 return value.NumVal;
             throw new InvalidCastException();
         }
 
         public static explicit operator float(Value value)
         {
-            if (value.RefVal is NumberClass)
+            if (value.RefVal is NumericalClass)
                 return (float)value.NumVal;
             throw new InvalidCastException();
         }
@@ -124,9 +124,9 @@ namespace VARP.Scheme.Data
             return (string)value.RefVal;
         }
 
-        public static explicit operator ValueVector(Value value)
+        public static explicit operator List<Value>(Value value)
         {
-            return (ValueVector)value.RefVal;
+            return (List<Value>)value.RefVal;
         }
 
         public static explicit operator ValuePair(Value value)
@@ -134,28 +134,15 @@ namespace VARP.Scheme.Data
             return (ValuePair)value.RefVal;
         }
 
-        public static explicit operator ValueList(Value value)
+        public static explicit operator LinkedList<Value>(Value value)
         {
-            return (ValueList)value.RefVal;
+            return (LinkedList<Value>)value.RefVal;
         }
 
         public static explicit operator Symbol(Value value)
         {
             return (Symbol)value.RefVal;
         }
-
-        //        public static explicit operator Thread(Value value)
-        //        {
-        //            return (Thread)value.RefVal;
-        //        }
-        //
-        //        public static explicit operator Callable(Value value)
-        //        {
-        //            if (value.RefVal != null && !Callable.IsCallable(value.RefVal))
-        //                throw new InvalidCastException();
-        //
-        //            return new Callable() { Val = value.RefVal };
-        //        }
 
         #endregion
 

@@ -34,7 +34,6 @@ namespace VARP.Scheme.Data
 {
     using DataStructures;
     using Stx;
-    using ValueVector = List<Value>;
 
     /// <summary>
     /// Value constructors
@@ -66,7 +65,7 @@ namespace VARP.Scheme.Data
         /// </summary>
         public double AsDouble()
         {
-            return RefVal is NumberClass ? (double)NumVal : 0;
+            return RefVal is NumericalClass ? (double)NumVal : 0;
         }
 
         /// <summary>
@@ -76,7 +75,7 @@ namespace VARP.Scheme.Data
         /// </summary>
         public int AsInt32()
         {
-            return RefVal is NumberClass ? (int)NumVal : 0;
+            return RefVal is NumericalClass ? (int)NumVal : 0;
         }
 
         /// <summary>
@@ -86,7 +85,7 @@ namespace VARP.Scheme.Data
         /// </summary>
         public uint AsUInt32()
         {
-            return RefVal is NumberClass ? (uint)NumVal : 0;
+            return RefVal is NumericalClass ? (uint)NumVal : 0;
         }
 
         /// <summary>
@@ -103,9 +102,9 @@ namespace VARP.Scheme.Data
         /// Convert to the Pair type
         /// </summary>
         /// <returns></returns>
-        public ValueList AsValueList()
+        public LinkedList<Value> AsLinkedList<Value>()
         {
-            return RefVal is ValueList ? (ValueList)RefVal : null;
+            return RefVal is LinkedList<Value> ? (LinkedList<Value>)RefVal : null;
         }
 
         /// <summary>
@@ -120,18 +119,18 @@ namespace VARP.Scheme.Data
         /// <summary>
         /// Returns the value as a table (if it is a table, else returns null).
         /// </summary>
-        public ValueTable AsValueTable()
+        public Dictionary<object, Value> AsTable()
         {
-            return RefVal as ValueTable;
+            return RefVal as Dictionary<object, Value>;
         }
 
         /// <summary>
         /// Convert to the Vector type
         /// </summary>
         /// <returns></returns>
-        public ValueVector AsValueVector()
+        public List<T> AsList<T>()
         {
-            return RefVal is ValueVector ? (ValueVector)RefVal : null;
+            return RefVal is List<T> ? (List<T>)RefVal : null;
         }
 
         /// <summary>
@@ -170,7 +169,7 @@ namespace VARP.Scheme.Data
         {
             var val = RefVal;
 
-            if (val is NumberClass || val is BoolClass)
+            if (val is NumericalClass || val is BoolClass)
                 return null;
 
             return val as T;
@@ -193,6 +192,12 @@ namespace VARP.Scheme.Data
                 return (RefVal as INumeric).ToString(NumVal);
             if (RefVal is ValueClass)
                 return (RefVal as ValueClass).ToString();
+            if (RefVal is List<Value>)
+                return ValueList.ToString(RefVal as List<Value>);
+            if (RefVal is LinkedList<Value>)
+                return ValueLinkedList.ToString(RefVal as LinkedList<Value>);
+            if (RefVal is Dictionary<object, Value>)
+                return ValueDictionary.ToString(RefVal as Dictionary<object, Value>);
             return RefVal.ToString();
         }
 

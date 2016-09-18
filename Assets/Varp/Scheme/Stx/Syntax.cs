@@ -74,7 +74,13 @@ namespace VARP.Scheme.Stx
         /// Get expression
         /// </summary>
         /// <returns></returns>
-        public ValueList AsValueList() { return Expression.AsValueList(); }
+        public LinkedList<Value> AsValueLinkedList() { return Expression.AsLinkedList<Value>(); }
+
+        /// <summary>
+        /// Get expression
+        /// </summary>
+        /// <returns></returns>
+        public LinkedList<T> AsLinkedList<T>() { return Expression.AsLinkedList<T>(); }
 
         /// <summary>
         /// Get identifier (exception if syntax is not identifier)
@@ -105,18 +111,27 @@ namespace VARP.Scheme.Stx
             if (expression.IsSyntax)
                 expression = (expression.AsSyntax()).Expression;
 
-            if (expression.IsValueList)
+            if (expression.IsLinkedList<Value>())
             {
-                ValueList result = new ValueList();
-                foreach (var val in expression.AsValueList())
+                LinkedList<Value> result = new LinkedList<Value>();
+                foreach (var val in expression.AsLinkedList<Value>())
                     result.AddLast(GetDatum(val));
                 return new Value(result);
             }
 
-            if (expression.IsValueVector)
+            if (expression.IsLinkedList<Syntax>())
             {
-                ValueVector src = expression.AsValueVector();
-                ValueVector dst = new ValueVector(src.Count);
+                LinkedList<Syntax> src = expression.AsLinkedList<Syntax>();
+                LinkedList<Value> dst = new LinkedList<Value>();
+                foreach (var v in src)
+                    dst.AddLast(GetDatum(v.ToValue()));
+                return new Value(dst);
+            }
+
+            if (expression.IsList<Value>())
+            {
+                List<Value> src = expression.AsList<Value>();
+                List<Value> dst = new List<Value>(src.Count);
                 foreach (var v in src)
                 {
                     if (v.IsSyntax)
@@ -126,14 +141,23 @@ namespace VARP.Scheme.Stx
                 }
                 return new Value(dst);
             }
-            return expression;
+
+
+            if (expression.IsValuePair)
+            {
+                ValuePair pair = expression.AsValuePair();
+                return new Value(new ValuePair(GetDatum(pair.Item1), GetDatum(pair.Item2)));
+            }
+
+
+                return expression;
         }
         #endregion
 
         public bool IsSymbol { get { return Expression.IsSymbol; } }
         public bool IsIdentifier { get { return (Expression.IsSymbol) && Expression.AsSymbol().IsIdentifier; } }
         public bool IsLiteral { get { return !IsExpression && !IsIdentifier; } }
-        public bool IsExpression { get { return (Expression == null) || Expression.IsValueList; } }
+        public bool IsExpression { get { return (Expression == null) || Expression.IsLinkedList<Value>(); } }
 
         #region ValueType Methods
         public override bool AsBool() { return true; }

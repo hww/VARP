@@ -45,19 +45,19 @@ namespace VARP.Scheme.Stx
         // -------------------------------------------------------------
         //  Example: (lambda (v1 v2 :optional o1 (o2 1) :key k1 (k2 2) :rest r)
         // -------------------------------------------------------------
-        public ValueList required;   //< (v1 v2)
-        public ValueList optional;   //< (:optional o1 (o2 1))    
-        public ValueList key;        //< (:key k1 (k2 2))    
+        public LinkedList<Value> required;   //< (v1 v2)
+        public LinkedList<Value> optional;   //< (:optional o1 (o2 1))    
+        public LinkedList<Value> key;        //< (:key k1 (k2 2))    
         public Value restIdent;      //< (:rest r)
         public Value bodyAst;        //< (:body b) TODO
         // -------------------------------------------------------------
         //  Example: (let ((x 1) (y 2)) ...)
         // -------------------------------------------------------------
-        public ValueList values;     //< (1 2)
+        public LinkedList<Value> values;     //< (1 2)
 
         public Value AsDatum()
         {
-            ValueList result = new ValueList();
+            LinkedList<Value> result = new LinkedList<Value>();
             if (required != null) result.Append(required);
             if (optionalKwd.IsNotNil)
             {
@@ -73,7 +73,7 @@ namespace VARP.Scheme.Stx
             {
                 result.AddLast(restIdent);
             }
-            return result.ToValue();
+            return new Value(result);
         }
     }
 
@@ -89,7 +89,7 @@ namespace VARP.Scheme.Stx
             End             // after #!res value
         }
 
-        delegate void AddDelegate(ref ValueList first, ref ValueList last, ValueClass obj);
+        delegate void AddDelegate(ref LinkedList<Value> first, ref LinkedList<Value> last, ValueClass obj);
 
         /// <summary>
         /// The result structure has lists of arguments where
@@ -99,7 +99,7 @@ namespace VARP.Scheme.Stx
         /// <param name="arguments">the arguments list (syntax syntax syntax ...)</param>
         /// <param name="env">environment</param>
         /// <param name="args">destination arguments structure</param>
-        public static void Parse(Syntax expression, ValueList arguments, Environment env, ref Arguments args)
+        public static void Parse(Syntax expression, LinkedList<Value> arguments, Environment env, ref Arguments args)
         {
             args.expression.Set(expression);
 
@@ -142,7 +142,7 @@ namespace VARP.Scheme.Stx
                     switch (arg_type)
                     {
                         case Type.Required:
-                            if (args.required == null) args.required = new ValueList();
+                            if (args.required == null) args.required = new LinkedList<Value>();
                             if (argstx.IsIdentifier)
                                 args.required.AddLast(arg);
                             else
@@ -153,7 +153,7 @@ namespace VARP.Scheme.Stx
                             if (argstx.IsIdentifier)
                                 args.optional.AddLast(MakeArgPair("lambda", argstx, argstx, env));
                             else if (argstx.IsExpression)
-                                args.optional.AddLast(MakeArgPair("lambda", argstx, argstx.AsValueList(), env));
+                                args.optional.AddLast(MakeArgPair("lambda", argstx, argstx.AsLinkedList<Value>(), env));
                             else
                                 throw SchemeError.ArgumentError("lambda", "list?", argstx);
                             break;
@@ -162,7 +162,7 @@ namespace VARP.Scheme.Stx
                             if (argstx.IsIdentifier)
                                 args.key.AddLast(MakeArgPair("lambda", argstx, argstx, env));
                             else if (argstx.IsExpression)
-                                args.key.AddLast(MakeArgPair("lambda", argstx, argstx.AsValueList(), env));
+                                args.key.AddLast(MakeArgPair("lambda", argstx, argstx.AsLinkedList<Value>(), env));
                             else
                                 throw SchemeError.ArgumentError("lambda", "list?", argstx);
                             break;
@@ -189,11 +189,11 @@ namespace VARP.Scheme.Stx
                     {
                         case Type.Optionals:
                             args.optionalKwd.Set(argstx);
-                            args.optional = new ValueList();
+                            args.optional = new LinkedList<Value>();
                             break;
                         case Type.Key:
                             args.keyKwd.Set(argstx);
-                            args.key = new ValueList();
+                            args.key = new LinkedList<Value>();
                             break;
                         case Type.Rest:
                             args.restKwd.Set(argstx);
@@ -207,12 +207,12 @@ namespace VARP.Scheme.Stx
             }
         }
 
-        public static void ParseLetList(Syntax expression, ValueList arguments, Environment env, ref Arguments args)
+        public static void ParseLetList(Syntax expression, LinkedList<Value> arguments, Environment env, ref Arguments args)
         {
             args.expression.Set(expression);
 
-            args.required = new ValueList();
-            args.values = new ValueList();
+            args.required = new LinkedList<Value>();
+            args.values = new LinkedList<Value>();
 
             if (arguments == null)
                 return;
@@ -222,7 +222,7 @@ namespace VARP.Scheme.Stx
                 Syntax argstx = arg.AsSyntax();
                 if (argstx.IsExpression)
                 {
-                    ValuePair arg_pair = MakeArgPair("let", argstx, argstx.AsValueList(), env).AsValuePair();
+                    ValuePair arg_pair = MakeArgPair("let", argstx, argstx.AsLinkedList<Value>(), env).AsValuePair();
                     args.required.AddLast(arg_pair.Item1);
                     args.values.AddLast(arg_pair.Item2);
                 }
@@ -234,7 +234,7 @@ namespace VARP.Scheme.Stx
         /// <summary>
         /// Build argument pair from identifier and initializer only (lambda (:optional (x 1) (y 2) (z 3)) ...)
         /// </summary>
-        static Value MakeArgPair(string name, Syntax stx, ValueList list, Environment env)
+        static Value MakeArgPair(string name, Syntax stx, LinkedList<Value> list, Environment env)
         {
             int argc = list.Count;
             if (argc != 2) throw SchemeError.ArityError("let", "lambda: bad &key or &optional argument", 2, argc, list, stx);

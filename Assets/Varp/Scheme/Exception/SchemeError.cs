@@ -26,13 +26,16 @@
  */
 
 using System.Text;
+using System.Collections.Generic;
 
 namespace VARP.Scheme.Exception
 {
+    using DataStructures;
     using Tokenizing;
     using Stx;
     using REPL;
     using Data;
+
 
     /// <summary>
     /// General exception class
@@ -153,7 +156,7 @@ namespace VARP.Scheme.Exception
             return string.Format("{0}{1}: contract violation\n   expected: {2}\n   given: {3}\n  argument position: {4}\n  other arguments...:\n{5}", loc, name, expected, badPos, badStr, argStr);
         }
 
-        public static string ArgumentErrorMessage(string name, string expected, int badPos, ValueList vals)
+        public static string ArgumentErrorMessage(string name, string expected, int badPos, LinkedList<Value> vals)
         {
             Value[] array = new Value[vals.Count];
             vals.CopyTo(array, 0);
@@ -169,7 +172,7 @@ namespace VARP.Scheme.Exception
         {
             return new SchemeError(ResultErrorMessage(name, expected, badPos, vals));
         }
-        public static SchemeError ArgumentError(string name, string expected, int badPos, ValueList val)
+        public static SchemeError ArgumentError(string name, string expected, int badPos, LinkedList<Value> val)
         {
             return new SchemeError(ResultErrorMessage(name, expected, val));
         }
@@ -275,7 +278,7 @@ namespace VARP.Scheme.Exception
             /// <param name="argv">arguments</param>
             /// <param name="expression">the expression whenre happens error</param>
             /// <returns></returns>
-        public static string ArityErrorMessage(string name, string message, int expected, int given, ValueList argv, Syntax expression)
+        public static string ArityErrorMessage(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(GetLocationString(expression));
@@ -289,7 +292,7 @@ namespace VARP.Scheme.Exception
             return sb.ToString();
         }
 
-        public static SchemeError ArityError(string name, string message, int expected, int given, ValueList argv, Syntax expression)
+        public static SchemeError ArityError(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
         {
             return new SchemeError(ArityErrorMessage(name, message, expected, given, argv, expression));
         }

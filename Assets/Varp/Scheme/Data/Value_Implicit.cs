@@ -78,12 +78,12 @@ namespace VARP.Scheme.Data
         //    return new Value(value);
         //}
         //
-        //public static implicit operator Value(ValueList value)
+        //public static implicit operator Value(LinkedList<Value> value)
         //{
         //    return new Value(value);
         //}
         //
-        //public static implicit operator Value(ValueTable value)
+        //public static implicit operator Value(Dictionary<object, Value> value)
         //{
         //    return new Value(value);
         //}

@@ -27,26 +27,27 @@
 
 namespace VARP.Scheme.Stx.Primitives
 {
+    using DataStructures;
     using Exception;
     using Data;
 
     public class BasePrimitive
     {
         #region Assertions
-        protected static int GetArgsCount(ValueList o) { return o.Count - 1; }
-        protected static void AssertArgsMinimum(string name, string message, int expected, int given, ValueList argv, Syntax expression)
+        protected static int GetArgsCount(LinkedList<Value> o) { return o.Count - 1; }
+        protected static void AssertArgsMinimum(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
         {
             if (given < expected)
                 throw SchemeError.ArityError(name, message, expected, given, argv, expression);
         }
 
-        protected static void AssertArgsMaximum(string name, string message, int expected, int given, ValueList argv, Syntax expression)
+        protected static void AssertArgsMaximum(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
         {
             if (given > expected)
                 throw SchemeError.ArityError(name, message, expected, given, argv, expression);
         }
 
-        protected static void AssertArgsEqual(string name, string message, int expected, int given, ValueList argv, Syntax expression)
+        protected static void AssertArgsEqual(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
         {
             if (given != expected)
                 throw SchemeError.ArityError(name, message, expected, given, argv, expression);

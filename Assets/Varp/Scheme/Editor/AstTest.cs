@@ -32,11 +32,13 @@ using VARP.Scheme.Tokenizing;
 using VARP.Scheme.Stx;
 using VARP.Scheme.REPL;
 
-public class AstTest
+namespace VARP.Scheme.Test
 {
-
-    string[] tests = new string[]
+    public class AstTest
     {
+
+        string[] tests = new string[]
+        {
         // List
         "()","()",
         "'()","(quote ())",
@@ -76,47 +78,48 @@ public class AstTest
         "(not 1)","(not 1)",
         "(display 1 2 2 3)","(display 1 2 2 3)",
         "(and 1 2 2 3)","(and 1 (and 2 (and 2 3)))"
-    };
+        };
 
-    [Test]
-    public void AstTestRun()
-    {
-        for (int i = 0; i < tests.Length; i += 2)
-            Test(tests[i], tests[i + 1]);
-    }
-
-    void Test(string source, string expectedResult)
-    {
-        //Prse
-
-        try
+        [Test]
+        public void AstTestRun()
         {
-            Tokenizer lexer = new Tokenizer(new StringReader(source), "AstTest.cs/sample code");
+            for (int i = 0; i < tests.Length; i += 2)
+                Test(tests[i], tests[i + 1]);
+        }
 
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        void Test(string source, string expectedResult)
+        {
+            //Prse
 
-            bool assSpace = false;
-            do
+            try
             {
-                Syntax result = Parser.Parse(lexer);
-                AST ast = AstBuilder.Expand(result);
+                Tokenizer lexer = new Tokenizer(new StringReader(source), "AstTest.cs/sample code");
 
-                if (result == null) break;
-                if (assSpace) sb.Append(" ");
-                sb.Append(Inspector.Inspect(ast.GetDatum()));
-                assSpace = true;
-            } while (lexer.LastToken != null);
-            string sresult = sb.ToString();
-            Debug.Assert(sresult == expectedResult, FoundAndExpected(source, sresult, expectedResult));
+                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+                bool assSpace = false;
+                do
+                {
+                    Syntax result = Parser.Parse(lexer);
+                    AST ast = AstBuilder.Expand(result);
+
+                    if (result == null) break;
+                    if (assSpace) sb.Append(" ");
+                    sb.Append(Inspector.Inspect(ast.GetDatum()));
+                    assSpace = true;
+                } while (lexer.LastToken != null);
+                string sresult = sb.ToString();
+                Debug.Assert(sresult == expectedResult, FoundAndExpected(source, sresult, expectedResult));
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError(string.Format("{0}\n{1}\n{2}", source, ex.Message, ex.StackTrace));
+            }
         }
-        catch (System.Exception ex)
+
+        string FoundAndExpected(string source, string found, string expected)
         {
-            Debug.LogError(string.Format("{0}\n{1}\n{2}", source, ex.Message, ex.StackTrace));
+            return string.Format(" SOURCE: {0}\n EXPECTED:\n{1}\n FOUND:\n{2}", source, expected, found);
         }
-    }
-
-    string FoundAndExpected(string source, string found, string expected)
-    {
-        return string.Format(" SOURCE: {0}\n EXPECTED:\n{1}\n FOUND:\n{2}", source, expected, found);
     }
 }

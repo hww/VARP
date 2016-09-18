@@ -33,6 +33,7 @@ namespace VARP.Scheme.Stx
     using Tokenizing;
     using Data;
     using Exception;
+    using DataStructures;
 
     /// <summary>
     /// Class that reads symbols from a Tokenizer and turns them into an object
@@ -152,7 +153,7 @@ namespace VARP.Scheme.Stx
         private static Syntax ParseList(Token thisToken, Tokenizer moreTokens)
         {
             // Is a list/vector
-            List<object> listContents = new List<object>();
+            List<Syntax> listContents = new List<Syntax>();
             Token dotToken = null;
 
             Token nextToken = moreTokens.ReadToken();
@@ -202,7 +203,7 @@ namespace VARP.Scheme.Stx
                 if (listContents.Count == 0)
                     return new Syntax(Value.Nill, thisToken);
                 else
-                    return new Syntax(new ValueList(listContents), thisToken);
+                    return new Syntax(ValueLinkedList.FromList<Syntax>(listContents), thisToken);
             }
 
         }
@@ -231,7 +232,7 @@ namespace VARP.Scheme.Stx
             if (nextToken == null) // Missing ')'
                 throw SchemeError.SyntaxError("parser", "Missing close parenthesis", thisToken);
 
-            return new Syntax(new ValueVector(listContents), thisToken);
+            return new Syntax(ValueList.FromList(listContents), thisToken);
         }
 
         /// <summary>

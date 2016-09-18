@@ -31,66 +31,39 @@ using System.Text;
 
 namespace VARP.Scheme.Data
 {
-    public sealed class ValueTable : Dictionary<object, Value>
+    public sealed class ValueDictionary
     {
-        public ValueTable() : base() { }
-        public ValueTable(IEqualityComparer<object> comparer) : base(comparer)
+        public static Dictionary<object, Value> FromValuePairArray(ValuePair[] array)
         {
-
-        }
-        public ValueTable(IDictionary<object, Value> dictionary) : base(dictionary)
-        {
-
-        }
-        public ValueTable(int capacity) : base(capacity)
-        {
-
-        }
-        public ValueTable(IDictionary<object, Value> dictionary, IEqualityComparer<object> comparer) : base(dictionary, comparer)
-        {
-
-        }
-        public ValueTable(int capacity, IEqualityComparer<object> comparer)
-        {
-
-        }
-        public ValueTable(IEnumerable<ValuePair> collection) : base()
-        {
-            foreach (var o in collection)
-            {
-                this.Add(o.Item1, o.Item2);
-            }
+            Dictionary<object, Value> list = new Dictionary<object, Value>();
+            foreach (var v in array)
+                list[v.Item1] = v.Item2;
+            return list;
         }
 
-        public Value ToValue()
-        {
-            return new Value(this);
-        }
-
-
-        public static ValueTable TableFromArguments(params Value[] args)
+        public static Dictionary<object, Value> FromArguments(params Value[] args)
         {
             Debug.Assert((args.Length & 1) == 0);
             ValuePair[] list = new ValuePair[args.Length / 2];
             for (int i = 0; i < args.Length; i += 2)
                 list[i / 2] = new ValuePair(args[i], args[i + 1]);
-            return new ValueTable(list);
+            return FromValuePairArray(list);
         }
-        public static ValueTable TableFromArguments(params object[] args)
+        public static Dictionary<object, Value> FromArguments(params object[] args)
         {
             Debug.Assert((args.Length & 1) == 0);
             ValuePair[] list = new ValuePair[args.Length / 2];
             for (int i = 0; i < args.Length; i += 2)
                 list[i / 2] = new ValuePair(args[i], args[i + 1]);
-            return new ValueTable(list);
+            return FromValuePairArray(list);
         }
 
-        public override string ToString()
+        public static string ToString(Dictionary<object, Value> table)
         {
             StringBuilder sb = new StringBuilder();
             bool appendSpace = false;
             sb.Append("#hash(");
-            foreach (var v in this)
+            foreach (var v in table)
             {
                 if (appendSpace) sb.Append(" ");
                 sb.Append(string.Format("({0} . {1})", ValueString.ToString(v.Key), ValueString.ToString(v.Value)));

@@ -61,7 +61,7 @@ namespace VARP.Scheme.Data
     using Exception;
     using REPL;
     using Stx;
-    using ValueVector = List<Data.Value>;
+    using DataStructures;
 
     public interface INumeric
     {
@@ -135,12 +135,12 @@ namespace VARP.Scheme.Data
     /// <summary>
     /// When Numeric type the numeric part contains the value
     /// </summary>
-    public class NumberClass : ValueClass {}
+    public class NumericalClass : ValueClass {}
 
     /// <summary>
     /// When Float type the numeric part contains the value
     /// </summary>
-    public sealed class FloatClass : NumberClass, INumeric
+    public sealed class FloatClass : NumericalClass, INumeric
     {
         public static readonly FloatClass Instance = new FloatClass();
         public string ToString(double value) { return Convert.ToSingle(value).ToString("0.0##############"); }
@@ -149,7 +149,7 @@ namespace VARP.Scheme.Data
     /// <summary>
     /// When FixNum type the numeric part contains the value
     /// </summary>
-    public sealed class FixnumClass : NumberClass, INumeric
+    public sealed class FixnumClass : NumericalClass, INumeric
     {
         public static readonly FixnumClass Instance = new FixnumClass();
         public string ToString(double value) { return Convert.ToInt32(value).ToString(); }
@@ -214,16 +214,17 @@ namespace VARP.Scheme.Data
         public bool IsBool { get { return RefVal is BoolClass; } }
         public bool IsTrue { get { return RefVal is TrueClass; } }
         public bool IsFalse { get { return RefVal is FalseClass; } }
-        public bool IsNumber { get { return RefVal is NumberClass; } }
+        public bool IsNumber { get { return RefVal is NumericalClass; } }
         public bool IsFixnum { get { return RefVal is FixnumClass; } }
         public bool IsFloat { get { return RefVal is FloatClass; } }
         public bool IsString { get { return RefVal is string; } }
-        public bool IsValueTable { get { return RefVal is ValueTable; } }
         public bool IsSymbol { get { return RefVal is Symbol; } }
-        public bool IsValueList { get { return RefVal is ValueList; } }
-        public bool IsValueVector { get { return RefVal is ValueVector; } }
+        public bool IsLinkedList<T>() { return RefVal is LinkedList<T>; }
+        public bool IsTable { get { return RefVal is Dictionary<object, Value>; } }
+        public bool IsList<T>() { return RefVal is List<T>; } 
         public bool IsSyntax { get { return RefVal is Syntax; } }
         public bool IsAST { get { return RefVal is AST; } }
+        public bool IsValuePair { get { return RefVal is ValuePair; } }
     }
 
 }

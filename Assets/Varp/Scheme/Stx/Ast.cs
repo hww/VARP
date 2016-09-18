@@ -29,10 +29,11 @@ using System.Collections.Generic;
 
 namespace VARP.Scheme.Stx
 {
+    using DataStructures;
     using Data;
     using Exception;
     using REPL;
-    using ValueVector = List<Data.Value>;
+
     public interface IDatum
     {
         Value GetDatum();
@@ -80,15 +81,15 @@ namespace VARP.Scheme.Stx
                 return GetDatum(value.AsAST());
             if (value.IsSyntax)
                 return GetDatum(value.AsSyntax());
-            if (value.IsValueList)
-                return GetDatum(value.AsValueList());
-            if (value.IsValueVector)
-                return GetDatum(value.AsValueVector());
+            if (value.IsLinkedList<Value>())
+                return GetDatum(value.AsLinkedList<Value>());
+            if (value.IsList<Value>())
+                return GetDatum(value.AsList<Value>());
             return new Value(value);
         }
-        public static Value GetDatum(ValueList list)
+        public static Value GetDatum(LinkedList<Value> list)
         {
-            ValueList result = new ValueList();
+            LinkedList<Value> result = new LinkedList<Value>();
             if (list == null) return Value.Nill;
             foreach (Value curent in list)
             {
@@ -99,10 +100,10 @@ namespace VARP.Scheme.Stx
             }
             return new Value(result);
         }
-        public static Value GetDatum(ValueVector vector)
+        public static Value GetDatum(List<Value> list)
         {
-            ValueVector result = new ValueVector(vector.Count);
-            foreach (var curent in vector)
+            List<Value> result = new List<Value>(list.Count);
+            foreach (var curent in list)
                 result.Add(curent.AsAST().GetDatum());
             return new Value(result);
         }
@@ -169,7 +170,7 @@ namespace VARP.Scheme.Stx
             this.Value = value;
             this.Binding = binding;
         }
-        public override Value GetDatum() { return ValueList.ListFromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value)).ToValue(); }
+        public override Value GetDatum() { return new Value(ValueLinkedList.FromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value))); }
 
         #region ValueType Methods
         public override string ToString() { return base.ToString(); }
@@ -192,7 +193,7 @@ namespace VARP.Scheme.Stx
             this.Value = value;
             this.Binding = binding;
         }
-        public override Value GetDatum() { return ValueList.ListFromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value)).ToValue(); }
+        public override Value GetDatum() { return new Value(ValueLinkedList.FromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value))); }
 
         #region ValueType Methods
         public override string ToString() { return base.ToString(); }
@@ -218,9 +219,9 @@ namespace VARP.Scheme.Stx
         public override Value GetDatum()
         {
             if (elseExpression == null)
-                return ValueList.ListFromArguments(Keyword.GetDatum(), GetDatum(condExpression), GetDatum(thenExperssion)).ToValue();
+                return new Value(ValueLinkedList.FromArguments(Keyword.GetDatum(), GetDatum(condExpression), GetDatum(thenExperssion)));
             else
-                return ValueList.ListFromArguments(Keyword.GetDatum(), GetDatum(condExpression), GetDatum(thenExperssion), GetDatum(elseExpression)).ToValue();
+                return new Value(ValueLinkedList.FromArguments(Keyword.GetDatum(), GetDatum(condExpression), GetDatum(thenExperssion), GetDatum(elseExpression)));
         }
         #region ValueType Methods
         public override string ToString() { return base.ToString(); }
@@ -232,10 +233,10 @@ namespace VARP.Scheme.Stx
     public sealed class AstConditionCond : AST
     {
         public Syntax Keyword;
-        public ValueList Conditions;     //< list of pairs
-        public ValueList ElseCase;       //< else condition
+        public LinkedList<Value> Conditions;     //< list of pairs
+        public LinkedList<Value> ElseCase;       //< else condition
 
-        public AstConditionCond(Syntax syntax, Syntax keyword, ValueList conditions, ValueList elseCase) : base(syntax)
+        public AstConditionCond(Syntax syntax, Syntax keyword, LinkedList<Value> conditions, LinkedList<Value> elseCase) : base(syntax)
         {
             this.Keyword = keyword;
             this.Conditions = conditions;
@@ -243,11 +244,11 @@ namespace VARP.Scheme.Stx
         }
         public override Value GetDatum()
         {
-            ValueList resut = new ValueList();
+            LinkedList<Value> resut = new LinkedList<Value>();
             resut.AddLast(Keyword.GetDatum());
-            resut.Append(GetDatum(Conditions).AsValueList());
-            resut.Append(GetDatum(ElseCase).AsValueList());
-            return resut.ToValue();
+            resut.Append(GetDatum(Conditions).AsLinkedList<Value>());
+            resut.Append(GetDatum(ElseCase).AsLinkedList<Value>());
+            return new Value(resut);
         }
 
         #region ValueType Methods
@@ -263,18 +264,18 @@ namespace VARP.Scheme.Stx
     public sealed class AstPrimitive : AST
     {
         public Syntax Identifier;
-        public ValueList Arguments;
-        public AstPrimitive(Syntax syntax, Syntax identifier, ValueList arguments) : base(syntax)
+        public LinkedList<Value> Arguments;
+        public AstPrimitive(Syntax syntax, Syntax identifier, LinkedList<Value> arguments) : base(syntax)
         {
             this.Identifier = identifier;
             this.Arguments = arguments;
         }
         public override Value GetDatum()
         {
-            ValueList resut = new ValueList();
+            LinkedList<Value> resut = new LinkedList<Value>();
             resut.AddLast(Identifier.GetDatum());
-            resut.Append(GetDatum(Arguments).AsValueList());
-            return resut.ToValue();
+            resut.Append(GetDatum(Arguments).AsLinkedList<Value>());
+            return new Value(resut);
         }
 
         #region ValueType Methods
@@ -286,8 +287,8 @@ namespace VARP.Scheme.Stx
     // application e.g. (f 1 2)
     public sealed class AstApplication : AST
     {
-        ValueList expression;
-        public AstApplication(Syntax syntax, ValueList expression) : base(syntax)
+        LinkedList<Value> expression;
+        public AstApplication(Syntax syntax, LinkedList<Value> expression) : base(syntax)
         {
             this.expression = expression;
         }
@@ -310,8 +311,8 @@ namespace VARP.Scheme.Stx
     {
         public Syntax Keyword;              // (<lambda> (...) ...)
         public Arguments ArgList;           // (lambda <(...)> )
-        public ValueList BodyExpression;    // (lambda (...) <...>)
-        public AstLambda(Syntax syntax, Syntax keyword, Arguments arguments, ValueList expression) : base(syntax)
+        public LinkedList<Value> BodyExpression;    // (lambda (...) <...>)
+        public AstLambda(Syntax syntax, Syntax keyword, Arguments arguments, LinkedList<Value> expression) : base(syntax)
         {
             this.ArgList = arguments;
             this.BodyExpression = expression;
@@ -322,15 +323,15 @@ namespace VARP.Scheme.Stx
         }
         public override Value GetDatum()
         {
-            ValueList list = new ValueList();
+            LinkedList<Value> list = new LinkedList<Value>();
             Value body = GetDatum(BodyExpression);
 
             list.AddLast(Keyword.GetDatum());
             list.AddLast(ArgList.AsDatum());
 
-            list.Append(body.AsValueList());
+            list.Append(body.AsLinkedList<Value>());
 
-            return list.ToValue();
+            return new Value(list);
      
         }
 
@@ -347,18 +348,18 @@ namespace VARP.Scheme.Stx
     public sealed class AstSequence : AST
     {
         public Syntax Keyword;
-        public ValueList BodyExpression;
-        public AstSequence(Syntax syntax, Syntax keyword, ValueList expression) : base(syntax)
+        public LinkedList<Value> BodyExpression;
+        public AstSequence(Syntax syntax, Syntax keyword, LinkedList<Value> expression) : base(syntax)
         {
             this.Keyword = keyword;
             this.BodyExpression = expression;
         }
         public override Value GetDatum()
         {
-            ValueList resut = new ValueList();
+            LinkedList<Value> resut = new LinkedList<Value>();
             resut.AddLast(Keyword.GetDatum());
-            resut.Append(GetDatum(BodyExpression).AsValueList());
-            return resut.ToValue();
+            resut.Append(GetDatum(BodyExpression).AsLinkedList<Value>());
+            return new Value(resut);
         }
 
         #region ValueType Methods

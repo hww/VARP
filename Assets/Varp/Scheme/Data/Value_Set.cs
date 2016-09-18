@@ -80,7 +80,7 @@ namespace VARP.Scheme.Data
 
         public void Set(ValueClass value)
         {
-            if (value is NumberClass)
+            if (value is NumericalClass)
                 throw SchemeError.Error("value-set", "cant assign numeric value type", value);
             RefVal = value;
             NumVal = 0;
@@ -97,16 +97,18 @@ namespace VARP.Scheme.Data
             {
                 // Nill value
                 RefVal = null;
+                NumVal = 0;
                 return;
             }
 
             if (value is ValueClass)
             {
-                if (value is FloatClass)
+                if (value is NumericalClass)
                     throw SchemeError.Error("value-set", "cant assign numeric value type", value);
                 if (value is BoolClass)
                     Set(value as BoolClass); //< will check possible options
                 RefVal = value as ValueClass;
+                NumVal = 0;
                 return;
             }
 

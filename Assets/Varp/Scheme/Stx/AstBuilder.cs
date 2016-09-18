@@ -25,10 +25,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
+
 namespace VARP.Scheme.Stx
 {
+    using DataStructures;
     using Data;
     using Exception;
+
 
     public sealed class AstBuilder : ValueClass
     {
@@ -93,7 +97,7 @@ namespace VARP.Scheme.Stx
         // aka: (...)
         public static AST ExpandExpression(Syntax syntax, Environment env)
         {
-            ValueList list = syntax.AsValueList();
+            LinkedList<Value> list = syntax.AsValueLinkedList();
             if (list == null) return new AstApplication(syntax, null);
             Syntax ident = list[0].AsSyntax();
             if (ident.IsIdentifier)
@@ -111,11 +115,11 @@ namespace VARP.Scheme.Stx
 
         // Expand list of syntax objects as: (#<syntax> #<syntax> ...)
         // aka: (...)
-        public static ValueList ExpandListElements(ValueList list, int index, Environment env)
+        public static LinkedList<Value> ExpandListElements(LinkedList<Value> list, int index, Environment env)
         {
             if (list == null) return null;
 
-            ValueList result = new ValueList();
+            LinkedList<Value> result = new LinkedList<Value>();
 
             foreach (var v in list)
             {

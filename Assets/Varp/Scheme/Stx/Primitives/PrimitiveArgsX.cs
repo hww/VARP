@@ -27,7 +27,7 @@
 
 namespace VARP.Scheme.Stx.Primitives
 {
-
+    using DataStructures;
     using Data;
 
     public sealed class PrimitiveArgsX : BasePrimitive
@@ -36,10 +36,10 @@ namespace VARP.Scheme.Stx.Primitives
         // (display 1 2 3 4 ...)
         public static AST Expand(Syntax stx, Environment env)
         {
-            ValueList list = stx.AsValueList();
+            LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
             Syntax set_kwd = list[0].AsSyntax();
-            ValueList arguments = AstBuilder.ExpandListElements(list, 1, env);
+            LinkedList<Value> arguments = AstBuilder.ExpandListElements(list, 1, env);
             return new AstPrimitive(stx, set_kwd, arguments);
         }
     }

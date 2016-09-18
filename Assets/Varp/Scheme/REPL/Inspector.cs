@@ -36,7 +36,6 @@ namespace VARP.Scheme.REPL
     using Data;
     using Stx;
     using Tokenizing;
-    using ValueVector = List<Data.Value>;
 
     public interface Inspectable
     {
@@ -147,69 +146,7 @@ namespace VARP.Scheme.REPL
         {
             return string.Format("({0} . {1})", Inspect(x.Item1, options), Inspect(x.Item2));
         }
-        static string InspectSchemeObjectIntern(ValueList list, InspectOptions options = InspectOptions.Default, bool encloseList = true)
-        {
-            StringBuilder sb = new StringBuilder();
 
-            if (encloseList)
-                sb.Append("(");
-
-            LinkedListNode<Value> curent = list.First;
-            int consLen = 0;
-            while (curent != null && ++consLen < Inspector.MAX_CONS_PRINT_LEN)
-            {
-                Symbol sym = curent.Value.AsSymbol();
-                if (sym != null && sym.IsSpecialForm)
-                {
-                    if (options == InspectOptions.PrettyPrint)
-                        sb.Append(sym.ToSpecialFormString());
-                    else
-                        sb.Append(sym.ToString());
-                }
-                else
-                    sb.Append(Inspector.Inspect(curent.Value, options));
-
-                curent = curent.Next;
-                if (curent != null) sb.Append(" ");
-            }
-
-            if (curent != null)
-                sb.Append(" ... ");
-
-            if (encloseList)
-                sb.Append(")");
-
-            return sb.ToString();
-        }
-        static string InspectSchemeObjectIntern(ValueVector vector, InspectOptions options = InspectOptions.Default)
-        {
-            StringBuilder sb = new StringBuilder();
-            bool appendSpace = false;
-            sb.Append("#(");
-            foreach (var v in vector)
-            {
-                if (appendSpace) sb.Append(" ");
-                sb.Append(Inspect(v, options));
-                appendSpace |= true;
-            }
-            sb.Append(")");
-            return sb.ToString();
-        }
-
-        static string InspectSchemeObjectIntern(ValueTable table, InspectOptions options = InspectOptions.Default)
-        {
-            StringBuilder sb = new StringBuilder();
-            bool appendSpace = false;
-            sb.Append("#(");
-            foreach (var v in table)
-            {
-                if (appendSpace) sb.Append(" ");
-                sb.Append(string.Format("#<pair {0} {1}>", Inspect(v.Key, options), Inspect(v.Value, options)));
-                appendSpace |= true;
-            }
-            sb.Append(")");
-            return sb.ToString();
-        }
 
         #region Inspect Mono Classes
 
@@ -221,14 +158,14 @@ namespace VARP.Scheme.REPL
             if (x is char)
                 return string.Format(CultureInfo.CurrentCulture, "#\\{0}", x);
 
-            if (x is ValueList)
-                return InspectSchemeObjectIntern(x as ValueList);
+            if (x is LinkedList<Value>)
+                return InspectSchemeObjectIntern(x as LinkedList<Value>);
 
-            if (x is ValueVector)
-                return InspectSchemeObjectIntern(x as ValueVector);
+            if (x is List<Value>)
+                return InspectSchemeObjectIntern(x as List<Value>);
 
-            if (x is ValueTable)
-                return InspectSchemeObjectIntern(x as ValueTable);
+            if (x is Dictionary<object, Value>)
+                return InspectSchemeObjectIntern(x as Dictionary<object, Value>);
 
             if (x is Array)
                 return InspectArray((Array)x, options);
@@ -320,6 +257,69 @@ namespace VARP.Scheme.REPL
             }
 
             return retval;
+        }
+        static string InspectSchemeObjectIntern(LinkedList<Value> list, InspectOptions options = InspectOptions.Default, bool encloseList = true)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (encloseList)
+                sb.Append("(");
+
+            LinkedListNode<Value> curent = list.First;
+            int consLen = 0;
+            while (curent != null && ++consLen < Inspector.MAX_CONS_PRINT_LEN)
+            {
+                Symbol sym = curent.Value.AsSymbol();
+                if (sym != null && sym.IsSpecialForm)
+                {
+                    if (options == InspectOptions.PrettyPrint)
+                        sb.Append(sym.ToSpecialFormString());
+                    else
+                        sb.Append(sym.ToString());
+                }
+                else
+                    sb.Append(Inspector.Inspect(curent.Value, options));
+
+                curent = curent.Next;
+                if (curent != null) sb.Append(" ");
+            }
+
+            if (curent != null)
+                sb.Append(" ... ");
+
+            if (encloseList)
+                sb.Append(")");
+
+            return sb.ToString();
+        }
+        static string InspectSchemeObjectIntern(List<Value> list, InspectOptions options = InspectOptions.Default)
+        {
+            StringBuilder sb = new StringBuilder();
+            bool appendSpace = false;
+            sb.Append("#(");
+            foreach (var v in list)
+            {
+                if (appendSpace) sb.Append(" ");
+                sb.Append(Inspect(v, options));
+                appendSpace |= true;
+            }
+            sb.Append(")");
+            return sb.ToString();
+        }
+
+        static string InspectSchemeObjectIntern(Dictionary<object, Value> table, InspectOptions options = InspectOptions.Default)
+        {
+            StringBuilder sb = new StringBuilder();
+            bool appendSpace = false;
+            sb.Append("#hash(");
+            foreach (var v in table)
+            {
+                if (appendSpace) sb.Append(" ");
+                sb.Append(string.Format("#<pair {0} {1}>", Inspect(v.Key, options), Inspect(v.Value, options)));
+                appendSpace |= true;
+            }
+            sb.Append(")");
+            return sb.ToString();
         }
         #endregion
     }
