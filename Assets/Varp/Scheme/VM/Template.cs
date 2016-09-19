@@ -30,10 +30,10 @@ namespace VARP.Scheme.VM
     using Data;
     public sealed class Template
     {
-        public ValueClass[] Literals;
+        public Value[] Literals;
         public Instruction[] Code;
 
-        public Template(ValueClass[] literals, Instruction[] code)
+        public Template(Value[] literals, Instruction[] code)
         {
             this.Literals = literals;
             this.Code = code;

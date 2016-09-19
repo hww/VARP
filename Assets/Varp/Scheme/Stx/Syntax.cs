@@ -42,30 +42,30 @@ namespace VARP.Scheme.Stx
         public readonly static Syntax False = new Syntax(Value.False, null as Location);
         public readonly static Syntax Void = new Syntax(Value.Void, null as Location);
 
-        public Value Expression;
-        public Location location;
+        private Value expression;
+        private Location location;
 
         public Syntax() : base()
         {
         }
         public Syntax(Value expression, Location location)
         {
-            this.Expression = expression;
+            this.expression = expression;
             this.location = location;
         }
         public Syntax(Value expression, Token token)
         {
-            this.Expression = expression;
+            this.expression = expression;
             this.location = token == null ? null : token.location;
         }
         public Syntax(object expression, Location location)
         {
-            this.Expression.Set(expression);
+            this.expression.Set(expression);
             this.location = location;
         }
         public Syntax(object expression, Token token)
         {
-            this.Expression.Set(expression);
+            this.expression.Set(expression);
             this.location = token == null ? null : token.location;
         }
 
@@ -74,13 +74,13 @@ namespace VARP.Scheme.Stx
         /// Get expression
         /// </summary>
         /// <returns></returns>
-        public LinkedList<Value> AsValueLinkedList() { return Expression.AsLinkedList<Value>(); }
+        public LinkedList<Value> AsValueLinkedList() { return expression.AsLinkedList<Value>(); }
 
         /// <summary>
         /// Get expression
         /// </summary>
         /// <returns></returns>
-        public LinkedList<T> AsLinkedList<T>() { return Expression.AsLinkedList<T>(); }
+        public LinkedList<T> AsLinkedList<T>() { return expression.AsLinkedList<T>(); }
 
         /// <summary>
         /// Get identifier (exception if syntax is not identifier)
@@ -88,7 +88,7 @@ namespace VARP.Scheme.Stx
         /// <returns></returns>
         public Symbol AsIdentifier()
         {
-            if (Expression.IsSymbol) return Expression.AsSymbol();
+            if (expression.IsSymbol) return expression.AsSymbol();
             throw SchemeError.ArgumentError("get-identifier", "identifier?", this);
         }
 
@@ -96,7 +96,12 @@ namespace VARP.Scheme.Stx
         /// Get datum
         /// </summary>
         /// <returns></returns>
-        public Value GetDatum() { return GetDatum(Expression); }
+        public Value GetDatum() { return GetDatum(expression); }
+
+        /// <summary>
+        /// Get location of this syntax
+        /// </summary>
+        public Location Location { get { return location; } }
 
         #endregion
 
@@ -109,7 +114,7 @@ namespace VARP.Scheme.Stx
         static Value GetDatum(Value expression)
         {
             if (expression.IsSyntax)
-                expression = (expression.AsSyntax()).Expression;
+                expression = (expression.AsSyntax()).expression;
 
             if (expression.IsLinkedList<Value>())
             {
@@ -154,14 +159,14 @@ namespace VARP.Scheme.Stx
         }
         #endregion
 
-        public bool IsSymbol { get { return Expression.IsSymbol; } }
-        public bool IsIdentifier { get { return (Expression.IsSymbol) && Expression.AsSymbol().IsIdentifier; } }
+        public bool IsSymbol { get { return expression.IsSymbol; } }
+        public bool IsIdentifier { get { return (expression.IsSymbol) && expression.AsSymbol().IsIdentifier; } }
         public bool IsLiteral { get { return !IsExpression && !IsIdentifier; } }
-        public bool IsExpression { get { return (Expression == null) || Expression.IsLinkedList<Value>(); } }
+        public bool IsExpression { get { return (expression == null) || expression.IsLinkedList<Value>(); } }
 
         #region ValueType Methods
         public override bool AsBool() { return true; }
-        public override string ToString() { return Expression == null ? "()" : Expression.ToString(); }
+        public override string ToString() { return expression == null ? "()" : expression.ToString(); }
 
         #endregion
 

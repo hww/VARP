@@ -63,8 +63,17 @@ namespace VARP.Scheme.Data
     using Stx;
     using DataStructures;
 
+    /// <summary>
+    /// This Value class uses double value for containing
+    /// current scalar value. 
+    /// </summary>
     public interface INumeric
     {
+        /// <summary>
+        /// Convert scalar value to the string 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         string ToString(double value);
     }
 
@@ -103,6 +112,9 @@ namespace VARP.Scheme.Data
     // When Value structure contains the Nill, Void, Number or Bool
     // it's reference pointer point to that static object
     // =================================================================================
+    public class UpvalueClass : ValueClass
+    {
+    }
 
     /// <summary>
     /// When Nill type the numeric part does not mater
@@ -189,11 +201,10 @@ namespace VARP.Scheme.Data
         public static readonly Value True = new Value(true);
 
         /// <summary>
-        /// Open up-values (and these should only be seen in up-value
-        /// arrays in closures!) are represented with RefVal == OpenUpValueTag
-        /// and NumVal == the stack index it points to.
+        /// When upvalue reffer to this tag the numeric part has index
+        /// of variable. 
         /// </summary>
-        internal static readonly object OpenUpValueTag = new object();
+        internal static readonly UpvalueClass OpenUpValueTag = new UpvalueClass();
 
         /// <summary>
         /// Get type of the object. 

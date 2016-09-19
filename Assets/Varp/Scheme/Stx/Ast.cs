@@ -53,7 +53,7 @@ namespace VARP.Scheme.Stx
         /// But for literal x the position of expression is
         /// position of this literal
         /// </summary>
-        public Syntax Expression;   //< for expression (+ 1 2) will be "("
+        protected Syntax Expression;   //< for expression (+ 1 2) will be "("
 
         public AST(Syntax syntax)
         {
@@ -114,8 +114,8 @@ namespace VARP.Scheme.Stx
         protected string GetLocationString()
         {
             if (Expression == null) return string.Empty;
-            if (Expression.location == null) return string.Empty;
-            return string.Format(":{0}:{1}", Expression.location.LineNumber, Expression.location.ColNumber);
+            if (Expression.Location == null) return string.Empty;
+            return string.Format(":{0}:{1}", Expression.Location.LineNumber, Expression.Location.ColNumber);
         }
     }
 
@@ -135,13 +135,14 @@ namespace VARP.Scheme.Stx
         #endregion
     }
 
+
     // variable reference  e.g. x
     public sealed class AstReference : AST
     {
-        public Binding Binding;
+        private Binding Binding;
         public AstReference(Syntax syntax, Binding binding) : base(syntax)
         {
-            Binding = binding;
+            this.Binding = binding;
         }
         public override Value GetDatum() { return GetDatum(Expression); }
 
@@ -153,10 +154,10 @@ namespace VARP.Scheme.Stx
     // variable assignment e.g. (set! x 99)
     public sealed class AstSet : AST
     {
-        public Syntax Keyword;              // set!                                     
-        public Syntax Variable;             // x   
-        public AST Value;                   // 99
-        public Binding Binding;      //
+        private Syntax Keyword;              // set!                                     
+        private Syntax Variable;             // x   
+        private AST Value;                   // 99
+        private Binding Binding;      //
         public AstSet(Syntax syntax, Syntax keyword, Syntax variable, AST value, Binding binding) : base(syntax)
         {
             this.Keyword = keyword;
@@ -175,10 +176,10 @@ namespace VARP.Scheme.Stx
     // same as set! but does not require previous declaration
     public sealed class AstDefine : AST
     {
-        public Syntax Keyword;              // set!                                     
-        public Syntax Variable;             // x   
-        public AST Value;                   // 99
-        public Binding Binding;      //
+        private Syntax Keyword;              // set!                                     
+        private Syntax Variable;             // x   
+        private AST Value;                   // 99
+        private Binding Binding;      //
         public AstDefine(Syntax syntax, Syntax keyword, Syntax variable, AST value, Binding binding) : base(syntax)
         {
             this.Keyword = keyword;
@@ -197,10 +198,10 @@ namespace VARP.Scheme.Stx
     // conditional e.g. (if 1 2 3)
     public sealed class AstIfCondition : AST
     {
-        public Syntax Keyword;
-        public AST condExpression;        // 1
-        public AST thenExperssion;        // 2
-        public AST elseExpression;        // 3
+        private Syntax Keyword;
+        private AST condExpression;        // 1
+        private AST thenExperssion;        // 2
+        private AST elseExpression;        // 3
 
         public AstIfCondition(Syntax syntax, Syntax keyword, AST cond, AST then, AST els) : base(syntax)
         {
@@ -224,9 +225,9 @@ namespace VARP.Scheme.Stx
     // conditional e.g. (cond (() .. ) (() ...) (else ...))
     public sealed class AstConditionCond : AST
     {
-        public Syntax Keyword;
-        public LinkedList<Value> Conditions;     //< list of pairs
-        public LinkedList<Value> ElseCase;       //< else condition
+        private Syntax Keyword;
+        private LinkedList<Value> Conditions;     //< list of pairs
+        private LinkedList<Value> ElseCase;       //< else condition
 
         public AstConditionCond(Syntax syntax, Syntax keyword, LinkedList<Value> conditions, LinkedList<Value> elseCase) : base(syntax)
         {
@@ -254,8 +255,8 @@ namespace VARP.Scheme.Stx
     // primitive op e.g. (+ 1 2)
     public sealed class AstPrimitive : AST
     {
-        public Syntax Identifier;
-        public LinkedList<Value> Arguments;
+        private Syntax Identifier;
+        private LinkedList<Value> Arguments;
         public AstPrimitive(Syntax syntax, Syntax identifier, LinkedList<Value> arguments) : base(syntax)
         {
             this.Identifier = identifier;
@@ -278,14 +279,14 @@ namespace VARP.Scheme.Stx
     // application e.g. (f 1 2)
     public sealed class AstApplication : AST
     {
-        LinkedList<Value> expression;
+        private LinkedList<Value> list;
         public AstApplication(Syntax syntax, LinkedList<Value> expression) : base(syntax)
         {
-            this.expression = expression;
+            this.list = expression;
         }
         public override Value GetDatum()
         {
-            return GetDatum(expression);
+            return GetDatum(list);
         }
         #region ValueType Methods
         public override string Inspect()
@@ -298,9 +299,9 @@ namespace VARP.Scheme.Stx
     // lambda expression   e.g. (lambda(x) x)
     public sealed class AstLambda : AST
     {
-        public Syntax Keyword;                      // (<lambda> (...) ...)
-        public BaseArguments ArgList;               // (lambda <(...)> )
-        public LinkedList<Value> BodyExpression;    // (lambda (...) <...>)
+        private Syntax Keyword;                      // (<lambda> (...) ...)
+        private BaseArguments ArgList;               // (lambda <(...)> )
+        private LinkedList<Value> BodyExpression;    // (lambda (...) <...>)
         public AstLambda(Syntax syntax, Syntax keyword, BaseArguments arguments, LinkedList<Value> expression) : base(syntax)
         {
             this.ArgList = arguments;
@@ -308,7 +309,7 @@ namespace VARP.Scheme.Stx
             if (keyword.GetDatum() == Symbol.LAMBDA)
                 this.Keyword = keyword;
             else
-                this.Keyword = new Syntax(Symbol.LAMBDA, keyword.location);
+                this.Keyword = new Syntax(Symbol.LAMBDA, keyword.Location);
         }
         public override Value GetDatum()
         {
@@ -335,8 +336,8 @@ namespace VARP.Scheme.Stx
     // sequence e.g. (begin 1 2)
     public sealed class AstSequence : AST
     {
-        public Syntax Keyword;
-        public LinkedList<Value> BodyExpression;
+        private Syntax Keyword;
+        private LinkedList<Value> BodyExpression;
         public AstSequence(Syntax syntax, Syntax keyword, LinkedList<Value> expression) : base(syntax)
         {
             this.Keyword = keyword;

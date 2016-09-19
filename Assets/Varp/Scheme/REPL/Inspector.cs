@@ -59,13 +59,13 @@ namespace VARP.Scheme.REPL
         public static string Inspect(Object x, InspectOptions options = InspectOptions.Default)
         {
             if (x == null)
-                return "()";
+                return "null";
 
             if (x is Value)
-                return InspectSchemeObject((Value)x, options);
+                return InspectInternal((Value)x, options);
 
             if (x is ValueClass)
-                return InspectSchemeObject(x as ValueClass, options);
+                return InspectInternal(x as ValueClass, options);
 
             if (x is Inspectable)
                 return (x as Inspectable).Inspect();
@@ -73,38 +73,38 @@ namespace VARP.Scheme.REPL
             return InspectMonoObject(x, options);
         }
 
-        static string InspectSchemeObject(Value x, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(Value x, InspectOptions options = InspectOptions.Default)
         {
             if (x.IsNil || x.IsBool || x.IsNumber)
                 return x.ToString();
             return Inspect(x.RefVal, options);
         }
-        static string InspectSchemeObject(ValueClass x, InspectOptions options = InspectOptions.Default)
+
+        static string InspectInternal(ValueClass x, InspectOptions options = InspectOptions.Default)
         {
             if (x is Location)
-                return InspectSchemeObjectIntern(x as Location, options);
+                return InspectInternal(x as Location, options);
             if (x is Token)
-                return InspectSchemeObjectIntern(x as Token, options);
+                return InspectInternal(x as Token, options);
             if (x is ValuePair)
-                return InspectSchemeObjectIntern(x as ValuePair, options);
+                return InspectInternal(x as ValuePair, options);
             if (x is Syntax)
-                return InspectSchemeObjectIntern(x as Syntax);
+                return InspectInternal(x as Syntax, options);
             if (x is AST)
-                return (x as AST).Inspect();
+                return InspectInternal(x as AST, options);
             if (x is Binding)
-                return InspectSchemeObjectIntern(x as Binding, options);
+                return InspectInternal(x as Binding, options);
             if (x is Stx.Environment)
-                return InspectSchemeObjectIntern(x as Stx.Environment, options);
+                return InspectInternal(x as Stx.Environment, options);
             // all another just convert to string
             return x.ToString();
-
         }
 
-        static string InspectSchemeObjectIntern(Location x, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(Location x, InspectOptions options = InspectOptions.Default)
         {
             return string.Format("#<location:{0}:{1} {2}>", x.LineNumber, x.ColNumber, x.File);
         }
-        static string InspectSchemeObjectIntern(Token x, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(Token x, InspectOptions options = InspectOptions.Default)
         {
             Location loc = x.location;
             if (loc == null)
@@ -112,15 +112,15 @@ namespace VARP.Scheme.REPL
             else
                 return string.Format("#<token:{0}:{1} \"{2}\">", loc.LineNumber, loc.ColNumber, x.ToString());
         }
-        static string InspectSchemeObjectIntern(Syntax x, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(Syntax x, InspectOptions options = InspectOptions.Default)
         {
-            Location loc = x.location;
+            Location loc = x.Location;
             if (loc == null)
                 return string.Format("#<syntax {0}>", x.ToString());
             else
                 return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.GetDatum(), options));
         }
-        static string InspectSchemeObjectIntern(Binding bind, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(Binding bind, InspectOptions options = InspectOptions.Default)
         {
             string prefix = bind.IsPrimitive ? "#Prim" : string.Empty; 
                 if (bind.IsGlobal)
@@ -129,7 +129,7 @@ namespace VARP.Scheme.REPL
                     return string.Format("[{0}] {1} {2}>", bind.Index, prefix, bind.Identifier.Name);
         }
 
-        static string InspectSchemeObjectIntern(Stx.Environment env, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(Stx.Environment env, InspectOptions options = InspectOptions.Default)
         {
             int tabs = env.GetEnvironmentIndex();
             string tabstr = new string(' ', tabs * 4);
@@ -137,14 +137,18 @@ namespace VARP.Scheme.REPL
             sb.AppendLine(tabstr + "Lexical Environment");
             foreach (var b in env)
             {
-                sb.AppendLine(tabstr + InspectSchemeObjectIntern(b, options));
+                sb.AppendLine(tabstr + InspectInternal(b, options));
             }
             return sb.ToString();
         }
 
-        static string InspectSchemeObjectIntern(ValuePair x, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(ValuePair x, InspectOptions options = InspectOptions.Default)
         {
             return string.Format("({0} . {1})", Inspect(x.Item1, options), Inspect(x.Item2));
+        }
+        static string InspectInternal(AST x, InspectOptions options = InspectOptions.Default)
+        {
+            return x.Inspect();
         }
 
 
@@ -159,13 +163,13 @@ namespace VARP.Scheme.REPL
                 return string.Format(CultureInfo.CurrentCulture, "#\\{0}", x);
 
             if (x is LinkedList<Value>)
-                return InspectSchemeObjectIntern(x as LinkedList<Value>);
+                return InspectInternal(x as LinkedList<Value>);
 
             if (x is List<Value>)
-                return InspectSchemeObjectIntern(x as List<Value>);
+                return InspectInternal(x as List<Value>);
 
             if (x is Dictionary<object, Value>)
-                return InspectSchemeObjectIntern(x as Dictionary<object, Value>);
+                return InspectInternal(x as Dictionary<object, Value>);
 
             if (x is Array)
                 return InspectArray((Array)x, options);
@@ -258,7 +262,7 @@ namespace VARP.Scheme.REPL
 
             return retval;
         }
-        static string InspectSchemeObjectIntern(LinkedList<Value> list, InspectOptions options = InspectOptions.Default, bool encloseList = true)
+        static string InspectInternal(LinkedList<Value> list, InspectOptions options = InspectOptions.Default, bool encloseList = true)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -292,7 +296,7 @@ namespace VARP.Scheme.REPL
 
             return sb.ToString();
         }
-        static string InspectSchemeObjectIntern(List<Value> list, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(List<Value> list, InspectOptions options = InspectOptions.Default)
         {
             StringBuilder sb = new StringBuilder();
             bool appendSpace = false;
@@ -307,7 +311,7 @@ namespace VARP.Scheme.REPL
             return sb.ToString();
         }
 
-        static string InspectSchemeObjectIntern(Dictionary<object, Value> table, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(Dictionary<object, Value> table, InspectOptions options = InspectOptions.Default)
         {
             StringBuilder sb = new StringBuilder();
             bool appendSpace = false;

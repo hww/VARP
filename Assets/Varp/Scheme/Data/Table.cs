@@ -27,68 +27,71 @@
 
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace VARP.Scheme.Data
 {
-    /// <summary>
-    /// Fields of the class
-    /// </summary>
-    public partial struct Value
+    using Data;
+
+    public interface IMetatable
     {
-        internal double NumVal;
-        internal object RefVal;
+        Table Metatable { get; }
+    }
 
-        #region Constructors
-        public Value(ValueClass type)
+    public class Table : ValueClass, IMetatable, IEnumerable<KeyValuePair<Symbol, Value>>
+    {
+        Dictionary<Symbol, Value> table;
+        Table metatable;
+
+        public Table()
         {
-            RefVal = type;
-            NumVal = 0;
+            table = new Dictionary<Symbol, Value>();
         }
-        public Value(BoolClass value)
+        public Table(int size)
         {
-            RefVal = value;
-            NumVal = 0;
-        }
-        public Value(char value)
-        {
-            RefVal = CharClass.Instance;
-            NumVal = value;
+            table = new Dictionary<Symbol, Value>(size);
         }
 
-        public Value(bool value)
-        {
-            RefVal = value ? BoolClass.True : BoolClass.False;
-            NumVal = 0;
-        }
+        #region IMetatable
+        public Table Metatable { get { return metatable; } }
 
-        public Value(int value)
-        {
-            RefVal = FixnumClass.Instance;
-            NumVal = value;
-        }
+        #endregion
 
-        public Value(uint value)
+        #region Aray Methods
+        /// <summary>
+        /// Get definition by index. Use only for local environment
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public Value this[Symbol index]
         {
-            RefVal = FixnumClass.Instance;
-            NumVal = value;
-        }
-
-        public Value(double value)
-        {
-            RefVal = FloatClass.Instance;
-            NumVal = value;
-        }
-
-        public Value(object value) : this()
-        {
-            Set(value);
+            get { return table[index]; }
         }
         #endregion
 
+        #region IEnumerable<T> Members
+
+        public IEnumerator<KeyValuePair<Symbol, Value>> GetEnumerator()
+        {
+            foreach (var b in table)
+                yield return b;
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            // Lets call the generic version here
+            return this.GetEnumerator();
+        }
+
+        #endregion
+
+        public int Count { get { return table.Count; } }
     }
 
 
- 
 }

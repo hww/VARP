@@ -65,7 +65,7 @@ namespace VARP.Scheme.Exception
             if (x is Token)
                 return GetLocationStringIntern((x as Token).location);
             if (x is Syntax)
-                return GetLocationStringIntern((x as Syntax).location);
+                return GetLocationStringIntern((x as Syntax).Location);
             return string.Empty;
         }
 

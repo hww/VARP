@@ -24,14 +24,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-     /*
+using System;
+using System.Text;
+using System.Diagnostics;
+using System.Collections.Generic;
+
 namespace VARP.Scheme.VM
 {
     using Data;
     using Exception;
-    using System;
-    using System.Diagnostics;
-    using System.Text;
 
     public sealed class VarpVM
     {
@@ -46,15 +47,9 @@ namespace VARP.Scheme.VM
         {
             Environment environment = frame.environment;
             Template template = frame.template;
-            ValueType[] variables = frame.variables;
-
-            RkDelegate Rk = (int i) =>
-            {
-                if ((i & Instruction.BitK) != 0)
-                    return template.Literals[i];
-                else
-                    return variables[i];
-            };
+            Value[] literals = template.Literals;
+            Value[] values = frame.Values;
+            Value[] upvalues = frame.Upvalues;
 
 #if PROFILER
             _profiler.EnterFunction(null, TEMPLATE);
@@ -63,32 +58,34 @@ namespace VARP.Scheme.VM
             {
                 while (true)
                 {
-                    Instruction i = frame.template.Code[frame.PC];
-                    switch (i.OpCode)
+                    Instruction op = frame.template.Code[frame.PC];
+                    switch (op.OpCode)
                     {
                         case Instruction.OpCodes.MOVE:
-                            variables[i.A] = variables[i.B];
+                            values[op.A] = values[op.B];
                             break;
 
                         case Instruction.OpCodes.LOADK:
-                            variables[i.A] = template.Literals[i.B];
+                            values[op.A] = template.Literals[op.B];
                             break;
 
                         case Instruction.OpCodes.LOADBOOL:
                             {
-                                int a = i.A;
-                                int b = i.B;
-                                do { variables[a++] = null; } while (b-- != 0);
+                                values[op.A].Set(op.B != 0);
+                                if (op.C != 0) frame.PC++;
                             }
                             break;
 
                         case Instruction.OpCodes.LOADNIL:
-                            frame.variables[i.A] = i.B != 0 ? SBool.True : SBool.False;
-                            if (i.C != 0) frame.PC++;
+                            {
+                                int a = op.A;
+                                int b = op.B;
+                                do { values[a++].SetNil(); } while (b-- != 0);
+                            }
                             break;
 
                         case Instruction.OpCodes.GETUPVAL:
-                            variables[i.A] = frame.upvariables[i.B];
+                            ReadUpValue(frame, ref upvalues[op.B], out values[op.A]);
                             break;
 
                         case Instruction.OpCodes.GETGLOBAL:
@@ -101,13 +98,31 @@ namespace VARP.Scheme.VM
                             break;
 
                         case Instruction.OpCodes.SETUPVAL:
-                            frame.upvariables[i.B] = frame.upvariables[i.A];
+                            WriteUpValue(frame, ref upvalues[op.B], ref values[op.A]);
                             break;
 
                         case Instruction.OpCodes.SETTABLE:
+                            //{
+                            //    int b = op.B;
+                            //    var key = (b & Instruction.BitK) != 0 ?
+                            //        literals[b & ~Instruction.BitK] :
+                            //        values[b];
+                            //
+                            //    int c = op.C;
+                            //    var value = (c & Instruction.BitK) != 0 ?
+                            //        literals[c & ~Instruction.BitK] :
+                            //        values[c];
+                            //
+                            //    //SetTable(variables[ op.A], ref key, ref value);
+                            //}
                             break;
 
                         case Instruction.OpCodes.NEWTABLE:
+                            {
+                                int nArr = FbToInt(op.B);   // array size
+                                int nNod = FbToInt(op.C);   // hash size
+                                values[op.A].Set(new Table(nNod));
+                            }
                             break;
 
                         case Instruction.OpCodes.SELF:
@@ -120,14 +135,21 @@ namespace VARP.Scheme.VM
                         case Instruction.OpCodes.MOD:
                         case Instruction.OpCodes.POW:
                             {
-                                ISchemeNumeric a = variables[i.A] as ISchemeNumeric;
-                                ISchemeNumeric b = variables[i.B] as ISchemeNumeric;
-                                ISchemeNumeric c = variables[i.C] as ISchemeNumeric;
+                                var ib = op.B;
+                                var b = (ib & Instruction.BitK) != 0 ?
+                                    literals[ib & ~Instruction.BitK] :
+                                    values[ib];
 
-                                if (b != null && c != null)
+                                var ic = op.C;
+                                var c = (ic & Instruction.BitK) != 0 ?
+                                    literals[ic & ~Instruction.BitK] :
+                                    values[ic];
+
+                                if (b.RefVal is INumeric &&
+                                    c.RefVal is INumeric)
                                 {
-                                    double rv, bv = b.DoubleVlaue, cv = c.DoubleVlaue;
-                                    switch (i.OpCode)
+                                    double rv, bv = b.NumVal, cv = c.NumVal;
+                                    switch (op.OpCode)
                                     {
                                         case Instruction.OpCodes.ADD: rv = bv + cv; break;
                                         case Instruction.OpCodes.SUB: rv = bv - cv; break;
@@ -137,66 +159,65 @@ namespace VARP.Scheme.VM
                                         case Instruction.OpCodes.POW: rv = Math.Pow(bv, cv); break;
                                         default: throw new NotImplementedException();
                                     }
-
-                                    if (a == null)
-                                        a = new SDouble(rv);
-                                    else
-                                        a.DoubleVlaue = rv;
+                                    values[op.A].Set(rv);
+                                }
+                                else
+                                {
+                                    DoArith(op.OpCode, b, c, ref values[op.A]);
                                 }
                             }
                             break;
 
                         case Instruction.OpCodes.NEG:
                             {
-                                ISchemeNumeric a = variables[i.A] as ISchemeNumeric;
-                                ISchemeNumeric b = variables[i.B] as ISchemeNumeric;
-                                if (b != null)
-                                {
-                                    if (a == null)
-                                        a = (b as ValueType).Clone() as ISchemeNumeric;
-                                    a.DoubleVlaue = -b.DoubleVlaue;
-                                }
+                                var ib = op.B;
+                                var b = (ib & Instruction.BitK) != 0 ?
+                                    literals[ib & ~Instruction.BitK] :
+                                    values[ib];
+
+                                if (b.RefVal is INumeric)
+                                    values[op.A].Set(-b.NumVal);
                                 else
-                                    DoArith(Instruction.OpCodes.NEG, b, b, ref frame.variables[i.A]);
+                                    DoArith(op.OpCode, b, b, ref values[op.A]);
                             }
                             break;
 
                         case Instruction.OpCodes.NOT:
                             {
-                                variables[i.A] = variables[i.B].AsBool() ? SBool.True : SBool.False;
+                                values[op.A].Set(!values[op.B].AsBool());
                             }
                             break;
 
                         case Instruction.OpCodes.LEN:
                             {
-                                ValueType b = variables[i.B];
-                                if (b is SString)
-                                {
-
-                                }
+                                var ib = op.B;
+                                var b = (ib & Instruction.BitK) != 0 ?
+                                    literals[ib & ~Instruction.BitK] :
+                                    values[ib];
+                                DoGetLen(ref b, out values[op.A]);
                             }
                             break;
 
                         case Instruction.OpCodes.CONCAT:
                             {
-                                int len = i.C + 1;
+                                int end = op.C + 1;
                                 StringBuilder sb = new StringBuilder();
-                                for (var n = i.B; n < len; n++)
-                                    sb.Append(variables[n].AsString());
-                                SString ss = variables[i.A] as SString;
-                                if (ss == null) ss = new SString();
-                                ss.Value = sb.ToString();
-                                variables[i.A] = ss;
+                                for (var n = op.B; n < end; n++)
+                                    sb.Append(values[n].AsString());
+                                values[op.A].Set(sb.ToString());
                             }
                             break;
 
                         case Instruction.OpCodes.JMP:
+                            {
+                                frame.PC += (int)op.BX; // SBX
+                            }
                             break;
 
                         case Instruction.OpCodes.EQ:
                             {
-                                ValueType rb = Rk(i.B);
-                                ValueType rc = Rk(i.C);
+                                ValueType rb = Rk(op.B);
+                                ValueType rc = Rk(op.C);
                                 //if ((rb == rc) )
                             }
                             break;
@@ -276,17 +297,14 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="val"></param>
         /// <returns></returns>
-        private bool ToNumber(ValueType val, ref double result)
+        private bool ToNumber(Value val, ref double result)
         {
-            if (val is ISchemeNumeric)
-            {
-                result = (val as ISchemeNumeric).DoubleVlaue;
+            if (val.RefVal is INumeric)
                 return true;
-            }
 
-            if (val is SString)
+            if (val.IsString)
             {
-                result = Libs.StringLibs.GetNumerical((val as SString).AsString());
+                result = Libs.StringLibs.GetNumerical(val.AsString());
                 return true;
             }
 
@@ -300,7 +318,7 @@ namespace VARP.Scheme.VM
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <param name="ret"></param>
-        private void DoArith(Instruction.OpCodes opCode, ValueType a, ValueType b, ref ValueType ret)
+        private void DoArith(Instruction.OpCodes opCode, Value a, Value b, ref Value ret)
         {
             double na = 0, nb = 0, rv = 0;
 
@@ -320,16 +338,107 @@ namespace VARP.Scheme.VM
 
                     default: Debug.Assert(false); rv = 0; break;
                 }
-
-                if (ret is ISchemeNumeric)
-                    (ret as ISchemeNumeric).DoubleVlaue = rv;
-                else
-                    ret = new SDouble(rv);
-
+                ret.Set(rv);
                 return;
             }
 
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Read up-value
+        /// </summary>
+        /// <param name="frame">current frame</param>
+        /// <param name="upVal">up value</param>
+        /// <param name="ret">return value</param>
+        private void ReadUpValue(Frame frame, ref Value upVal, out Value ret)
+        {
+            if (upVal.RefVal is Frame)
+            {
+                int varNum = (int)upVal.NumVal;
+                ret = frame.Values[varNum];
+                return;
+            }
+            if (upVal.RefVal is UpvalueClass)
+            {
+                // Get frame number and value number
+                int number = (int)upVal.NumVal;
+                ushort vindex = (ushort)number;  
+                ushort vfridx = (ushort)(number >> 16);
+                // Find requested frame
+                while (vfridx>0)
+                { frame = frame.parent; vfridx--; }
+                // Update up-value reference
+                upVal.RefVal = frame;
+                upVal.NumVal = vindex;
+                // Read upvalue
+                ret = frame.Values[vindex];
+                return;
+            }
+            throw new SystemException();
+        }
+        /// <summary>
+        /// Write up-value
+        /// </summary>
+        /// <param name="frame">current frame</param>
+        /// <param name="upVal">upvalue</param>
+        /// <param name="value">value</param>
+        private void WriteUpValue(Frame frame, ref Value upVal, ref Value value)
+        {
+            if (upVal.RefVal is Frame)
+            {
+                int varNum = (int)upVal.NumVal;
+                (upVal.RefVal as Frame).Values[varNum] = value;
+                return;
+            }
+            if (upVal.RefVal is UpvalueClass)
+            {
+                // Get frame number and value number
+                int number = (int)upVal.NumVal;
+                ushort vindex = (ushort)number;
+                ushort vfridx = (ushort)(number >> 16);
+                // Find requested frame
+                while (vfridx > 0)
+                { frame = frame.parent; vfridx--; }
+                // Update up-value reference
+                upVal.RefVal = frame;
+                upVal.NumVal = vindex;
+                // Write up-value
+                (upVal.RefVal as Frame).Values[vindex] = value;
+                return;
+            }
+            throw new SystemException();
+        }
+
+        private void DoGetLen(ref Value val, out Value ret)
+        {
+            var str = val.AsString();
+            if (str != null)
+            {
+                ret.RefVal = FixnumClass.Instance;
+                ret.NumVal = str.Length;
+                return;
+            }
+
+            var asTable = val.RefVal as Table;
+            if (asTable != null)
+            {
+                ret.RefVal = FixnumClass.Instance;
+                ret.NumVal = asTable.Count;
+                return;
+            }
+
+            throw new NotImplementedException();
+        }
+
+        internal static int FbToInt(int x)
+        {
+            int e = (x >> 3) & 0x1f;
+            return e == 0 ? x : ((x & 7) + 8) << (e - 1);
+        }
+
+        #region Tables
+
+        #endregion
     }
-}*/
+}

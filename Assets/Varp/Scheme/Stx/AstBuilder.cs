@@ -102,7 +102,7 @@ namespace VARP.Scheme.Stx
             Syntax ident = list[0].AsSyntax();
             if (ident.IsIdentifier)
             {
-                Binding binding = env.Lookup(ident.Expression.AsSymbol());
+                Binding binding = env.Lookup(ident.AsIdentifier());
                 if (binding != null)
                 {
                     if (binding.IsPrimitive)

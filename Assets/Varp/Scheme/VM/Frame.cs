@@ -35,26 +35,34 @@ namespace VARP.Scheme.VM
 
         public Frame parent;            //< pointer to parent frame
         public Template template;       //< pointer to template
-        public uint PC;                 //< program counter
-        public ValueClass[] variables;     //< register set
-        public ValueClass[] upvariables;   //< upvariables
+        public int PC;                  //< program counter
+        public Value[] Values;          //< register set
+        public Value[] Upvalues;        //< up-variables
 
-        public Frame(Frame parent, Template template, int size = 0)
+        public Frame(Frame parent, Template template, int values = 0, int upvalues = 0)
         {
             this.parent = parent;
             this.template = template;
-            this.variables = new ValueClass[size];
+            this.Values = new Value[values];
+            this.Upvalues = new Value[upvalues];
             this.environment = parent==null ? Environment.Top : parent.environment;
         }
 
         /// <summary>
         /// Return size of this frame
         /// </summary>
-        public int Count
+        public int ValuesCount
         {
-            get { return variables.Length; }
+            get { return Values.Length; }
         }
 
+        /// <summary>
+        /// Return size of this frame
+        /// </summary>
+        public int UpvaluesCount
+        {
+            get { return Upvalues.Length; }
+        }
 
     }
 }
