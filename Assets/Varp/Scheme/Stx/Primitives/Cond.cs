@@ -68,13 +68,15 @@ namespace VARP.Scheme.Stx.Primitives
 
                     if (var.IsIdentifier && var.AsIdentifier() == Symbol.ELSE)
                     {
-                        elsecase = ValueLinkedList.FromArguments(var, AstBuilder.Expand(val, env));
+                        AST ast = AstBuilder.Expand(val, env);
+                        elsecase = ValueLinkedList.FromArguments(new Value(var), new Value(ast));
                     }
                     else
                     {
                         AST cond_ = AstBuilder.Expand(var, env);
                         AST then_ = AstBuilder.Expand(val, env);
                         LinkedList<Value> single_cond = ValueLinkedList.FromArguments(cond_, then_);
+                        if (allcases == null) allcases = new LinkedList<Value>();
                         allcases.AddLast(new Value(single_cond));
                     }
                 }

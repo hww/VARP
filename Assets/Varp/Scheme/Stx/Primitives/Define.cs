@@ -68,7 +68,7 @@ namespace VARP.Scheme.Stx.Primitives
                 // ----------------------------------------------------------------
                 LinkedList<Value> args_list = var_stx.AsLinkedList<Value>();
 
-                Arguments arguments = new Arguments();
+                LambdaArguments arguments = new LambdaArguments();
                 ArgumentsList.Parse(stx, args_list, env, ref arguments);
 
                 LinkedList<Value> lambda_body = AstBuilder.ExpandListElements(list, 2, env);

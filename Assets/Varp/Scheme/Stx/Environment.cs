@@ -71,11 +71,29 @@ namespace VARP.Scheme.Stx
         /// <param name="expression">Expression where is this arguments list</param>
         /// <param name="arguments">Arguments list</param>
         /// <returns>new environment</returns>
-        public Environment CreateEnvironment(Syntax expression, Arguments arguments)
+        public Environment CreateEnvironment(Syntax expression, BaseArguments arguments)
         {
             Environment env = new Environment(this);
-            env.ExpandLocals(expression, arguments);
+            if (arguments is LambdaArguments)
+                env.Expand(expression, arguments as LambdaArguments);
+            else 
+                env.Expand(expression, arguments as LetArguments);
             return env;
+        }
+
+        /// <summary>
+        /// Create new child environment
+        /// </summary>
+        /// <param name="expression">Expression where is this arguments list</param>
+        /// <param name="arguments">Arguments list</param>
+        /// <returns>new environment</returns>
+        private void Expand(Syntax expression, LetArguments arguments)
+        {
+            Debug.Assert(expression != null);
+            Debug.Assert(arguments != null);
+
+            if (arguments.required != null)
+                ExpandRequired(expression, arguments.required);
         }
 
         /// <summary>
@@ -83,8 +101,11 @@ namespace VARP.Scheme.Stx
         /// </summary>
         /// <param name="expression">Expression where is this arguments list</param>
         /// <param name="arguments"></param>
-        public void ExpandLocals(Syntax expression, Arguments arguments)
+        public void Expand(Syntax expression, LambdaArguments arguments)
         {
+            Debug.Assert(expression != null);
+            Debug.Assert(arguments != null);
+
             if (arguments.required != null)
                 Requried = ExpandRequired(expression, arguments.required);
             if (arguments.optional != null)

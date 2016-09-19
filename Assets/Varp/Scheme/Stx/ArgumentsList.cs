@@ -35,9 +35,58 @@ namespace VARP.Scheme.Stx
     using Exception;
     using REPL;
 
-    public sealed class Arguments
+    public abstract class BaseArguments 
+    {
+        public abstract Value AsDatum();
+
+        protected Value GetDatum(Value value)
+        {
+            if (value.IsAST)
+                return value.AsAST().GetDatum();
+            else if (value.IsSyntax)
+                return value.AsSyntax().GetDatum();
+            else if (value.IsValuePair)
+            {
+                ValuePair pair = value.AsValuePair();
+                LinkedList<Value> newPair = ValueLinkedList.FromArguments(GetDatum(pair.Item1), GetDatum(pair.Item2));
+                return new Value(newPair);
+            }
+            else
+                return value;
+        }
+
+        protected LinkedList<Value> GetDatum(LinkedList<Value> list)
+        {
+            LinkedList<Value> newlist = new LinkedList<Value>();
+            foreach (var v in list)
+            {
+                newlist.AddLast(GetDatum(v));
+            }
+            return newlist;
+        }
+    }
+
+    public sealed class LetArguments : BaseArguments
     {
         public Value expression; //< the expression where this arguments
+        // -------------------------------------------------------------
+        //  Example: (let ((x 1) (y 2)) ...)
+        // -------------------------------------------------------------
+        public LinkedList<Value> required;   //< (v1 v2)
+        public LinkedList<Value> values;     //< (1 2)
+
+        public override Value AsDatum()
+        {
+            LinkedList<Value> result = new LinkedList<Value>();
+            if (required != null)
+                result.Append(GetDatum(required));
+            return new Value(result);
+        }
+    }
+
+    public sealed class LambdaArguments : BaseArguments
+    {
+        public Value expression;    //< the expression where this arguments
         public Value optionalKwd;
         public Value keyKwd;
         public Value restKwd;
@@ -55,7 +104,7 @@ namespace VARP.Scheme.Stx
         // -------------------------------------------------------------
         public LinkedList<Value> values;     //< (1 2)
 
-        public Value AsDatum()
+        public override Value AsDatum()
         {
             LinkedList<Value> result = new LinkedList<Value>();
             if (required != null)
@@ -76,32 +125,6 @@ namespace VARP.Scheme.Stx
                 result.AddLast(GetDatum(restIdent));
             }
             return new Value(result);
-        }
-
-        Value GetDatum(Value value)
-        {
-            if (value.IsAST)
-                return value.AsAST().GetDatum();
-            else if (value.IsSyntax)
-                return value.AsSyntax().GetDatum();
-            else if (value.IsValuePair)
-            {
-                ValuePair pair = value.AsValuePair();
-                LinkedList<Value> newPair = ValueLinkedList.FromArguments(GetDatum(pair.Item1), GetDatum(pair.Item2));
-                return new Value(newPair);
-            }
-            else
-                return value;
-        }
-
-        LinkedList<Value> GetDatum(LinkedList<Value> list)
-        {
-            LinkedList<Value> newlist = new LinkedList<Value>();
-            foreach (var v in list)
-            {
-                newlist.AddLast(GetDatum(v));
-            }
-            return newlist;
         }
     }
 
@@ -129,7 +152,7 @@ namespace VARP.Scheme.Stx
         /// <param name="arguments">the arguments list (syntax syntax syntax ...)</param>
         /// <param name="env">environment</param>
         /// <param name="args">destination arguments structure</param>
-        public static void Parse(Syntax expression, LinkedList<Value> arguments, Environment env, ref Arguments args)
+        public static void Parse(Syntax expression, LinkedList<Value> arguments, Environment env, ref LambdaArguments args)
         {
             args.expression.Set(expression);
 
@@ -213,7 +236,8 @@ namespace VARP.Scheme.Stx
                         case Type.End:
                             throw SchemeError.SyntaxError("lambda", "unexpected extra argument", argstx);
                     }
-                } else
+                }
+                else
                 {
                     switch (arg_type)
                     {
@@ -237,7 +261,7 @@ namespace VARP.Scheme.Stx
             }
         }
 
-        public static void ParseLetList(Syntax expression, LinkedList<Value> arguments, Environment env, ref Arguments args)
+        public static void ParseLetList(Syntax expression, LinkedList<Value> arguments, Environment env, ref LetArguments args)
         {
             args.expression.Set(expression);
 

@@ -45,7 +45,7 @@ namespace VARP.Scheme.Stx.Primitives
             Syntax kwdr = list[0].AsSyntax();
             Syntax args = list[1].AsSyntax();
 
-            Arguments arguments = new Arguments();
+            LambdaArguments arguments = new LambdaArguments();
             ArgumentsList.Parse(stx, args.AsLinkedList<Value>(), env, ref arguments);
 
             Environment localEnv = env.CreateEnvironment(stx, arguments);

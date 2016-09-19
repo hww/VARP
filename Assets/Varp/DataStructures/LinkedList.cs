@@ -26,13 +26,14 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using VARP.Scheme.Data;
 
 namespace VARP.DataStructures
 {
+    using Scheme.Data;
 
     // =============================================================================
     // This LinkedListNode for a doubly-Linked circular list.
@@ -114,7 +115,7 @@ namespace VARP.DataStructures
         {
             get
             {
-                return string.Format("#<LinkedListNode {0}>", Value);
+                return string.Format("#<LinkedListNode {0} {1}>", Value, typeof(Value));
             }
         }
         #endregion
@@ -124,7 +125,8 @@ namespace VARP.DataStructures
     // This LinkedList is a doubly-Linked circular list.
     // =============================================================================
 
-    [DebuggerDisplay("Count = {Count}")]
+   // [DebuggerDisplay("{DebuggerDisplay,nq}")]
+    [DebuggerTypeProxy(typeof(System_CollectionDebugView<>))]
     [System.Serializable]
     public class LinkedList<T> : IEnumerable<T>
     {
@@ -711,7 +713,43 @@ namespace VARP.DataStructures
             return sb.ToString();
         }
 
+        #region DebuggerDisplay 
+        public string DebuggerDisplay
+        {
+            get
+            {
+                return string.Format("#<LinkedList Count={0}>", Count);
+            }
+        }
+        #endregion
     }
 
+    //
+    // Custom debugger type proxy to display collections as arrays
+    //
+    internal sealed class System_CollectionDebugView<T>
+    {
+        private ICollection<T> collection;
 
+        public System_CollectionDebugView(ICollection<T> collection)
+        {
+            if (collection == null)
+            {
+                throw new ArgumentNullException("collection");
+            }
+
+            this.collection = collection;
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        public T[] Items
+        {
+            get
+            {
+                T[] items = new T[collection.Count];
+                collection.CopyTo(items, 0);
+                return items;
+            }
+        }
+    }
 }

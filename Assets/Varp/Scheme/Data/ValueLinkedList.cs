@@ -33,6 +33,7 @@ namespace VARP.Scheme.Data
 {
     using DataStructures;
     using REPL;
+    using Stx;
     using System.Text;
 
     public static class ValueLinkedList 
@@ -40,6 +41,20 @@ namespace VARP.Scheme.Data
         public static LinkedList<Value> FromArguments(params Value[] args)
         {
             return new LinkedList<Value>(args);
+        }
+        public static LinkedList<Value> FromArguments(params AST[] args)
+        {
+            LinkedList<Value> list = new LinkedList<Value>();
+            foreach (var o in args)
+                list.AddLast(new Value(o));
+            return list;
+        }
+        public static LinkedList<Value> FromArguments(params int[] args)
+        {
+            LinkedList<Value> list = new LinkedList<Value>();
+            foreach (var o in args)
+                list.AddLast(new Value(o));
+            return list;
         }
         public static LinkedList<Value> FromArguments(params object[] args)
         {

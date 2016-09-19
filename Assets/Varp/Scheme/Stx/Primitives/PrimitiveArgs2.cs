@@ -49,15 +49,17 @@ namespace VARP.Scheme.Stx.Primitives
             else
             {
                 // for expression (+ 1 2 3 4)
-                LinkedList<Value> args = arguments.DuplicateReverse(0,-1) as LinkedList<Value>;     //< (+ 4 3 2 1)
-                AST rightarg = args[0].AsAST();                                     //< 4
+                LinkedList<Value> args = arguments.DuplicateReverse(0,-1);     //< (+ 4 3 2 1)
+                Value rightarg = args[0];                                     //< 4
                 int skip = 1;
                 foreach (Value leftarg in args)                                     //< 3, 2, 1, 
                 {
                     if (skip-- > 0) continue;
-                    rightarg = new AstPrimitive(stx, set_kwd, ValueLinkedList.FromArguments(leftarg, rightarg));
+                    LinkedList<Value> values = ValueLinkedList.FromArguments(leftarg, rightarg);
+                    AstPrimitive prim = new AstPrimitive(stx, set_kwd, values);
+                    rightarg.Set(prim);
                 }
-                return rightarg;
+                return rightarg.AsAST();
             }
         }
     }
