@@ -58,7 +58,7 @@ namespace VARP.Scheme.VM
             {
                 while (true)
                 {
-                    Instruction op = frame.template.Code[frame.PC];
+                    Instruction op = template.Code[frame.PC];
                     switch (op.OpCode)
                     {
                         case Instruction.OpCodes.MOVE:
@@ -66,7 +66,7 @@ namespace VARP.Scheme.VM
                             break;
 
                         case Instruction.OpCodes.LOADK:
-                            values[op.A] = template.Literals[op.B];
+                            values[op.A] = literals[op.B];
                             break;
 
                         case Instruction.OpCodes.LOADBOOL:
@@ -89,12 +89,46 @@ namespace VARP.Scheme.VM
                             break;
 
                         case Instruction.OpCodes.GETGLOBAL:
+                            {
+                                int c = op.C;
+                                var key = (c & Instruction.BitK) != 0 ?
+                                    literals[c & ~Instruction.BitK] :
+                                    values[c];
+
+                                Value upVal;
+                                ReadUpValue(frame, ref upvalues[op.B], out upVal);
+                                Binding bind = environment.LookupRecursively(upVal.AsSymbol());
+                                if (bind != null)
+                                    values[op.A].Set(bind.value);
+                                else
+                                    throw SchemeError.Error("vm-get-gloabal", "undefined variable", upVal.AsSymbol());
+                            }
                             break;
 
                         case Instruction.OpCodes.GETTABLE:
                             break;
 
                         case Instruction.OpCodes.SETGLOBAL:
+                            {
+                                int b = op.B;
+                                var key = (b & Instruction.BitK) != 0 ?
+                                    literals[b & ~Instruction.BitK] :
+                                    values[b];
+
+                                int c = op.C;
+                                var value = (c & Instruction.BitK) != 0 ?
+                                    literals[c & ~Instruction.BitK] :
+                                    values[c];
+
+                                Value upVal;
+                                ReadUpValue(frame, ref upvalues[op.A], out upVal);
+
+                                Binding bind = environment.LookupRecursively(upVal.AsSymbol());
+                                if (bind != null)
+                                    bind.value.Set(value);
+                                else
+                                    throw SchemeError.Error("vm-set-gloabal", "undefined variable", upVal.AsSymbol());
+                            }
                             break;
 
                         case Instruction.OpCodes.SETUPVAL:
@@ -126,6 +160,18 @@ namespace VARP.Scheme.VM
                             break;
 
                         case Instruction.OpCodes.SELF:
+                            {
+                                // TODO!
+                                var table = values[op.B];
+                                values[op.A + 1] = table;
+
+                                int c = op.C;
+                                var key = (c & Instruction.BitK) != 0 ?
+                                    literals[c & ~Instruction.BitK] :
+                                    values[c];
+
+                                //GetTable(table, ref key, stackBase + op.A);
+                            }
                             break;
 
                         case Instruction.OpCodes.ADD:
@@ -215,23 +261,94 @@ namespace VARP.Scheme.VM
                             break;
 
                         case Instruction.OpCodes.EQ:
+                        case Instruction.OpCodes.LT:
+                        case Instruction.OpCodes.LE:
                             {
-                                ValueType rb = Rk(op.B);
-                                ValueType rc = Rk(op.C);
-                                //if ((rb == rc) )
+                                int b = op.B;
+                                var bv = (b & Instruction.BitK) != 0 ?
+                                    literals[b & ~Instruction.BitK] :
+                                    values[b];
+
+                                int c = op.C;
+                                var cv = (c & Instruction.BitK) != 0 ?
+                                    literals[c & ~Instruction.BitK] :
+                                    values[c];
+
+                                bool test;
+
+                                switch (op.OpCode)
+                                {
+                                    case Instruction.OpCodes.EQ:
+                                        test = bv.RefVal == cv.RefVal ?
+                                            bv.RefVal is NumericalClass || bv.NumVal == cv.NumVal :
+                                            Equal(ref bv, ref cv);
+                                        break;
+
+                                    case Instruction.OpCodes.LT:
+                                        test = (bv.RefVal is NumericalClass && cv.RefVal is NumericalClass) ?
+                                            bv.NumVal < cv.NumVal :
+                                            Less(ref bv, ref cv);
+                                        break;
+
+                                    case Instruction.OpCodes.LE:
+                                        test = (bv.RefVal is NumericalClass && cv.RefVal is NumericalClass) ?
+                                            bv.NumVal <= cv.NumVal :
+                                            LessEqual(ref bv, ref cv);
+                                        break;
+
+                                    default: Debug.Assert(false); test = false; break;
+                                }
+
+                                if (test != (op.A != 0))
+                                {
+                                    frame.PC++;
+                                }
+                                else
+                                {
+                                    op = template.Code[++frame.PC];
+                                    Debug.Assert(op.OpCode == Instruction.OpCodes.JMP);
+                                    goto case Instruction.OpCodes.JMP;
+                                }
                             }
                             break;
 
-                        case Instruction.OpCodes.LT:
-                            break;
-
-                        case Instruction.OpCodes.LE:
-                            break;
 
                         case Instruction.OpCodes.TEST:
+                            {
+                                var a = values[op.A].RefVal;
+                                var test = a == null || a == BoolClass.False;
+
+                                if ((op.C != 0) == test)
+                                {
+                                    frame.PC++;
+                                }
+                                else
+                                {
+                                    op = template.Code[++frame.PC];
+                                    Debug.Assert(op.OpCode == Instruction.OpCodes.JMP);
+                                    goto case Instruction.OpCodes.JMP;
+                                }
+                            }
                             break;
 
                         case Instruction.OpCodes.TESTSET:
+                            {
+                                var b = values[op.B].RefVal;
+                                var test = b == null || b == BoolClass.False;
+
+                                if ((op.C != 0) == test)
+                                {
+                                    frame.PC++;
+                                }
+                                else
+                                {
+                                    values[op.A] = values[op.B];
+
+                                    op = template.Code[++frame.PC];
+                                    Debug.Assert(op.OpCode == Instruction.OpCodes.JMP);
+                                    goto case Instruction.OpCodes.JMP;
+                                }
+                            }
                             break;
 
                         case Instruction.OpCodes.CALL:
@@ -430,6 +547,57 @@ namespace VARP.Scheme.VM
 
             throw new NotImplementedException();
         }
+
+        #region Comparison
+        private bool Equal(ref Value a, ref Value b)
+        {
+            var str = a.RefVal as string;
+            if (str != null)
+                return str.Equals(b.RefVal as string);
+
+            if (a.RefVal is BoolClass)
+                return b.AsBool() == a.AsBool();
+
+            return a.Equals(b);
+        }
+
+        private bool Less(ref Value a, ref Value b)
+        {
+            var asStrA = a.RefVal as string;
+            var asStrB = b.RefVal as string;
+
+            if (asStrA != null && asStrB != null)
+                return asStrA.CompareTo(asStrB) < 0;
+
+            throw new NotImplementedException();
+        }
+
+        //internal bool Less(Value a, Value b, Callable less)
+        //{
+        //    if (less.IsNotNil)
+        //    {
+        //        SetStack(less, a, b);
+        //        Call(2, 1);
+        //        return PopValue().ToBool();
+        //    }
+        //
+        //    if (a.RefVal == Value.NumTypeTag && b.RefVal == Value.NumTypeTag)
+        //        return a.NumVal < b.NumVal;
+        //
+        //    return Less(ref a, ref b);
+        //}
+
+        private bool LessEqual(ref Value a, ref Value b)
+        {
+            var asStrA = a.RefVal as string;
+            var asStrB = b.RefVal as string;
+
+            if (asStrA != null && asStrB != null)
+                return asStrA.CompareTo(asStrB) <= 0;
+
+            throw new NotImplementedException();
+        }
+        #endregion
 
         internal static int FbToInt(int x)
         {

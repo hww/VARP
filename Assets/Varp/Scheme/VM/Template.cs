@@ -28,11 +28,26 @@
 namespace VARP.Scheme.VM
 {
     using Data;
+    using Tokenizing;
+
     public sealed class Template
     {
-        public Value[] Literals;
-        public Instruction[] Code;
+        internal struct UpValInfo
+        {
+			public Symbol Name;
+            public byte Index;
+        }
+        internal struct LocalVarInfo
+        {
+            public Symbol Name;
+            public byte Index;
+        }
 
+        public Instruction[] Code;          //< code sequence
+        public Location[] Locations;        //< the location in source code
+        public Value[] Literals;            //< list of literals, there will be child templates
+        private UpValInfo[] upvalues;       //< upvalues info
+        private LocalVarInfo[] locals;      //< local vars info
         public Template(Value[] literals, Instruction[] code)
         {
             this.Literals = literals;

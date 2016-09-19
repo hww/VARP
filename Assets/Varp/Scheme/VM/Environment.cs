@@ -90,12 +90,12 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="name">identifier</param>
         /// <returns>Binding or null</returns>
-        public Binding Lookup(Symbol name)
+        public Binding LookupRecursively(Symbol name)
         {
             Binding value;
             if (Bindings.TryGetValue(name, out value))
                 return value;
-            return parent == null ? null : parent.Lookup(name);
+            return parent == null ? null : parent.LookupRecursively(name);
         }
 
         #region IEnumerable<T> Members
