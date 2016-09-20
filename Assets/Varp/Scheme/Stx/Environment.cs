@@ -112,9 +112,9 @@ namespace VARP.Scheme.Stx
                 Optional = ExpandOptional(expression, arguments.optional);
             if (arguments.key != null)
                 Keys = ExpandOptional(expression, arguments.key);
-            if (arguments.restIdent.IsNotNil)
+            if (arguments.restIdent != null)
             {
-                Syntax synt = arguments.restIdent.AsSyntax();
+                Syntax synt = arguments.restIdent;
                 DefineVariable(synt.AsIdentifier());
                 Rest = 1;
             }

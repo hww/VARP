@@ -87,7 +87,7 @@ namespace VARP.Scheme.Stx.Primitives
                 curent = curent.Next;
             }
 
-            return new AstConditionCond(stx, keyword, allcases, elsecase);
+            return new AstCondition(stx, keyword, allcases, elsecase);
         }
     }
 }

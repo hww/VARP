@@ -38,7 +38,8 @@ namespace VARP.Scheme.VM
         public int PC;                  //< program counter
         public Value[] Values;          //< register set
         public Value[] Upvalues;        //< up-variables
-
+        public int VarArgsIndex;        //< where starts variable argumens
+        public int VarArgsCount;        //< quantity of variable aguments
         public Frame(Frame parent, Template template, int values = 0, int upvalues = 0)
         {
             this.parent = parent;

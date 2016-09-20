@@ -139,7 +139,7 @@ namespace VARP.Scheme.Stx
     // variable reference  e.g. x
     public sealed class AstReference : AST
     {
-        private Binding Binding;
+        public Binding Binding;
         public AstReference(Syntax syntax, Binding binding) : base(syntax)
         {
             this.Binding = binding;
@@ -196,14 +196,14 @@ namespace VARP.Scheme.Stx
 
 
     // conditional e.g. (if 1 2 3)
-    public sealed class AstIfCondition : AST
+    public sealed class AstConditionIf : AST
     {
         private Syntax Keyword;
-        private AST condExpression;        // 1
-        private AST thenExperssion;        // 2
-        private AST elseExpression;        // 3
+        public AST condExpression;        // 1
+        public AST thenExperssion;        // 2
+        public AST elseExpression;        // 3
 
-        public AstIfCondition(Syntax syntax, Syntax keyword, AST cond, AST then, AST els) : base(syntax)
+        public AstConditionIf(Syntax syntax, Syntax keyword, AST cond, AST then, AST els) : base(syntax)
         {
             this.Keyword = keyword;
             this.condExpression = cond;
@@ -223,13 +223,13 @@ namespace VARP.Scheme.Stx
     }
 
     // conditional e.g. (cond (() .. ) (() ...) (else ...))
-    public sealed class AstConditionCond : AST
+    public sealed class AstCondition : AST
     {
         private Syntax Keyword;
-        private LinkedList<Value> Conditions;     //< list of pairs
-        private LinkedList<Value> ElseCase;       //< else condition
+        public LinkedList<Value> Conditions;     //< list of pairs
+        public LinkedList<Value> ElseCase;       //< else condition
 
-        public AstConditionCond(Syntax syntax, Syntax keyword, LinkedList<Value> conditions, LinkedList<Value> elseCase) : base(syntax)
+        public AstCondition(Syntax syntax, Syntax keyword, LinkedList<Value> conditions, LinkedList<Value> elseCase) : base(syntax)
         {
             this.Keyword = keyword;
             this.Conditions = conditions;
@@ -255,8 +255,8 @@ namespace VARP.Scheme.Stx
     // primitive op e.g. (+ 1 2)
     public sealed class AstPrimitive : AST
     {
-        private Syntax Identifier;
-        private LinkedList<Value> Arguments;
+        public Syntax Identifier;
+        public LinkedList<Value> Arguments;
         public AstPrimitive(Syntax syntax, Syntax identifier, LinkedList<Value> arguments) : base(syntax)
         {
             this.Identifier = identifier;
@@ -337,7 +337,7 @@ namespace VARP.Scheme.Stx
     public sealed class AstSequence : AST
     {
         private Syntax Keyword;
-        private LinkedList<Value> BodyExpression;
+        public LinkedList<Value> BodyExpression;
         public AstSequence(Syntax syntax, Syntax keyword, LinkedList<Value> expression) : base(syntax)
         {
             this.Keyword = keyword;

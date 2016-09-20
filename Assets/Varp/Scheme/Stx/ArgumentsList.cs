@@ -37,6 +37,7 @@ namespace VARP.Scheme.Stx
 
     public abstract class BaseArguments 
     {
+        #region Datum Methods
         public abstract Value AsDatum();
 
         protected Value GetDatum(Value value)
@@ -64,11 +65,44 @@ namespace VARP.Scheme.Stx
             }
             return newlist;
         }
+
+        #endregion
+
+        #region Private methods
+
+        /// <summary>
+        /// Build argument pair from identifier and initializer only (lambda (:optional (x 1) (y 2) (z 3)) ...)
+        /// </summary>
+        static protected Value MakeArgPair(string name, Syntax stx, LinkedList<Value> list, Environment env)
+        {
+            int argc = list.Count;
+            if (argc != 2) throw SchemeError.ArityError("let", "lambda: bad &key or &optional argument", 2, argc, list, stx);
+
+            Syntax a = list[0].AsSyntax();
+            Syntax b = list[1].AsSyntax();
+
+            if (!a.IsIdentifier)
+                SchemeError.ArgumentError(name, "symbol?", a);
+
+            return new Value(new ValuePair(a, AstBuilder.Expand(b, env)));
+        }
+        /// <summary>
+        /// Build argument pair from identifier only (lambda (:optional x y z) ...)
+        /// </summary>
+        static protected Value MakeArgPair(string name, Syntax stx, Syntax identifier, Environment env)
+        {
+            if (!identifier.IsIdentifier)
+                SchemeError.ArgumentError(name, "symbol?", identifier);
+
+            return new Value(new ValuePair(identifier, new AstLiteral(Syntax.False)));
+        }
+
+        #endregion
     }
 
     public sealed class LetArguments : BaseArguments
     {
-        public Value expression; //< the expression where this arguments
+        public Syntax expression; //< the expression where this arguments
         // -------------------------------------------------------------
         //  Example: (let ((x 1) (y 2)) ...)
         // -------------------------------------------------------------
@@ -82,56 +116,80 @@ namespace VARP.Scheme.Stx
                 result.Append(GetDatum(required));
             return new Value(result);
         }
+
+        public static void Parse(Syntax expression, LinkedList<Value> arguments, Environment env, ref LetArguments args)
+        {
+            args.expression = expression;
+
+            args.required = new LinkedList<Value>();
+            args.values = new LinkedList<Value>();
+
+            if (arguments == null)
+                return;
+
+            foreach (var arg in arguments)
+            {
+                Syntax argstx = arg.AsSyntax();
+                if (argstx.IsExpression)
+                {
+                    ValuePair arg_pair = MakeArgPair("let", argstx, argstx.AsLinkedList<Value>(), env).AsValuePair();
+                    args.required.AddLast(arg_pair.Item1);
+                    args.values.AddLast(arg_pair.Item2);
+                }
+                else
+                    throw SchemeError.ArgumentError("let", "list?", argstx);
+            }
+        }
     }
 
     public sealed class LambdaArguments : BaseArguments
     {
-        public Value expression;    //< the expression where this arguments
-        public Value optionalKwd;
-        public Value keyKwd;
-        public Value restKwd;
-        public Value bodyKwd;
+        // -------------------------------------------------------------
+        // Keywords for keeping debug information
+        // -------------------------------------------------------------
+        public Syntax expression;             //< the expression where this arguments
+        private Syntax optionalKwd;           //< &optional
+        private Syntax keyKwd;                //< &key
+        private Syntax restKwd;               //< &rest
+        private Syntax bodyKwd;               //< &body
         // -------------------------------------------------------------
         //  Example: (lambda (v1 v2 :optional o1 (o2 1) :key k1 (k2 2) :rest r)
         // -------------------------------------------------------------
         public LinkedList<Value> required;   //< (v1 v2)
         public LinkedList<Value> optional;   //< (:optional o1 (o2 1))    
         public LinkedList<Value> key;        //< (:key k1 (k2 2))    
-        public Value restIdent;      //< (:rest r)
-        public Value bodyAst;        //< (:body b) TODO
-        // -------------------------------------------------------------
-        //  Example: (let ((x 1) (y 2)) ...)
-        // -------------------------------------------------------------
-        public LinkedList<Value> values;     //< (1 2)
+        public Syntax restIdent;             //< (:rest r)
+        public AST bodyAst;                  //< (:body b) TODO
+
+        #region Datum Methods
 
         public override Value AsDatum()
         {
             LinkedList<Value> result = new LinkedList<Value>();
             if (required != null)
                 result.Append(GetDatum(required));
-            if (optionalKwd.IsNotNil)
+            if (optionalKwd != null)
             {
-                result.AddLast(optionalKwd.AsSyntax().GetDatum());
+                result.AddLast(optionalKwd.GetDatum());
                 result.Append(GetDatum(optional));
             }
-            if (keyKwd.IsNotNil)
+            if (keyKwd != null)
             {
-                result.AddLast(keyKwd.AsSyntax().GetDatum());
+                result.AddLast(keyKwd.GetDatum());
                 result.Append(GetDatum(key));
             }
-            if (restKwd.IsNotNil)
+            if (restKwd != null)
             {
-                result.AddLast(restKwd.AsSyntax().GetDatum());
-                result.AddLast(GetDatum(restIdent));
+                result.AddLast(restKwd.GetDatum());
+                result.AddLast(GetDatum(restIdent.GetDatum()));
             }
             return new Value(result);
         }
-    }
+        
+        #endregion
 
+        #region PArser Methods
 
-
-    public sealed class ArgumentsList
-    {
         public enum Type
         {
             Required,       // (lambda (x y z) ...)
@@ -154,7 +212,7 @@ namespace VARP.Scheme.Stx
         /// <param name="args">destination arguments structure</param>
         public static void Parse(Syntax expression, LinkedList<Value> arguments, Environment env, ref LambdaArguments args)
         {
-            args.expression.Set(expression);
+            args.expression = expression;
 
             args.required = null;
             args.optional = null;
@@ -162,7 +220,7 @@ namespace VARP.Scheme.Stx
 
             if (arguments == null) return;
 
-            ArgumentsList.Type arg_type = ArgumentsList.Type.Required;
+            Type arg_type = Type.Required;
 
             /// ----------------------------------------------------------------------
             /// Waiting for the DSSSL keywords, when found change mode and return true
@@ -222,14 +280,14 @@ namespace VARP.Scheme.Stx
 
                         case Type.Rest:
                             if (argstx.IsIdentifier)
-                                args.restIdent.Set(arg.AsSyntax());
+                                args.restIdent = arg.AsSyntax();
                             else
                                 throw SchemeError.ArgumentError("lambda", "symbol?", argstx);
                             arg_type = Type.End;
                             break;
 
                         case Type.Body:
-                            args.bodyAst.Set(AstBuilder.Expand(argstx, env));
+                            args.bodyAst = AstBuilder.Expand(argstx, env);
                             arg_type = Type.End;
                             break;
 
@@ -242,74 +300,26 @@ namespace VARP.Scheme.Stx
                     switch (arg_type)
                     {
                         case Type.Optionals:
-                            args.optionalKwd.Set(argstx);
+                            args.optionalKwd = argstx;
                             args.optional = new LinkedList<Value>();
                             break;
                         case Type.Key:
-                            args.keyKwd.Set(argstx);
+                            args.keyKwd = argstx;
                             args.key = new LinkedList<Value>();
                             break;
                         case Type.Rest:
-                            args.restKwd.Set(argstx);
+                            args.restKwd = argstx;
                             break;
                         case Type.Body:
-                            args.bodyKwd.Set(argstx);
+                            args.bodyKwd = argstx;
                             break;
 
                     }
                 }
             }
         }
+        #endregion
 
-        public static void ParseLetList(Syntax expression, LinkedList<Value> arguments, Environment env, ref LetArguments args)
-        {
-            args.expression.Set(expression);
-
-            args.required = new LinkedList<Value>();
-            args.values = new LinkedList<Value>();
-
-            if (arguments == null)
-                return;
-
-            foreach (var arg in arguments)
-            {
-                Syntax argstx = arg.AsSyntax();
-                if (argstx.IsExpression)
-                {
-                    ValuePair arg_pair = MakeArgPair("let", argstx, argstx.AsLinkedList<Value>(), env).AsValuePair();
-                    args.required.AddLast(arg_pair.Item1);
-                    args.values.AddLast(arg_pair.Item2);
-                }
-                else
-                    throw SchemeError.ArgumentError("let", "list?", argstx);
-            }
-        }
-
-        /// <summary>
-        /// Build argument pair from identifier and initializer only (lambda (:optional (x 1) (y 2) (z 3)) ...)
-        /// </summary>
-        static Value MakeArgPair(string name, Syntax stx, LinkedList<Value> list, Environment env)
-        {
-            int argc = list.Count;
-            if (argc != 2) throw SchemeError.ArityError("let", "lambda: bad &key or &optional argument", 2, argc, list, stx);
-
-            Syntax a = list[0].AsSyntax();
-            Syntax b = list[1].AsSyntax();
-
-            if (!a.IsIdentifier)
-                SchemeError.ArgumentError(name, "symbol?", a);
-
-            return new Value(new ValuePair(a, AstBuilder.Expand(b, env)));
-        }
-        /// <summary>
-        /// Build argument pair from identifier only (lambda (:optional x y z) ...)
-        /// </summary>
-        static Value MakeArgPair(string name, Syntax stx, Syntax identifier, Environment env)
-        {
-            if (!identifier.IsIdentifier)
-                SchemeError.ArgumentError(name, "symbol?", identifier);
-
-            return new Value(new ValuePair(identifier, new AstLiteral(Syntax.False)));
-        }
     }
+
 }

@@ -46,7 +46,7 @@ namespace VARP.Scheme.Stx.Primitives
             if (!arguments.IsExpression) throw SchemeError.SyntaxError("let", "bad syntax (missing name or binding pairs)", stx);
 
             LetArguments letarguments = new LetArguments();
-            ArgumentsList.ParseLetList(stx, arguments.AsLinkedList<Value>(), env, ref letarguments);
+            LetArguments.Parse(stx, arguments.AsLinkedList<Value>(), env, ref letarguments);
             Environment localEnv = env.CreateEnvironment(stx, letarguments);
 
             AST lambda = new AstLambda(stx, keyword, letarguments, AstBuilder.ExpandListElements(list, 2, localEnv));

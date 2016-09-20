@@ -33,7 +33,7 @@ namespace VARP.Scheme.VM
 {
     using Data;
     using Exception;
-
+    using OpCode = Instruction.OpCode;
     public sealed class VarpVM
     {
         public object RunTemplate(Template template)
@@ -56,27 +56,27 @@ namespace VARP.Scheme.VM
 #endif
             try
             {
-                while (true)
+                for (int pc = frame.PC; pc < template.Code.Length; frame.PC = ++pc)
                 {
-                    Instruction op = template.Code[frame.PC];
+                    var op = template.Code[pc];
                     switch (op.OpCode)
                     {
-                        case Instruction.OpCodes.MOVE:
+                        case OpCode.MOVE:
                             values[op.A] = values[op.B];
                             break;
 
-                        case Instruction.OpCodes.LOADK:
+                        case OpCode.LOADK:
                             values[op.A] = literals[op.B];
                             break;
 
-                        case Instruction.OpCodes.LOADBOOL:
+                        case OpCode.LOADBOOL:
                             {
                                 values[op.A].Set(op.B != 0);
-                                if (op.C != 0) frame.PC++;
+                                if (op.C != 0) pc++;
                             }
                             break;
 
-                        case Instruction.OpCodes.LOADNIL:
+                        case OpCode.LOADNIL:
                             {
                                 int a = op.A;
                                 int b = op.B;
@@ -84,11 +84,11 @@ namespace VARP.Scheme.VM
                             }
                             break;
 
-                        case Instruction.OpCodes.GETUPVAL:
+                        case OpCode.GETUPVAL:
                             ReadUpValue(frame, ref upvalues[op.B], out values[op.A]);
                             break;
 
-                        case Instruction.OpCodes.GETGLOBAL:
+                        case OpCode.GETGLOBAL:
                             {
                                 int c = op.C;
                                 var key = (c & Instruction.BitK) != 0 ?
@@ -105,10 +105,10 @@ namespace VARP.Scheme.VM
                             }
                             break;
 
-                        case Instruction.OpCodes.GETTABLE:
+                        case OpCode.GETTABLE:
                             break;
 
-                        case Instruction.OpCodes.SETGLOBAL:
+                        case OpCode.SETGLOBAL:
                             {
                                 int b = op.B;
                                 var key = (b & Instruction.BitK) != 0 ?
@@ -131,11 +131,11 @@ namespace VARP.Scheme.VM
                             }
                             break;
 
-                        case Instruction.OpCodes.SETUPVAL:
+                        case OpCode.SETUPVAL:
                             WriteUpValue(frame, ref upvalues[op.B], ref values[op.A]);
                             break;
 
-                        case Instruction.OpCodes.SETTABLE:
+                        case OpCode.SETTABLE:
                             //{
                             //    int b = op.B;
                             //    var key = (b & Instruction.BitK) != 0 ?
@@ -151,7 +151,7 @@ namespace VARP.Scheme.VM
                             //}
                             break;
 
-                        case Instruction.OpCodes.NEWTABLE:
+                        case OpCode.NEWTABLE:
                             {
                                 int nArr = FbToInt(op.B);   // array size
                                 int nNod = FbToInt(op.C);   // hash size
@@ -159,7 +159,7 @@ namespace VARP.Scheme.VM
                             }
                             break;
 
-                        case Instruction.OpCodes.SELF:
+                        case OpCode.SELF:
                             {
                                 // TODO!
                                 var table = values[op.B];
@@ -174,12 +174,12 @@ namespace VARP.Scheme.VM
                             }
                             break;
 
-                        case Instruction.OpCodes.ADD:
-                        case Instruction.OpCodes.SUB:
-                        case Instruction.OpCodes.MUL:
-                        case Instruction.OpCodes.DIV:
-                        case Instruction.OpCodes.MOD:
-                        case Instruction.OpCodes.POW:
+                        case OpCode.ADD:
+                        case OpCode.SUB:
+                        case OpCode.MUL:
+                        case OpCode.DIV:
+                        case OpCode.MOD:
+                        case OpCode.POW:
                             {
                                 var ib = op.B;
                                 var b = (ib & Instruction.BitK) != 0 ?
@@ -197,12 +197,12 @@ namespace VARP.Scheme.VM
                                     double rv, bv = b.NumVal, cv = c.NumVal;
                                     switch (op.OpCode)
                                     {
-                                        case Instruction.OpCodes.ADD: rv = bv + cv; break;
-                                        case Instruction.OpCodes.SUB: rv = bv - cv; break;
-                                        case Instruction.OpCodes.MUL: rv = bv * cv; break;
-                                        case Instruction.OpCodes.DIV: rv = bv / cv; break;
-                                        case Instruction.OpCodes.MOD: rv = bv % cv; break;
-                                        case Instruction.OpCodes.POW: rv = Math.Pow(bv, cv); break;
+                                        case OpCode.ADD: rv = bv + cv; break;
+                                        case OpCode.SUB: rv = bv - cv; break;
+                                        case OpCode.MUL: rv = bv * cv; break;
+                                        case OpCode.DIV: rv = bv / cv; break;
+                                        case OpCode.MOD: rv = bv % cv; break;
+                                        case OpCode.POW: rv = Math.Pow(bv, cv); break;
                                         default: throw new NotImplementedException();
                                     }
                                     values[op.A].Set(rv);
@@ -214,7 +214,7 @@ namespace VARP.Scheme.VM
                             }
                             break;
 
-                        case Instruction.OpCodes.NEG:
+                        case OpCode.NEG:
                             {
                                 var ib = op.B;
                                 var b = (ib & Instruction.BitK) != 0 ?
@@ -228,13 +228,13 @@ namespace VARP.Scheme.VM
                             }
                             break;
 
-                        case Instruction.OpCodes.NOT:
+                        case OpCode.NOT:
                             {
                                 values[op.A].Set(!values[op.B].AsBool());
                             }
                             break;
 
-                        case Instruction.OpCodes.LEN:
+                        case OpCode.LEN:
                             {
                                 var ib = op.B;
                                 var b = (ib & Instruction.BitK) != 0 ?
@@ -244,7 +244,7 @@ namespace VARP.Scheme.VM
                             }
                             break;
 
-                        case Instruction.OpCodes.CONCAT:
+                        case OpCode.CONCAT:
                             {
                                 int end = op.C + 1;
                                 StringBuilder sb = new StringBuilder();
@@ -254,15 +254,15 @@ namespace VARP.Scheme.VM
                             }
                             break;
 
-                        case Instruction.OpCodes.JMP:
+                        case OpCode.JMP:
                             {
-                                frame.PC += (int)op.BX; // SBX
+                                pc += op.SBX; 
                             }
                             break;
 
-                        case Instruction.OpCodes.EQ:
-                        case Instruction.OpCodes.LT:
-                        case Instruction.OpCodes.LE:
+                        case OpCode.EQ:
+                        case OpCode.LT:
+                        case OpCode.LE:
                             {
                                 int b = op.B;
                                 var bv = (b & Instruction.BitK) != 0 ?
@@ -278,19 +278,19 @@ namespace VARP.Scheme.VM
 
                                 switch (op.OpCode)
                                 {
-                                    case Instruction.OpCodes.EQ:
+                                    case OpCode.EQ:
                                         test = bv.RefVal == cv.RefVal ?
                                             bv.RefVal is NumericalClass || bv.NumVal == cv.NumVal :
                                             Equal(ref bv, ref cv);
                                         break;
 
-                                    case Instruction.OpCodes.LT:
+                                    case OpCode.LT:
                                         test = (bv.RefVal is NumericalClass && cv.RefVal is NumericalClass) ?
                                             bv.NumVal < cv.NumVal :
                                             Less(ref bv, ref cv);
                                         break;
 
-                                    case Instruction.OpCodes.LE:
+                                    case OpCode.LE:
                                         test = (bv.RefVal is NumericalClass && cv.RefVal is NumericalClass) ?
                                             bv.NumVal <= cv.NumVal :
                                             LessEqual(ref bv, ref cv);
@@ -301,85 +301,135 @@ namespace VARP.Scheme.VM
 
                                 if (test != (op.A != 0))
                                 {
-                                    frame.PC++;
+                                    pc++;
                                 }
                                 else
                                 {
-                                    op = template.Code[++frame.PC];
-                                    Debug.Assert(op.OpCode == Instruction.OpCodes.JMP);
-                                    goto case Instruction.OpCodes.JMP;
+                                    op = template.Code[++pc];
+                                    Debug.Assert(op.OpCode == OpCode.JMP);
+                                    goto case OpCode.JMP;
                                 }
                             }
                             break;
 
 
-                        case Instruction.OpCodes.TEST:
+                        case OpCode.TEST:
                             {
                                 var a = values[op.A].RefVal;
                                 var test = a == null || a == BoolClass.False;
 
                                 if ((op.C != 0) == test)
                                 {
-                                    frame.PC++;
+                                    pc++;
                                 }
                                 else
                                 {
-                                    op = template.Code[++frame.PC];
-                                    Debug.Assert(op.OpCode == Instruction.OpCodes.JMP);
-                                    goto case Instruction.OpCodes.JMP;
+                                    op = template.Code[++pc];
+                                    Debug.Assert(op.OpCode == OpCode.JMP);
+                                    goto case OpCode.JMP;
                                 }
                             }
                             break;
 
-                        case Instruction.OpCodes.TESTSET:
+                        case OpCode.TESTSET:
                             {
                                 var b = values[op.B].RefVal;
                                 var test = b == null || b == BoolClass.False;
 
                                 if ((op.C != 0) == test)
                                 {
-                                    frame.PC++;
+                                    pc++;
                                 }
                                 else
                                 {
                                     values[op.A] = values[op.B];
 
-                                    op = template.Code[++frame.PC];
-                                    Debug.Assert(op.OpCode == Instruction.OpCodes.JMP);
-                                    goto case Instruction.OpCodes.JMP;
+                                    op = template.Code[++pc];
+                                    Debug.Assert(op.OpCode == OpCode.JMP);
+                                    goto case OpCode.JMP;
                                 }
                             }
                             break;
 
-                        case Instruction.OpCodes.CALL:
+                        case OpCode.CALL:
+                            {
+                                int funcIdx = op.A;
+
+                                int numArgs = op.B - 1;
+                                if (numArgs == -1)
+                                    numArgs = funcIdx - 1;
+
+                                int numRetVals = op.C - 1;
+
+                                pc++; //return to the next instruction
+                                //BeginCall(funcIdx, numArgs, numRetVals); //valid because CallReturnAll == -1
+                                //
+                                //Execute();
+                                //
+                                //EndCall();
+                            }
                             break;
 
-                        case Instruction.OpCodes.TAILCALL:
+                        case OpCode.TAILCALL:
                             break;
 
-                        case Instruction.OpCodes.RETURN:
+                        case OpCode.RETURN:
                             frame = frame.parent;
                             break;
 
-                        case Instruction.OpCodes.FORLOOP:
+                        case OpCode.FORLOOP:
                             break;
 
-                        case Instruction.OpCodes.FORPREP:
+                        case OpCode.FORPREP:
                             break;
 
-                        case Instruction.OpCodes.TFORLOOP:
+                        case OpCode.TFORLOOP:
                             break;
 
-                        case Instruction.OpCodes.SETLIST:
+                        case OpCode.SETLIST:
                             break;
 
-                        case Instruction.OpCodes.CLOSE:
+                        case OpCode.CLOSE:
                             break;
 
-                        case Instruction.OpCodes.CLOSURE:
+                        case OpCode.CLOSURE:
                             break;
 
-                        case Instruction.OpCodes.VARARG:
+                        case OpCode.VARARG:
+                            {
+                                //// R(A), R(A+1), ..., R(A+B-1) = varargs
+                                //int max = frame.ValuesCount;
+                                //int idx = frame.VarArgsIndex + frame.VarArgsCount;
+                                //int cnt = op.B; // argc
+                                //while (cnt>0)
+                                //{
+                                //    values[destIdx + i].RefVal = null;
+                                //}
+                                //
+                                //
+                                //
+                                //if (VarArgsCount + Va)
+                                //int qunatity = op.A
+                                //if (frame.argc)
+                                //int srcIdx = call.VarArgsIndex;
+                                //int destIdx = stackBase + op.A;
+                                //
+                                //int numVarArgs = call.StackBase - srcIdx;
+                                //int numWanted = op.B - 1;
+                                //
+                                //if (numWanted == -1)
+                                //{
+                                //    numWanted = numVarArgs;
+                                //    stackTop = destIdx + numWanted;
+                                //}
+                                //
+                                //int numHad = numWanted < numVarArgs ? numWanted : numVarArgs;
+                                //for (int i = 0; i < numHad; i++)
+                                //    values[destIdx + i] = values[srcIdx + i];
+                                //
+                                //for (int i = numHad; i < numWanted; i++)
+                                //    values[destIdx + i].RefVal = null;
+                            }
                             break;
 
 
@@ -435,23 +485,23 @@ namespace VARP.Scheme.VM
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <param name="ret"></param>
-        private void DoArith(Instruction.OpCodes opCode, Value a, Value b, ref Value ret)
+        private void DoArith(OpCode opCode, Value a, Value b, ref Value ret)
         {
             double na = 0, nb = 0, rv = 0;
 
-            if (ToNumber(a, ref na) && (opCode == Instruction.OpCodes.NEG || ToNumber(b, ref nb)))
+            if (ToNumber(a, ref na) && (opCode == OpCode.NEG || ToNumber(b, ref nb)))
             {
 
                 switch (opCode)
                 {
-                    case Instruction.OpCodes.ADD: rv = na + nb; break;
-                    case Instruction.OpCodes.SUB: rv = na - nb; break;
-                    case Instruction.OpCodes.MUL: rv = na * nb; break;
-                    case Instruction.OpCodes.DIV: rv = na / nb; break;
-                    case Instruction.OpCodes.MOD: rv = na % nb; break;
-                    case Instruction.OpCodes.POW: rv = Math.Pow(na, nb); break;
+                    case OpCode.ADD: rv = na + nb; break;
+                    case OpCode.SUB: rv = na - nb; break;
+                    case OpCode.MUL: rv = na * nb; break;
+                    case OpCode.DIV: rv = na / nb; break;
+                    case OpCode.MOD: rv = na % nb; break;
+                    case OpCode.POW: rv = Math.Pow(na, nb); break;
 
-                    case Instruction.OpCodes.NEG: rv = -na; break;
+                    case OpCode.NEG: rv = -na; break;
 
                     default: Debug.Assert(false); rv = 0; break;
                 }

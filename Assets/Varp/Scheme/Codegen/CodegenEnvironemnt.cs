@@ -25,43 +25,47 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace VARP.Scheme.Stx.Primitives
+
+using System;
+using System.Diagnostics;
+using System.Collections.Generic;
+
+namespace VARP.Scheme.Stx
 {
-
     using Data;
+    using Primitives;
     using DataStructures;
+    using VM;
 
-    public sealed class PrimitiveLambda : BasePrimitive
+    public sealed class CodegenEnvironemnt : Environment
     {
-        // (lambda () ...)
-        public static AST Expand(Syntax stx, Environment env)
+        public CodegenEnvironemnt() : base(null)
         {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();
-            int argc = GetArgsCount(list);
-            AssertArgsMinimum("lambda", "arity mismatch", 1, argc, list, stx);
-            var x = list[0];
-            var xs = x.ToString();
-            xs = x.DebuggerDisplay;
-            Syntax kwdr = list[0].AsSyntax();
-            Syntax args = list[1].AsSyntax();
+            //DefinePrimitive("define", PrimitiveDefine.Expand);
+            //DefinePrimitive("set!", PrimitiveSet.Expand);
+            //DefinePrimitive("if", PrimitiveIf.Expand);
+            //DefinePrimitive("cond", PrimitiveCond.Expand);
+            //DefinePrimitive("lambda", PrimitiveLambda.Expand);
+            //DefinePrimitive("begin", PrimitiveBegin.Expand);
+            //DefinePrimitive("let", PrimitiveLet.Expand);
 
-            LambdaArguments arguments = new LambdaArguments();
-            LambdaArguments.Parse(stx, args.AsLinkedList<Value>(), env, ref arguments);
+            //DefinePrimitive("=", PrimitiveArgs2.Expand);
+            //DefinePrimitive("<", PrimitiveArgs2.Expand);
+            //DefinePrimitive(">", PrimitiveArgs2.Expand);
+            DefinePrimitive("+", Expand);
+            //DefinePrimitive("-", PrimitiveArgs2.Expand);
+            //DefinePrimitive("*", PrimitiveArgs2.Expand);
+            //DefinePrimitive("/", PrimitiveArgs2.Expand);
+            //DefinePrimitive("or", PrimitiveArgs2.Expand);
+            //DefinePrimitive("and", PrimitiveArgs2.Expand);
+            //DefinePrimitive("not", PrimitiveArgs1.Expand);
+            //DefinePrimitive("display", PrimitiveArgsX.Expand);
 
-            Environment localEnv = env.CreateEnvironment(stx, arguments);
-
-            LinkedList<Value> body = new LinkedList<Value>();
-
-            if (argc > 1)
-            {
-                LinkedListNode<Value> curent = list.GetNodeAtIndex(2);
-                while (curent != null)
-                {
-                    body.AddLast(AstBuilder.Expand(curent.Value.AsSyntax(), localEnv).ToValue());
-                    curent = curent.Next;
-                }
-            }
-            return new AstLambda(stx, kwdr, arguments, body);
+            //DefinePrimitive("quote", QuotePrimitive.Expand);
+            //DefinePrimitive("quaziquote", QuaziquotePrimitive.Expand);
         }
     }
+
+ 
+
 }

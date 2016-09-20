@@ -48,7 +48,7 @@ namespace VARP.Scheme.Stx.Primitives
             AST then_ast = AstBuilder.Expand(then, env);
             AST else_ast = AstBuilder.Expand(elsc, env);
 
-            return new AstIfCondition(stx, keyword, cond_ast, then_ast, else_ast);
+            return new AstConditionIf(stx, keyword, cond_ast, then_ast, else_ast);
         }
     }
 }
