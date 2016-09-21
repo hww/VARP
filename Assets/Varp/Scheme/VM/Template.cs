@@ -43,11 +43,12 @@ namespace VARP.Scheme.VM
             public byte Index;
         }
 
-        public Instruction[] Code;          //< code sequence
-        public Location[] Locations;        //< the location in source code
-        public Value[] Literals;            //< list of literals, there will be child templates
-        private UpValInfo[] upvalues;       //< upvalues info
-        private LocalVarInfo[] locals;      //< local vars info
+        internal Instruction[] Code;          //< code sequence
+        internal Location[] Locations;        //< the location in source code
+        internal Value[] Literals;            //< list of literals, there will be child templates
+        internal UpValInfo[] upvalues;       //< upvalues info
+        internal LocalVarInfo[] locals;      //< local vars info
+        internal bool HasVarArgs;
         public Template(Value[] literals, Instruction[] code)
         {
             this.Literals = literals;

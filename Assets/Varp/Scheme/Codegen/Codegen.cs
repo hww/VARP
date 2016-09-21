@@ -36,7 +36,7 @@ namespace VARP.Scheme.Codegen
     using DataStructures;
     using Stx;
 
-    public class CodeGenerator
+    public sealed partial class CodeGenerator
     {
         List<Instruction> code;
         List<Template.UpValInfo> upvalues;
@@ -138,39 +138,69 @@ namespace VARP.Scheme.Codegen
 
         private bool GenerateConditionIf(AstConditionIf ast)
         {
+            byte temp = (byte)TempIndex;
             Generate(ast.condExpression);
+
+            // if ((bool)R(A) != (bool)C) then {skip next instruction}
+            AddABC(OpCode.TEST, temp, 0, 0);
+            int jmp_address = AddOpcode(Instruction.Nop);
+
             Generate(ast.thenExperssion);
+            int else_address = PC;
             Generate(ast.elseExpression);
+
+            code[jmp_address] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(jmp_address, else_address));
             return true;
         }
 
         private bool GenerateCondition(AstCondition ast)
         {
-            foreach (var v in ast.Conditions)
+            byte temp = (byte)TempIndex;
+
+            if (ast.Conditions != null)
             {
-                LinkedList<Value> cond = v.AsLinkedList<Value>();
-                Value c = cond[0];
-                if (cond.count == 1)
+                foreach (var v in ast.Conditions)
                 {
-                    Generate(cond[0].AsAST());
+                    LinkedList<Value> cond = v.AsLinkedList<Value>();
+                    Value c = cond[0];
+                    if (cond.count == 1)
+                    {
+                        Generate(cond[0].AsAST());
+                    }
+                    else if (cond.count > 1)
+                    {
+                        Generate(cond[0].AsAST());
+
+                        // if ((bool)R(A) != (bool)C) then {skip next instruction}
+                        code.Add(Instruction.MakeABC(OpCode.TEST, temp, 0, 0));
+                        int jmp_address = PC; code.Add(Instruction.Nop);
+
+                        Generate(cond[1].AsAST());
+
+                        int else_address = PC;
+                        code[jmp_address] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(jmp_address, else_address));
+                    }
                 }
-                else if (cond.count > 1)
-                {
-                    Generate(cond[0].AsAST());
-                    Generate(cond[1].AsAST());
-                }
+            }
+
+            if (ast.ElseCase != null)
+            {
+                Generate(ast.ElseCase[1].AsAST());
             }
             return true;
         }
-        private bool GeneratePrimitive(AstPrimitive ast)
-        {
-            Symbol id = ast.Identifier.AsIdentifier();
-            LinkedList<Value> args = ast.Arguments;
-            return true;
-        }
+
 
         private bool GenerateApplication(AstApplication ast)
         {
+            // R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
+            byte temp = (byte)TempIndex;
+            foreach (var val in ast.list)
+            {
+                Generate(val.AsAST());
+            }
+            // now temp[] = [function, arg, arg, arg, ...]
+            AddAB(OpCode.CALL, temp, 0);
             return true;
         }
 
@@ -182,15 +212,90 @@ namespace VARP.Scheme.Codegen
             return true;
         }
 
+        #region Program Counter Variables
+        private int PC { get { return code.Count; } }
+        private int Jmp(int src, int dst) { return dst - src; }
+
+        /// <summary>
+        /// Make instruction of format A
+        /// </summary>
+        /// <param name="inst">instruction</param>
+        private int AddOpcode(Instruction inst)
+        {
+            code.Add(inst);
+            return PC - 1;
+        }
+        /// <summary>
+        /// Make instruction of format A
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="a"></param>
+        private int AddA(OpCode opcode, ushort a)
+        {
+            code.Add(Instruction.MakeA(opcode, a));
+            return PC - 1;
+        }
+
+        /// <summary>
+        /// Make instruction of format A,B
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        private int AddAB(OpCode opcode, ushort a, ushort b)
+        {
+            code.Add(Instruction.MakeAB(opcode, a, b));
+            return PC - 1;
+        }
+
+        /// <summary>
+        /// Make instruction of format A,B,C
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        private int AddABC(OpCode opcode, ushort a, ushort b, ushort c)
+        {
+            code.Add(Instruction.MakeABC(opcode, a, b, c));
+            return PC - 1;
+        }
+        /// <summary>
+        /// Make instruction of format A,BX
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="a"></param>
+        /// <param name="bx"></param>
+        private int AddABX(OpCode opcode, ushort a, int bx)
+        {
+            code.Add(Instruction.MakeABX(opcode, a, bx));
+            return PC - 1;
+        }
+
+        /// <summary>
+        /// Make instruction of format A,B or A,B,C
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="a"></param>
+        /// <param name="sbx"></param>
+        private int AddASBX(OpCode opcode, ushort a, int sbx)
+        {
+            code.Add(Instruction.MakeASBX(opcode, a, sbx));
+            return PC - 1;
+        }
+        #endregion
+
         #region Temporary Variables
 
-        public int maxTempVar;
-        public int curTempVar;
-        public int GetTempVar()
+        private ushort maxTempVar;
+        private ushort curTempVar;
+        public ushort TempIndex
         {
-            int num = curTempVar;
-            maxTempVar = System.Math.Max(++curTempVar, maxTempVar);
-            return num;
+            get { return curTempVar; }
+            set
+            {
+                maxTempVar = System.Math.Max(curTempVar = value, maxTempVar);
+            }
         }
 
         #endregion

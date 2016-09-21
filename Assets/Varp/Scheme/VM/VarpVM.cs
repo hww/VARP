@@ -33,7 +33,6 @@ namespace VARP.Scheme.VM
 {
     using Data;
     using Exception;
-    using OpCode = Instruction.OpCode;
     public sealed class VarpVM
     {
         public object RunTemplate(Template template)
@@ -61,6 +60,9 @@ namespace VARP.Scheme.VM
                     var op = template.Code[pc];
                     switch (op.OpCode)
                     {
+                        case OpCode.NOP:
+                            break;
+
                         case OpCode.MOVE:
                             values[op.A] = values[op.B];
                             break;
@@ -315,18 +317,19 @@ namespace VARP.Scheme.VM
 
                         case OpCode.TEST:
                             {
+                                // if ((bool)R(A) != (bool)C) then {skip next instruction}
                                 var a = values[op.A].RefVal;
-                                var test = a == null || a == BoolClass.False;
+                                var isfalse = a == null || a == BoolClass.False;
 
-                                if ((op.C != 0) == test)
-                                {
-                                    pc++;
-                                }
-                                else
+                                if ((op.C == 0) == isfalse)
                                 {
                                     op = template.Code[++pc];
                                     Debug.Assert(op.OpCode == OpCode.JMP);
                                     goto case OpCode.JMP;
+                                }
+                                else
+                                {
+                                    pc++;
                                 }
                             }
                             break;
@@ -362,11 +365,7 @@ namespace VARP.Scheme.VM
                                 int numRetVals = op.C - 1;
 
                                 pc++; //return to the next instruction
-                                //BeginCall(funcIdx, numArgs, numRetVals); //valid because CallReturnAll == -1
-                                //
-                                //Execute();
-                                //
-                                //EndCall();
+
                             }
                             break;
 
@@ -622,21 +621,6 @@ namespace VARP.Scheme.VM
             throw new NotImplementedException();
         }
 
-        //internal bool Less(Value a, Value b, Callable less)
-        //{
-        //    if (less.IsNotNil)
-        //    {
-        //        SetStack(less, a, b);
-        //        Call(2, 1);
-        //        return PopValue().ToBool();
-        //    }
-        //
-        //    if (a.RefVal == Value.NumTypeTag && b.RefVal == Value.NumTypeTag)
-        //        return a.NumVal < b.NumVal;
-        //
-        //    return Less(ref a, ref b);
-        //}
-
         private bool LessEqual(ref Value a, ref Value b)
         {
             var asStrA = a.RefVal as string;
@@ -657,6 +641,11 @@ namespace VARP.Scheme.VM
 
         #region Tables
 
+        #endregion
+
+        #region Call
+
+   
         #endregion
     }
 }

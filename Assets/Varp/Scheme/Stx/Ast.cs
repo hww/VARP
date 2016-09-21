@@ -279,7 +279,7 @@ namespace VARP.Scheme.Stx
     // application e.g. (f 1 2)
     public sealed class AstApplication : AST
     {
-        private LinkedList<Value> list;
+        public LinkedList<Value> list;
         public AstApplication(Syntax syntax, LinkedList<Value> expression) : base(syntax)
         {
             this.list = expression;

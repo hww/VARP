@@ -32,6 +32,7 @@ namespace VARP.Scheme.VM
 {
     internal enum OpCode
     {
+        NOP,
         MOVE,       //<    A B      R(A) := R(B)
         LOADK,      //<    A Bx     R(A) := K(Bx)
         LOADBOOL,   //<    A B C    R(A) := (Bool)B; if (C) PC++
@@ -52,6 +53,8 @@ namespace VARP.Scheme.VM
         POW,        //<    A B C    R(A) := RK(B) ^ RK(C)
         NEG,        //<    A B      R(A) := -R(B)
         NOT,        //<    A B      R(A) := not R(B)
+        AND,        //<    A B C    R(A) := RK(B) and RK(C)
+        OR,         //<    A B C    R(A) := RK(B) or RK(C)
         LEN,        //<    A B	    R(A) := length of R(B)	
         CONCAT,     //<    A B      C R(A) := R(B) .. ... .. R(C)
         JMP,        //<    sBx      PC += sBx
@@ -76,6 +79,7 @@ namespace VARP.Scheme.VM
     [System.Serializable]
     internal struct Instruction
     {
+        public static Instruction Nop = Instruction.MakeA(OpCode.NOP,0);
 
         public uint PackedValue;
 
@@ -172,7 +176,7 @@ namespace VARP.Scheme.VM
         }
 
         /// <summary>
-        /// Make instruction of format A,B or A,B,C
+        /// Make instruction of format A,B
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
@@ -186,7 +190,21 @@ namespace VARP.Scheme.VM
         }
 
         /// <summary>
-        /// Make instruction of format A,B or A,B,C
+        /// Make instruction of format A,B,C
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="a"></param>
+        public static Instruction MakeABC(OpCode code, ushort a, ushort b, ushort c)
+        {
+            Instruction inst = new Instruction();
+            inst.OpCode = code;
+            inst.A = a;
+            inst.B = b;
+            inst.C = c;
+            return inst;
+        }
+        /// <summary>
+        /// Make instruction of format A,BX
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
@@ -200,7 +218,7 @@ namespace VARP.Scheme.VM
         }
 
         /// <summary>
-        /// Make instruction of format A,B or A,B,C
+        /// Make instruction of format A,B or SBX
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
