@@ -28,31 +28,151 @@
 namespace VARP.Scheme.VM
 {
     using Data;
+    using REPL;
+    using Stx;
+    using System.Text;
     using Tokenizing;
 
-    public sealed class Template
+    public sealed class Template : Inspectable
     {
         internal struct UpValInfo
         {
-			public Symbol Name;
-            public byte Index;
+            public Symbol Name;     //< variable name
+            public byte ArgIndex;   //< variable index
+            public byte EnvIndex;   //< the environment index
+            public byte VarIndex;   //< index of the variable in frame
         }
         internal struct LocalVarInfo
         {
-            public Symbol Name;
-            public byte Index;
+            public Symbol Name;                 //< variable name
+            public byte ArgIndex;               //< variable index
         }
 
-        internal Instruction[] Code;          //< code sequence
-        internal Location[] Locations;        //< the location in source code
-        internal Value[] Literals;            //< list of literals, there will be child templates
-        internal UpValInfo[] upvalues;       //< upvalues info
-        internal LocalVarInfo[] locals;      //< local vars info
-        internal bool HasVarArgs;
+        internal struct KeyVarInfo
+        {
+            public Symbol Name;                 //< variable name
+            public byte ArgIndex;               //< variable index
+            public ushort LitIndex;             //< initializer
+        }
+
+        internal Instruction[] Code;            //< code sequence
+        internal Location[] Locations;          //< the location in source code
+        internal Value[] Literals;              //< list of literals, there will be child templates
+        internal LocalVarInfo[] Values;         //< local vars info, include required, and optional
+        internal UpValInfo[] UpValues;          //< up-values info
+        internal KeyVarInfo[] KeyVals;          //< local vars info
+        internal KeyVarInfo[] OptVals;          //< local vars info
+        internal int OptValueIdx;               //< index of first element
+        internal int KeyValueIdx;               //< index of first element
+        internal int UpValueIdx;                //< index of first element
+        internal int RestValueIdx;              //< index of first element
+        public Template()
+        {
+            this.OptValueIdx = -1;
+            this.KeyValueIdx = -1;
+            this.UpValueIdx = -1;
+            this.RestValueIdx = -1;
+        }
+
         public Template(Value[] literals, Instruction[] code)
         {
             this.Literals = literals;
             this.Code = code;
+            this.OptValueIdx = -1;
+            this.KeyValueIdx = -1;
+            this.UpValueIdx = -1;
+            this.RestValueIdx = -1;
         }
+
+
+        public string Inspect()
+        {
+            return Inspect(0);
+        }
+
+        public string Inspect(int ident)
+        {
+            string sident = new string(' ', ident * 2);
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append(sident);
+            sb.AppendLine("Template");
+            /// arguments ///
+            sb.Append(sident);
+            sb.Append("  arguments:");
+            foreach (var v in Values)
+            {
+                sb.Append(" ");
+                sb.Append(v.Name.ToString());
+            }
+            sb.AppendLine();
+            /// &optionals ///
+            sb.Append(sident);
+            sb.Append("  optionals:");
+            foreach (var v in OptVals)
+            {
+                sb.Append(" ");
+                sb.Append(v.Name.ToString());
+                sb.Append(":");
+                sb.Append(v.LitIndex.ToString());
+            }
+            sb.AppendLine();
+            /// &keys ///
+            sb.Append(sident);
+            sb.Append("  key:");
+            foreach (var v in OptVals)
+            {
+                sb.Append(" ");
+                sb.Append(v.Name.ToString());
+                sb.Append(":");
+                sb.Append(v.LitIndex.ToString());
+            }
+            /// &rest ///
+            if (RestValueIdx >= 0)
+            {
+                sb.AppendLine();
+                sb.Append(sident);
+                sb.Append("  rest: ");
+                sb.Append(Values[RestValueIdx].Name.ToString());
+            }
+            sb.AppendLine();
+            /// code ///
+            sb.Append(sident);
+            sb.AppendLine("  code:");
+            int pc = 0;
+            foreach (var v in Code)
+            {
+                sb.Append(sident);
+                sb.Append(string.Format("  [{0}] ", pc));
+                sb.Append(Code[pc++].ToString());
+                sb.AppendLine();
+            }
+
+
+            sb.Append(sident);
+            sb.Append("  literals:");
+            sb.AppendLine();
+            string lident = new string(' ', (ident + 1) * 2);
+            int lidx = 0;
+            foreach (var v in Literals)
+            {
+                sb.Append(lident);
+                sb.Append(string.Format("  [{0}] ", lidx++));
+                if (v.Is<Template>())
+                {
+                    sb.AppendLine();
+                    sb.Append(v.As<Template>().Inspect(ident + 2));
+                    sb.AppendLine();
+                }
+                else
+                {
+                    sb.Append(v.ToString());
+                    sb.AppendLine();
+                }
+            }
+
+            return sb.ToString();
+        }
+
     }
 }

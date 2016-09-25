@@ -258,7 +258,7 @@ namespace VARP.Scheme.VM
 
                         case OpCode.JMP:
                             {
-                                pc += op.SBX; 
+                                pc += op.SBx; 
                             }
                             break;
 
@@ -356,15 +356,19 @@ namespace VARP.Scheme.VM
 
                         case OpCode.CALL:
                             {
-                                int funcIdx = op.A;
+                                // A - has the closure to call
+                                // B - has quantity of the arguments
+                                // C - has quantity of results
 
-                                int numArgs = op.B - 1;
-                                if (numArgs == -1)
-                                    numArgs = funcIdx - 1;
+                                var func = values[op.A];
+                                var closure = func.As<Frame>();
 
-                                int numRetVals = op.C - 1;
+                                int numArgs = op.B;
+                                int numRetVals = op.C;
 
                                 pc++; //return to the next instruction
+
+                                closure.BeforeCall(numArgs, numRetVals);
 
                             }
                             break;
@@ -392,6 +396,12 @@ namespace VARP.Scheme.VM
                             break;
 
                         case OpCode.CLOSURE:
+                            {
+                                /// R(A) := closure(KPROTO[Bx], R(A), ... , R(A + n))
+                                Template ntempl = literals[op.B].As<Template>();
+                                Frame nfram = new Frame(frame, ntempl); 
+                                values[op.A].RefVal = nfram;
+                            }
                             break;
 
                         case OpCode.VARARG:

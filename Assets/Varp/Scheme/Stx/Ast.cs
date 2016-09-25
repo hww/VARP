@@ -52,8 +52,12 @@ namespace VARP.Scheme.Stx
         /// position at first open bracket
         /// But for literal x the position of expression is
         /// position of this literal
+        /// 
+        /// for example: 
+        ///   expression: (+ 1 2) 
+        ///   will be: ast('(')
         /// </summary>
-        protected Syntax Expression;   //< for expression (+ 1 2) will be "("
+        protected Syntax Expression;   
 
         public AST(Syntax syntax)
         {
@@ -139,12 +143,17 @@ namespace VARP.Scheme.Stx
     // variable reference  e.g. x
     public sealed class AstReference : AST
     {
-        public Binding Binding;
-        public AstReference(Syntax syntax, Binding binding) : base(syntax)
+        public int EnvIdx;                   // index of environment 
+        public int VarIdx;                   // index of variables
+        public AstReference(Syntax syntax, int envIdx, int varIdx) : base(syntax)
         {
-            this.Binding = binding;
+            this.EnvIdx = envIdx;
+            this.VarIdx = varIdx;
         }
         public override Value GetDatum() { return GetDatum(Expression); }
+        public bool IsGlobal { get { return VarIdx < 0; } }
+        public bool IsUpValue { get { return EnvIdx > 0; } }
+        public Symbol Identifier { get { return Expression.AsIdentifier(); } }
 
         #region ValueType Methods
         public override string Inspect() { return string.Format("#<ast-ref{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum())); }
@@ -155,17 +164,22 @@ namespace VARP.Scheme.Stx
     public sealed class AstSet : AST
     {
         private Syntax Keyword;              // set!                                     
-        private Syntax Variable;             // x   
-        private AST Value;                   // 99
-        private Binding Binding;      //
-        public AstSet(Syntax syntax, Syntax keyword, Syntax variable, AST value, Binding binding) : base(syntax)
+        public Syntax Variable;              // x   
+        public AST Value;                    // 99
+        public int EnvIdx;                   // index of environment 
+        public int VarIdx;                   // index of variables
+        public AstSet(Syntax syntax, Syntax keyword, Syntax variable, AST value, int envIdx, int varIdx) : base(syntax)
         {
             this.Keyword = keyword;
             this.Variable = variable;
             this.Value = value;
-            this.Binding = binding;
+            this.EnvIdx = envIdx;
+            this.VarIdx = varIdx;
         }
         public override Value GetDatum() { return new Value(ValueLinkedList.FromArguments(Expression.GetDatum(), Variable.GetDatum(), GetDatum(Value))); }
+        public bool IsGlobal { get { return VarIdx < 0; } }
+        public bool IsUpValue { get { return EnvIdx > 0; } }
+        public Symbol Identifier { get { return Variable.AsIdentifier(); } }
 
         #region ValueType Methods
         public override string Inspect() { return string.Format("#<ast-set{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum())); }
@@ -300,8 +314,8 @@ namespace VARP.Scheme.Stx
     public sealed class AstLambda : AST
     {
         private Syntax Keyword;                      // (<lambda> (...) ...)
-        private BaseArguments ArgList;               // (lambda <(...)> )
-        private LinkedList<Value> BodyExpression;    // (lambda (...) <...>)
+        public BaseArguments ArgList;                // (lambda <(...)> )
+        public LinkedList<Value> BodyExpression;     // (lambda (...) <...>)
         public AstLambda(Syntax syntax, Syntax keyword, BaseArguments arguments, LinkedList<Value> expression) : base(syntax)
         {
             this.ArgList = arguments;

@@ -37,32 +37,33 @@ namespace VARP.Scheme.Stx
     {
         public delegate AST CompilerPrimitive(Syntax expression, Environment context);
 
+        public Environment Env;                 //< the variable binded to env
         public Symbol Identifier;               //< variable index in the environment
-        public Symbol UID;                      //< unique id of variable name.number
         public int Index;                       //< unique id of variable name.number
         public CompilerPrimitive Primitive;     //< in case if primitive
 
         // define global variable
-        public Binding(Symbol variable, CompilerPrimitive primitive = null)
+        public Binding(Environment env, Symbol variable, CompilerPrimitive primitive = null)
         {
+            Debug.Assert(env != null);
             Debug.Assert(variable != null);
+            this.Env = env;
             this.Identifier = variable;
-            this.UID = null;
             this.Index = -1; // global!
             this.Primitive = primitive;
         }
-        public Binding(Symbol variable, int index, CompilerPrimitive primitive = null)
+        public Binding(Environment env, Symbol variable, int index, CompilerPrimitive primitive = null)
         {
             Debug.Assert(variable != null);
             Debug.Assert(index >= 0);
             this.Identifier = variable;
-            this.UID = null;
             this.Index = index; // local!
             this.Primitive = primitive;
         }
 
         public bool IsPrimitive { get { return Primitive != null; } }
         public bool IsGlobal { get { return Index < 0; } }
+        public bool IsUpvalue(Environment env) { return Index > 0 && env != this.Env; }
 
         #region ValueType Methods
         public override bool AsBool() { return true; }

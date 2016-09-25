@@ -48,7 +48,7 @@ namespace VARP.Scheme.Stx.Primitives
             Binding binding = env.Lookup(var_id); // TODO! Maybe error when it is not defined
             if (binding == null) env.DefineVariable(var_id);
 
-            return new AstSet(stx, set_kwd, var_stx, AstBuilder.Expand(val_stx, env), binding);
+            return new AstSet(stx, set_kwd, var_stx, AstBuilder.Expand(val_stx, env), env.Index - binding.Env.Index, binding.Index);
         }
     }
 }

@@ -53,7 +53,7 @@ namespace VARP.Scheme.Codegen
         Symbol symLEN = Symbol.Intern("length");
         Symbol symCONCAT = Symbol.Intern("concat");
 
-        private bool GeneratePrimitive(AstPrimitive ast)
+        private int GeneratePrimitive(AstPrimitive ast)
         {
             Symbol sym = ast.Identifier.AsIdentifier();
             if (sym == symADD)
@@ -79,7 +79,7 @@ namespace VARP.Scheme.Codegen
             else if (sym == symCONCAT)
                 return GenerateArithX(ast, OpCode.CONCAT);
 
-            return false;
+            throw new SystemException();
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal bool GenerateArith1(AstPrimitive ast, OpCode opcode)
+        internal int GenerateArith1(AstPrimitive ast, OpCode opcode)
         {
             ushort temp = TempIndex;
 
@@ -98,7 +98,7 @@ namespace VARP.Scheme.Codegen
                 Generate(arg.AsAST());
             }
             AddAB(opcode, temp, temp);
-            return true;
+            return temp;
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal bool GenerateArith2(AstPrimitive ast, OpCode opcode)
+        internal int GenerateArith2(AstPrimitive ast, OpCode opcode)
         {
             ushort temp = TempIndex;
 
@@ -117,7 +117,7 @@ namespace VARP.Scheme.Codegen
                 Generate(arg.AsAST());
             }
             AddABC(opcode, temp, temp, (ushort)(temp + 1));
-            return true;
+            return temp;
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal bool GenerateArithX(AstPrimitive ast, OpCode opcode)
+        internal int GenerateArithX(AstPrimitive ast, OpCode opcode)
         {
             // R(A) := R(B) .. ... .. R(C)
 
@@ -137,7 +137,7 @@ namespace VARP.Scheme.Codegen
                 Generate(arg.AsAST());
 
             AddABC(OpCode.CONCAT, temp, temp, (ushort)(temp + args.Count));
-            return true;
+            return temp;
         }
 
 
@@ -149,7 +149,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal bool GenerateAndOr(AstPrimitive ast, OpCode opcode, bool expects)
+        internal int GenerateAndOr(AstPrimitive ast, OpCode opcode, bool expects)
         {
             ushort temp = TempIndex;
             ushort exp = expects ? (ushort)1 : (ushort)0;
@@ -167,9 +167,9 @@ namespace VARP.Scheme.Codegen
             // now make all jumps to the 
             int pc = PC;
             foreach (var jmp in jumps)
-                code[jmp] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(jmp, pc));
+                Code[jmp] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(jmp, pc));
 
-            return true;
+            return temp;
         }
     }
 

@@ -52,15 +52,17 @@ namespace VARP.Scheme.Stx
 
         private List<AST> Initializers = new List<AST>();
 
-        public bool isExpanded;
-        public int Requried;
-        public int Optional;
-        public int Keys;
-        public int Rest;
+        public int Index;           //< index of this environment
+        public bool isExpanded;     //< was the environment expanded    
+        public int RequriedCount;   //< how many required parameters
+        public int OptionalCount;   //< how many optionals
+        public int KeysCount;       //< how many key values
+        public int RestCount;       //< how many rest values
 
         // Create new environment and parent it to given
         public Environment(Environment parent = null)
         {
+            Index = parent == null ? 0 : parent.Index + 1;
             Parent = parent;
             Bindings = new List<Binding>();
         }
@@ -93,7 +95,7 @@ namespace VARP.Scheme.Stx
             Debug.Assert(arguments != null);
 
             if (arguments.required != null)
-                ExpandRequired(expression, arguments.required);
+                ExpandOptional(expression, arguments.required);
         }
 
         /// <summary>
@@ -107,16 +109,16 @@ namespace VARP.Scheme.Stx
             Debug.Assert(arguments != null);
 
             if (arguments.required != null)
-                Requried = ExpandRequired(expression, arguments.required);
+                RequriedCount = ExpandRequired(expression, arguments.required);
             if (arguments.optional != null)
-                Optional = ExpandOptional(expression, arguments.optional);
+                OptionalCount = ExpandOptional(expression, arguments.optional);
             if (arguments.key != null)
-                Keys = ExpandOptional(expression, arguments.key);
+                KeysCount = ExpandOptional(expression, arguments.key);
             if (arguments.restIdent != null)
             {
                 Syntax synt = arguments.restIdent;
                 DefineVariable(synt.AsIdentifier());
-                Rest = 1;
+                RestCount = 1;
             }
         }
         private int ExpandRequired(Syntax expression, LinkedList<Value> arguments)
@@ -258,7 +260,7 @@ namespace VARP.Scheme.Stx
         /// <returns>new binding</returns>
         public Binding DefinePrimitive(Symbol name, Binding.CompilerPrimitive primitive)
         {
-            Binding binding = new Binding(name, primitive);
+            Binding binding = new Binding(this, name, primitive);
             Define(name, binding);
             return binding;
         }
@@ -281,7 +283,7 @@ namespace VARP.Scheme.Stx
         /// <returns>new binding</returns>
         public Binding DefineVariable(Symbol name)
         {
-            Binding binding = new Binding(name, Bindings.Count);
+            Binding binding = new Binding(this, name, Bindings.Count);
             Define(name, binding);
             return binding;
         }
@@ -296,10 +298,10 @@ namespace VARP.Scheme.Stx
             BindingsMap.Clear();
             BindingsMap = null;
             Parent = null;
-            Requried = 0;
-            Optional = 0;
-            Keys = 0;
-            Rest = 0;
+            RequriedCount = 0;
+            OptionalCount = 0;
+            KeysCount = 0;
+            RestCount = 0;
         }
 
         /// <summary>

@@ -38,9 +38,17 @@ namespace VARP.Scheme.VM
         public int PC;                  //< program counter
         public Value[] Values;          //< register set
         public Value[] Upvalues;        //< up-variables
-        public int VarArgsIndex;        //< where starts variable argumens
-        public int VarArgsCount;        //< quantity of variable aguments
-        public Frame(Frame parent, Template template, int values = 0, int upvalues = 0)
+        public int VarArgsIndex;        //< where starts variable arguments
+        public int VarArgsCount;        //< quantity of variable augments
+
+        public Frame(Frame parent, Template template)
+        {
+            this.parent = parent;
+            this.template = template;
+            this.environment = parent == null ? Environment.Top : parent.environment;
+        }
+
+        public Frame(Frame parent, Template template, int values, int upvalues)
         {
             this.parent = parent;
             this.template = template;
@@ -65,5 +73,9 @@ namespace VARP.Scheme.VM
             get { return Upvalues.Length; }
         }
 
+        public void BeforeCall(int numArgs, int numRetVals)
+        {
+
+        }
     }
 }

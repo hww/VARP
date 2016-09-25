@@ -91,7 +91,7 @@ namespace VARP.Scheme.Stx
             Binding binding = env.Lookup(varname);
             if (binding == null)
                 throw SchemeError.SyntaxError("ast-builder-expand-identifier", "Expected identifier", syntax);
-            return new AstReference(syntax, binding);
+            return new AstReference(syntax, env.Index - binding.Env.Index, binding.Index);
         }
 
         // aka: (...)

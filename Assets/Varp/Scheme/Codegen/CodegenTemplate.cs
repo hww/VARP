@@ -25,36 +25,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace VARP.Scheme.Stx.Primitives
+using System;
+using System.Diagnostics;
+using System.Collections.Generic;
+
+namespace VARP.Scheme.Codegen
 {
-    using DataStructures;
-    using Exception;
+    using VM;
     using Data;
-
-    public sealed class PrimitiveLet : BasePrimitive
+    using DataStructures;
+    using Stx;
+    public sealed partial class CodeGenerator
     {
-        // (let () ...)
-        public static AST Expand(Syntax stx, Environment env)
-        {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();
-            int argc = GetArgsCount(list);
-            AssertArgsMinimum("let", "arity mismatch", 2, argc, list, stx);
 
-            Syntax keyword = list[0].AsSyntax();     // let arguments
-            Syntax arguments = list[1].AsSyntax();   // let arguments
 
-            if (!arguments.IsExpression) throw SchemeError.SyntaxError("let", "bad syntax (missing name or binding pairs)", stx);
-
-            LetArguments letarguments = new LetArguments();
-            LetArguments.Parse(stx, arguments.AsLinkedList<Value>(), env, ref letarguments);
-            Environment localEnv = env.CreateEnvironment(stx, letarguments);
-
-            AST lambda = new AstLambda(stx, keyword, letarguments, AstBuilder.ExpandListElements(list, 2, localEnv));
-            LinkedList<Value> result = new LinkedList<Value>();
-            result.AddLast(lambda.ToValue());
-            foreach (var v in letarguments.required)
-                result.AddLast(v.AsValuePair().Item2);
-            return new AstApplication(stx, result);
-        }
     }
 }

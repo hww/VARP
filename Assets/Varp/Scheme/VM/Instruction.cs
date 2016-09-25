@@ -30,7 +30,7 @@ using System.Text;
 
 namespace VARP.Scheme.VM
 {
-    internal enum OpCode
+    public enum OpCode
     {
         NOP,
         MOVE,       //<    A B      R(A) := R(B)
@@ -77,7 +77,7 @@ namespace VARP.Scheme.VM
     };
 
     [System.Serializable]
-    internal struct Instruction
+    public  struct Instruction
     {
         public static Instruction Nop = Instruction.MakeA(OpCode.NOP,0);
 
@@ -245,7 +245,7 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.LOADK:
-                    ret.AppendFormat(": R({0}) = K({1})", A, BX);
+                    ret.AppendFormat(": R({0}) = K({1})", A, Bx);
                     break;
 
                 case OpCode.LOADBOOL:
@@ -263,7 +263,7 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.GETGLOBAL:
-                    ret.AppendFormat(": R({0}) = G[K({1})]", A, BX);
+                    ret.AppendFormat(": R({0}) = G[K({1})]", A, Bx);
                     break;
 
                 case OpCode.GETTABLE:
@@ -271,7 +271,7 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.SETGLOBAL:
-                    ret.AppendFormat(": G[K{1}] = R({0})", A, BX);
+                    ret.AppendFormat(": G[K{1}] = R({0})", A, Bx);
                     break;
 
                 case OpCode.SETUPVAL:
@@ -316,9 +316,8 @@ namespace VARP.Scheme.VM
 
                 case OpCode.JMP:
                     ret.Append(":");
-                    short SBX = (short)(BX);
-                    if (SBX != 0)
-                        ret.AppendFormat(" PC {1}= {0}", System.Math.Abs(SBX), SBX > 0 ? "+" : "-");
+                    if (SBx != 0)
+                        ret.AppendFormat(" PC {1}= {0}", System.Math.Abs(SBx), SBx > 0 ? "+" : "-");
                     if (A != 0)
                         ret.AppendFormat(" CloseUpVals( R# >= {0} )", A + 1);
                     break;
@@ -383,7 +382,6 @@ namespace VARP.Scheme.VM
 
                 case OpCode.FORLOOP:
                     {
-                        short SBx = (short)BX;
                         ret.AppendFormat(": R({0}) += R({1}); if R({0}) <?= R({2}) then PC+= {3}", A, A + 2, A + 1, System.Math.Abs(SBx), SBx > 0 ? "+" : "-");
                     }
                     break;
@@ -393,8 +391,7 @@ namespace VARP.Scheme.VM
 
                 case OpCode.TFORLOOP:
                     {
-                        short sbx = (short)SBX;
-                        ret.AppendFormat(": if(type(R({1})) == table) {{ R({0}) = R({1}), PC {3}= {2} }}", A, A + 1, System.Math.Abs(sbx), sbx > 0 ? "+" : "-");
+                        ret.AppendFormat(": if(type(R({1})) == table) {{ R({0}) = R({1}), PC {3}= {2} }}", A, A + 1, System.Math.Abs(SBx), SBx > 0 ? "+" : "-");
                     }
                     break;
 
@@ -407,11 +404,11 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.CLOSURE:
-                    ret.AppendFormat(": R({0}) = MakeClosure( P{1} )", A, BX);
+                    ret.AppendFormat(": R({0}) = MakeClosure( P{1} )", A, Bx);
                     break;
 
                 case OpCode.VARARG:
-                    ret.AppendFormat(": R({0}) = MakeClosure( P{1} )", A, BX);
+                    ret.AppendFormat(": R({0}) = MakeClosure( P{1} )", A, Bx);
                     break;
 
                 default:

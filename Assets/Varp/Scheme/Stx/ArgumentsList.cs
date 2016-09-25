@@ -35,7 +35,7 @@ namespace VARP.Scheme.Stx
     using Exception;
     using REPL;
 
-    public abstract class BaseArguments 
+    public abstract class BaseArguments
     {
         #region Datum Methods
         public abstract Value AsDatum();
@@ -107,13 +107,26 @@ namespace VARP.Scheme.Stx
         //  Example: (let ((x 1) (y 2)) ...)
         // -------------------------------------------------------------
         public LinkedList<Value> required;   //< (v1 v2)
-        public LinkedList<Value> values;     //< (1 2)
 
         public override Value AsDatum()
         {
             LinkedList<Value> result = new LinkedList<Value>();
             if (required != null)
-                result.Append(GetDatum(required));
+            {
+                foreach (var v in required)
+                    result.AddLast(GetDatum(v.AsValuePair().Item1));
+            }
+
+            return new Value(result);
+        }
+        public Value AsDatumValues()
+        {
+            LinkedList<Value> result = new LinkedList<Value>();
+            if (required != null)
+            {
+                foreach (var v in required)
+                    result.AddLast(GetDatum(v.AsValuePair().Item2));
+            }
             return new Value(result);
         }
 
@@ -122,7 +135,6 @@ namespace VARP.Scheme.Stx
             args.expression = expression;
 
             args.required = new LinkedList<Value>();
-            args.values = new LinkedList<Value>();
 
             if (arguments == null)
                 return;
@@ -133,8 +145,7 @@ namespace VARP.Scheme.Stx
                 if (argstx.IsExpression)
                 {
                     ValuePair arg_pair = MakeArgPair("let", argstx, argstx.AsLinkedList<Value>(), env).AsValuePair();
-                    args.required.AddLast(arg_pair.Item1);
-                    args.values.AddLast(arg_pair.Item2);
+                    args.required.AddLast(new Value(arg_pair));
                 }
                 else
                     throw SchemeError.ArgumentError("let", "list?", argstx);
@@ -152,9 +163,9 @@ namespace VARP.Scheme.Stx
         private Syntax keyKwd;                //< &key
         private Syntax restKwd;               //< &rest
         private Syntax bodyKwd;               //< &body
-        // -------------------------------------------------------------
-        //  Example: (lambda (v1 v2 :optional o1 (o2 1) :key k1 (k2 2) :rest r)
-        // -------------------------------------------------------------
+                                              // -------------------------------------------------------------
+                                              //  Example: (lambda (v1 v2 :optional o1 (o2 1) :key k1 (k2 2) :rest r)
+                                              // -------------------------------------------------------------
         public LinkedList<Value> required;   //< (v1 v2)
         public LinkedList<Value> optional;   //< (:optional o1 (o2 1))    
         public LinkedList<Value> key;        //< (:key k1 (k2 2))    
@@ -185,7 +196,7 @@ namespace VARP.Scheme.Stx
             }
             return new Value(result);
         }
-        
+
         #endregion
 
         #region PArser Methods
