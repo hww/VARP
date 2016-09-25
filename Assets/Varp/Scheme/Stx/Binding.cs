@@ -56,6 +56,7 @@ namespace VARP.Scheme.Stx
         {
             Debug.Assert(variable != null);
             Debug.Assert(index >= 0);
+            this.Env = env;
             this.Identifier = variable;
             this.Index = index; // local!
             this.Primitive = primitive;

@@ -97,6 +97,7 @@ namespace VARP.Scheme.Codegen
             UpValues = new List<Template.UpValInfo>();
 
             OptValueIdx = KeyValueIdx = UpValueIdx = RestValueIdx = -1;
+            TempIndex = 0;
         }
         /// <summary>
         /// Defined lambda function
@@ -129,8 +130,8 @@ namespace VARP.Scheme.Codegen
             UpValues = new List<Template.UpValInfo>();
 
             OptValueIdx = KeyValueIdx = UpValueIdx = RestValueIdx = -1;
+            TempIndex = (ushort)req_count;
 
-            byte idx = 0; //< index of the argument
 
             // -----------------------------------------
             // setup required arguments
@@ -138,7 +139,6 @@ namespace VARP.Scheme.Codegen
 
             if (args.required != null)
             {
-                byte opt_idx = 0; //< index of the optional argument
 
                 foreach (var pair in args.required)
                 {
@@ -147,23 +147,22 @@ namespace VARP.Scheme.Codegen
                     Symbol identifier = null;
                     Template code = null;
                     GetIdentifierAndInitializer(pair, out identifier, out code);
-                    ushort literal = DefineLiteral(new Value(code));
+                    int literal = DefineLiteral(new Value(code));
 
                     // set up local variable item
-                    Values[idx] = new Template.LocalVarInfo()
+                    Values.Add(new Template.LocalVarInfo()
                     {
                         Name = identifier,
-                        ArgIndex = idx
-                    };
+                        ArgIndex = (byte)Values.Count
+                    });
 
                     // setup optional variable item
-                    OptVals[opt_idx] = new Template.KeyVarInfo()
+                    OptVals.Add(new Template.KeyVarInfo()
                     {
                         Name = identifier,
                         LitIndex = literal,
-                        ArgIndex = idx
-                    };
-                    idx++; opt_idx++;
+                        ArgIndex = (byte)OptVals.Count
+                    });
                 }
             }
         }
@@ -178,17 +177,19 @@ namespace VARP.Scheme.Codegen
             Code = new List<Instruction>(initialCodeSize);
             Literals = new List<Value>(initialLiteralsSize);
 
-            int req_count = args.required.Count;
-            int opt_count = args.optional.Count;
-            int key_count = args.key.Count;
+            int req_count = args.required != null ? args.required.Count : 0;
+            int opt_count = args.optional != null ? args.optional.Count : 0;
+            int key_count = args.key != null ? args.key.Count : 0;
             int rest_count = args.restIdent != null ? 1 : 0;
 
             int args_count = req_count + opt_count + key_count + rest_count;
 
             Values = new List<Template.LocalVarInfo>(args_count);
-            OptVals = new List<Template.KeyVarInfo>();
-            KeyVals = new List<Template.KeyVarInfo>();
+            OptVals = new List<Template.KeyVarInfo>(opt_count);
+            KeyVals = new List<Template.KeyVarInfo>(key_count);
             UpValues = new List<Template.UpValInfo>();
+
+            TempIndex = (ushort)args_count;
 
             byte idx = 0; //< index of the argument
 
@@ -198,11 +199,11 @@ namespace VARP.Scheme.Codegen
 
             foreach (var arg in args.required)
             {
-                Values[idx] = new Template.LocalVarInfo()
+                Values.Add(new Template.LocalVarInfo()
                 {
                     Name = arg.AsSyntax().AsIdentifier(),
                     ArgIndex = idx++
-                };
+                });
             }
 
             // -----------------------------------------
@@ -220,22 +221,22 @@ namespace VARP.Scheme.Codegen
                     Symbol identifier = null;
                     Template code = null;
                     GetIdentifierAndInitializer(pair, out identifier, out code);
-                    ushort literal = DefineLiteral(new Value(code));
+                    int literal = DefineLiteral(new Value(code));
 
                     // set up local variable item
-                    Values[idx] = new Template.LocalVarInfo()
+                    Values.Add(new Template.LocalVarInfo()
                     {
                         Name = identifier,
                         ArgIndex = idx
-                    };
+                    });
 
                     // setup optional variable item
-                    OptVals[opt_idx] = new Template.KeyVarInfo()
+                    OptVals.Add(new Template.KeyVarInfo()
                     {
                         Name = identifier,
                         LitIndex = literal,
                         ArgIndex = idx
-                    };
+                    });
                     idx++; opt_idx++;
                 }
             }
@@ -255,22 +256,22 @@ namespace VARP.Scheme.Codegen
                     Symbol identifier = null;
                     Template code = null;
                     GetIdentifierAndInitializer(pair, out identifier, out code);
-                    ushort literal = DefineLiteral(new Value(code));
+                    int literal = DefineLiteral(new Value(code));
 
                     // set up local variable item
-                    Values[idx] = new Template.LocalVarInfo()
+                    Values.Add(new Template.LocalVarInfo()
                     {
                         Name = identifier,
                         ArgIndex = idx
-                    };
+                    });
 
                     // setup optional variable item
-                    KeyVals[key_idx] = new Template.KeyVarInfo()
+                    KeyVals.Add(new Template.KeyVarInfo()
                     {
                         Name = identifier,
                         LitIndex = literal,
                         ArgIndex = idx
-                    };
+                    });
 
                     idx++; key_idx++;
                 }
@@ -381,7 +382,7 @@ namespace VARP.Scheme.Codegen
         /// </summary>
         /// <param name="val"></param>
         /// <returns></returns>
-        public ushort DefineLiteral(Value val)
+        public int DefineLiteral(Value val)
         {
             int idx = ReferenceLiteral(val);
             if (idx >= 0) return (ushort)idx;

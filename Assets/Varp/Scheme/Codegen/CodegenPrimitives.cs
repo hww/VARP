@@ -117,6 +117,9 @@ namespace VARP.Scheme.Codegen
                 Generate(arg.AsAST());
             }
             AddABC(opcode, temp, temp, (ushort)(temp + 1));
+
+            TempIndex = temp;
+
             return temp;
         }
 

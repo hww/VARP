@@ -52,7 +52,7 @@ namespace VARP.Scheme.VM
         {
             public Symbol Name;                 //< variable name
             public byte ArgIndex;               //< variable index
-            public ushort LitIndex;             //< initializer
+            public int LitIndex;                //< initializer
         }
 
         internal Instruction[] Code;            //< code sequence
@@ -157,15 +157,15 @@ namespace VARP.Scheme.VM
             foreach (var v in Literals)
             {
                 sb.Append(lident);
-                sb.Append(string.Format("  [{0}] ", lidx++));
                 if (v.Is<Template>())
                 {
-                    sb.AppendLine();
+                    sb.AppendLine(string.Format("  [{0}] -->", lidx++));
                     sb.Append(v.As<Template>().Inspect(ident + 2));
                     sb.AppendLine();
                 }
                 else
                 {
+                    sb.Append(string.Format("  [{0}] ", lidx++));
                     sb.Append(v.ToString());
                     sb.AppendLine();
                 }

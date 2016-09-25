@@ -404,7 +404,7 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.CLOSURE:
-                    ret.AppendFormat(": R({0}) = MakeClosure( P{1} )", A, Bx);
+                    ret.AppendFormat(": R({0}) = MakeClosure( K{1} )", A, Bx);
                     break;
 
                 case OpCode.VARARG:

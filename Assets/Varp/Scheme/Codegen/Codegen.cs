@@ -94,23 +94,23 @@ namespace VARP.Scheme.Codegen
 
         private int GenerateListeral(AstLiteral ast)
         {
-            byte temp = (byte)TempIndex;
-
             Value value = ast.GetDatum();
             object refval = value.RefVal;
             if (refval is BoolClass)
             {
-                Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, 0, value.AsBool() ? (ushort)1 : (ushort)0));
+                Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, (byte)TempIndex, value.AsBool() ? (ushort)1 : (ushort)0));
+                TempIndex++;
             }
             else if (refval is NumericalClass)
             {
                 int kid = DefineLiteral(value);
-                Code.Add(Instruction.MakeAB(OpCode.LOADK, 0, (ushort)kid));
+                Code.Add(Instruction.MakeABX(OpCode.LOADK, (byte)TempIndex, kid));
+                TempIndex++;
             }
             else
                 throw new SystemException();
 
-            return temp;
+            return 1;
         }
 
         private int GenerateReference(AstReference ast)
@@ -120,8 +120,9 @@ namespace VARP.Scheme.Codegen
             if (ast.IsGlobal)
             {
                 // R(A) := G[K(Bx)]
-                ushort litId = DefineLiteral(new Value(ast.Identifier));
-                AddAB(OpCode.GETGLOBAL, temp, litId);
+                int litId = DefineLiteral(new Value(ast.Identifier));
+                AddABX(OpCode.GETGLOBAL, temp, litId);
+                TempIndex++;
             }
             else
             {
@@ -151,8 +152,8 @@ namespace VARP.Scheme.Codegen
             {
                 // G[K(Bx)] := R(A)
                 Value varid = new Value(ast.Identifier);
-                ushort litId = DefineLiteral(varid);
-                AddAB(OpCode.SETGLOBAL, (ushort)target, litId);
+                int litId = DefineLiteral(varid);
+                AddABX(OpCode.SETGLOBAL, (ushort)target, litId);
             }
             else
             {
@@ -182,14 +183,16 @@ namespace VARP.Scheme.Codegen
             CodeGenerator lambda = new CodeGenerator(ast.ArgList);
 
             // now generate the code, and get target register
-            int result = lambda.Generate(ast);
+            foreach (var v in ast.BodyExpression)
+                lambda.Generate(v.AsAST());
 
             // now lets create template from dummy lambda
             Template template = lambda.GetTemplate();
 
-            ushort closureId = DefineLiteral(new Value(template));
-            AddAB(OpCode.CLOSURE, temp, closureId);
-            return temp;
+            int closureId = DefineLiteral(new Value(template));
+            AddABX(OpCode.CLOSURE, temp, closureId);
+            TempIndex++;
+            return 1;
         }
 
         private int GenerateConditionIf(AstConditionIf ast)
@@ -256,8 +259,9 @@ namespace VARP.Scheme.Codegen
                 Generate(val.AsAST());
             }
             // now temp[] = [function, arg, arg, arg, ...]
-            AddAB(OpCode.CALL, temp, 0);
-            return temp;
+            AddAB(OpCode.CALL, temp, (byte)(ast.list.Count - 1));
+            TempIndex = temp;
+            return 1;
         }
 
         private int GenerateSequence(AstSequence ast)
