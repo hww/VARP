@@ -92,37 +92,44 @@ namespace VARP.Scheme.Codegen
             throw new SystemException();
         }
 
+        /// <summary>
+        /// Generate literal and return the position of literal in values
+        /// list.
+        /// </summary>
+        /// <param name="ast"></param>
+        /// <returns></returns>
         private int GenerateListeral(AstLiteral ast)
         {
             Value value = ast.GetDatum();
             object refval = value.RefVal;
+
             if (refval is BoolClass)
             {
                 Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, (byte)TempIndex, value.AsBool() ? (ushort)1 : (ushort)0));
-                TempIndex++;
+                return TempIndex++;
             }
             else if (refval is NumericalClass)
             {
                 int kid = DefineLiteral(value);
                 Code.Add(Instruction.MakeABX(OpCode.LOADK, (byte)TempIndex, kid));
-                TempIndex++;
+                return TempIndex++;
             }
             else
                 throw new SystemException();
 
-            return 1;
+
         }
 
         private int GenerateReference(AstReference ast)
         {
-            byte temp = (byte)TempIndex;
-
             if (ast.IsGlobal)
             {
                 // R(A) := G[K(Bx)]
+                ushort dst = TempIndex;
                 int litId = DefineLiteral(new Value(ast.Identifier));
-                AddABX(OpCode.GETGLOBAL, temp, litId);
+                AddABX(OpCode.GETGLOBAL, dst, litId);
                 TempIndex++;
+                return dst;
             }
             else
             {
@@ -131,16 +138,19 @@ namespace VARP.Scheme.Codegen
                 if (envIdx > 0)
                 {
                     // UpValue case
-                    byte upId = DefineUpValue(ast.Identifier, envIdx, varIdx);
+                    // R(A) := U[B]
+                    ushort dst = TempIndex;
+                    AddAB(OpCode.GETUPVAL, dst, 0);
+                    //byte upId = DefineUpValue(ast.Identifier, envIdx, varIdx);
+                    return TempIndex++;
                 }
                 else
                 {
                     // Local case
-                    byte upId = DefineLocal(ast.Identifier);
-
+                    byte dst = ReferenceLocal(ast.Identifier);
+                    return dst;
                 }
             }
-            return temp;
         }
 
         private int GenerateSet(AstSet ast)

@@ -112,13 +112,9 @@ namespace VARP.Scheme.Codegen
             ushort temp = TempIndex;
 
             LinkedList<Value> args = ast.Arguments;
-            foreach (var arg in args)
-            {
-                Generate(arg.AsAST());
-            }
-            AddABC(opcode, temp, temp, (ushort)(temp + 1));
-
-            TempIndex = temp;
+            int arg0 = Generate(args[0].AsAST());
+            int arg1 = Generate(args[1].AsAST());
+            AddABC(opcode, temp, (byte)arg0, (byte)arg1);
 
             return temp;
         }

@@ -50,137 +50,21 @@ namespace VARP.Scheme.Stx
         // Symbol to binding conversion table
         private Dictionary<Symbol, Binding> BindingsMap = new Dictionary<Symbol, Binding>();
 
-        private List<AST> Initializers = new List<AST>();
-
         public int Index;           //< index of this environment
         public bool isExpanded;     //< was the environment expanded    
-        public int RequriedCount;   //< how many required parameters
-        public int OptionalCount;   //< how many optionals
-        public int KeysCount;       //< how many key values
-        public int RestCount;       //< how many rest values
+        public int UpValuesCount;   //< how many up values
 
         // Create new environment and parent it to given
         public Environment(Environment parent = null)
         {
             Index = parent == null ? 0 : parent.Index + 1;
             Parent = parent;
+            UpValuesCount = 0;
             Bindings = new List<Binding>();
         }
 
-        /// <summary>
-        /// Create new child environment
-        /// </summary>
-        /// <param name="expression">Expression where is this arguments list</param>
-        /// <param name="arguments">Arguments list</param>
-        /// <returns>new environment</returns>
-        public Environment CreateEnvironment(Syntax expression, BaseArguments arguments)
-        {
-            Environment env = new Environment(this);
-            if (arguments is LambdaArguments)
-                env.Expand(expression, arguments as LambdaArguments);
-            else 
-                env.Expand(expression, arguments as LetArguments);
-            return env;
-        }
 
-        /// <summary>
-        /// Create new child environment
-        /// </summary>
-        /// <param name="expression">Expression where is this arguments list</param>
-        /// <param name="arguments">Arguments list</param>
-        /// <returns>new environment</returns>
-        private void Expand(Syntax expression, LetArguments arguments)
-        {
-            Debug.Assert(expression != null);
-            Debug.Assert(arguments != null);
 
-            if (arguments.required != null)
-                ExpandOptional(expression, arguments.required);
-        }
-
-        /// <summary>
-        /// Expand environment to and define list of given arguments
-        /// </summary>
-        /// <param name="expression">Expression where is this arguments list</param>
-        /// <param name="arguments"></param>
-        public void Expand(Syntax expression, LambdaArguments arguments)
-        {
-            Debug.Assert(expression != null);
-            Debug.Assert(arguments != null);
-
-            if (arguments.required != null)
-                RequriedCount = ExpandRequired(expression, arguments.required);
-            if (arguments.optional != null)
-                OptionalCount = ExpandOptional(expression, arguments.optional);
-            if (arguments.key != null)
-                KeysCount = ExpandOptional(expression, arguments.key);
-            if (arguments.restIdent != null)
-            {
-                Syntax synt = arguments.restIdent;
-                DefineVariable(synt.AsIdentifier());
-                RestCount = 1;
-            }
-        }
-        private int ExpandRequired(Syntax expression, LinkedList<Value> arguments)
-        {
-            int count = 0;
-            foreach (var arg in arguments)
-            {
-                Syntax astx = arg.AsSyntax();
-                if (astx != null && astx.IsIdentifier)
-                {
-                    DefineVariable(astx.AsIdentifier());
-                    count++;
-                }
-                else
-                    throw SchemeError.ArgumentError("lambda", "identifier?", count, arguments);
-            }
-            return count;
-        }
-        private int ExpandOptional(Syntax expression, LinkedList<Value> arguments)
-        {
-            int count = 0;
-            foreach (var arg in arguments)
-            {
-                if (arg.IsSyntax)
-                {
-                    Syntax varname = arg.AsSyntax();
-                    if (varname.IsIdentifier)
-                    {
-                        Symbol ident = varname.AsIdentifier();
-                        if (ident == Symbol.OPTIONAL) continue;
-                        if (ident == Symbol.KEY) continue;
-                        DefineVariable(ident);
-                    }
-                    else
-                        throw SchemeError.ArgumentError("lambda", "identifier?", count, arguments);
-                }
-                else if (arg.IsLinkedList<Value>())
-                {
-                    LinkedList<Value> p = arg.AsLinkedList<Value>();
-                    object v0 = p[0].RefVal;
-                    object v1 = p[1].RefVal;
-                    Symbol ident = null;
-                    AST value = null;
-
-                    if (v0 is Syntax && (v0 as Syntax).IsIdentifier)
-                        ident = (v0 as Syntax).AsIdentifier();
-                    else
-                        throw SchemeError.ArgumentError("lambda", "syntax?", count, arguments);
-
-                    if (v1 is AST)
-                        value = v1 as AST;
-                    else
-                        throw SchemeError.ArgumentError("lambda", "ast?", count, arguments);
-
-                    Syntax var = arg.AsSyntax();
-
-                    DefineVariable(ident);
-                }
-                count++;
-            }
-            return count;
-        }
         #region Environment Methods
 
         /// <summary>
@@ -245,9 +129,11 @@ namespace VARP.Scheme.Stx
         /// </summary>
         /// <param name="name">identifier</param>
         /// <param name="value">binding</param>
-        public void Define(Symbol name, Binding value)
+        public void Define(Binding value)
         {
-            BindingsMap[name] = value;
+            BindingsMap[value.Identifier] = value;
+            Debug.Assert(Bindings.Count < 256);
+            value.Index = (byte)Bindings.Count;
             Bindings.Add(value);
         }
 
@@ -258,10 +144,12 @@ namespace VARP.Scheme.Stx
         /// <param name="name">identifier</param>
         /// <param name="primitive">primitive</param>
         /// <returns>new binding</returns>
-        public Binding DefinePrimitive(Symbol name, Binding.CompilerPrimitive primitive)
+        public Binding DefinePrimitive(Symbol name, PrimitiveBinding.CompilerPrimitive primitive)
         {
-            Binding binding = new Binding(this, name, primitive);
-            Define(name, binding);
+            Debug.Assert(IsGlobal); // can be defined only in global 
+            Syntax syntax = new Syntax(name);
+            Binding binding = new PrimitiveBinding(this, syntax, primitive);
+            Define(binding);
             return binding;
         }
         /// <summary>
@@ -271,21 +159,9 @@ namespace VARP.Scheme.Stx
         /// <param name="name">identifier</param>
         /// <param name="primitive">primitive</param>
         /// <returns>new binding</returns>
-        public Binding DefinePrimitive(string name, Binding.CompilerPrimitive primitive) 
+        public Binding DefinePrimitive(string name, PrimitiveBinding.CompilerPrimitive primitive) 
         {
             return DefinePrimitive(Symbol.Intern(name), primitive);
-        }
-
-        /// <summary>
-        /// Define variable with given name 
-        /// </summary>
-        /// <param name="name">identifier</param>
-        /// <returns>new binding</returns>
-        public Binding DefineVariable(Symbol name)
-        {
-            Binding binding = new Binding(this, name, Bindings.Count);
-            Define(name, binding);
-            return binding;
         }
 
         /// <summary>
@@ -298,10 +174,7 @@ namespace VARP.Scheme.Stx
             BindingsMap.Clear();
             BindingsMap = null;
             Parent = null;
-            RequriedCount = 0;
-            OptionalCount = 0;
-            KeysCount = 0;
-            RestCount = 0;
+            UpValuesCount = 0;
         }
 
         /// <summary>
@@ -356,6 +229,7 @@ namespace VARP.Scheme.Stx
         #region ValueType Methods
         public override bool AsBool() { return true; }
         public override string ToString() { return string.Format("#<lexical-environment size={0}>", Bindings.Count); }
+        public Binding[] ToArray() { return Bindings.ToArray(); }
 
         #endregion
     }

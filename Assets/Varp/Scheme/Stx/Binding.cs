@@ -33,42 +33,114 @@ namespace VARP.Scheme.Stx
     using Data;
 
 
-    public sealed class Binding : ValueClass
+    public class Binding : ValueClass
     {
-        public delegate AST CompilerPrimitive(Syntax expression, Environment context);
+        public Syntax Id;
+        public Environment Env;     //< the variable binded to environment
+        public byte Index;          //< variable index in the environment
 
-        public Environment Env;                 //< the variable binded to env
-        public Symbol Identifier;               //< variable index in the environment
-        public int Index;                       //< unique id of variable name.number
-        public CompilerPrimitive Primitive;     //< in case if primitive
-
-        // define global variable
-        public Binding(Environment env, Symbol variable, CompilerPrimitive primitive = null)
+        /// <summary>
+        /// Create global binding
+        /// </summary>
+        /// <param name="environment"></param>
+        /// <param name="variable"></param>
+        /// <param name="index"></param>
+        public Binding(Environment environment, Syntax variable)
         {
-            Debug.Assert(env != null);
+            Debug.Assert(environment != null);
             Debug.Assert(variable != null);
-            this.Env = env;
-            this.Identifier = variable;
-            this.Index = -1; // global!
-            this.Primitive = primitive;
-        }
-        public Binding(Environment env, Symbol variable, int index, CompilerPrimitive primitive = null)
-        {
-            Debug.Assert(variable != null);
-            Debug.Assert(index >= 0);
-            this.Env = env;
-            this.Identifier = variable;
-            this.Index = index; // local!
-            this.Primitive = primitive;
+            this.Env = environment;
+            this.Id = variable;
+            this.Index = 0;
         }
 
-        public bool IsPrimitive { get { return Primitive != null; } }
-        public bool IsGlobal { get { return Index < 0; } }
-        public bool IsUpvalue(Environment env) { return Index > 0 && env != this.Env; }
+        /// <summary>
+        /// variable identifier
+        /// </summary>
+        public virtual Symbol Identifier { get { return Id.AsIdentifier(); } }
+
+        public virtual bool IsPrimitive { get { return false; } }
+        public virtual bool IsGlobal { get { return Env == null; } }
+        public virtual bool IsLocal { get { return Env != null; } }
+        public virtual bool IsUpvalue { get { return false; } }
 
         #region ValueType Methods
         public override bool AsBool() { return true; }
-        public override string ToString() { return base.ToString(); }
+        public override string ToString() { return string.Format("#<binding {0}>", Identifier.Name); }
+        #endregion
+    }
+    public sealed class PrimitiveBinding : Binding
+    {
+        public delegate AST CompilerPrimitive(Syntax expression, Environment context);
+
+        public CompilerPrimitive Primitive;     
+
+        // define global variable
+        public PrimitiveBinding(Environment environment, Syntax identifier, CompilerPrimitive primitive) : base (environment, identifier)
+        {
+            Debug.Assert(primitive != null);
+            this.Primitive = primitive;
+        }
+
+        public override bool IsPrimitive { get { return true; } }
+
+        #region ValueType Methods
+        public override bool AsBool() { return true; }
+        public override string ToString() { return string.Format("#<primitive {0}>", Identifier.Name); }
+        #endregion
+    }
+    public sealed class UpBinding : Binding
+    {
+        public Binding Refrence;
+        public UpBinding(Environment environment, Syntax identifier, Binding other) : base(environment, identifier)
+        {
+            Debug.Assert(other != null);
+            this.Refrence = other;
+        }
+
+        public byte EnvIndex {
+            get {
+                int diff = Env.Index - Refrence.Env.Index;
+                Debug.Assert(diff < 256);
+                return (byte)diff;
+            }
+        }
+        public override bool IsUpvalue { get { return true; } }
+
+        #region ValueType Methods
+        public override bool AsBool() { return true; }
+        public override string ToString() { return string.Format("#<up-binding {0}>", Identifier.Name); }
+        #endregion
+
+    }
+
+    public sealed class ArgumentBinding : Binding
+    {
+        public enum Type
+        {
+            Required,       // (lambda (x y z) ...)
+            Optionals,      // (lambda (x y #!optional z) ...)
+            Key,            // (lambda (x y #!key z) ...)
+            Rest,           // (lambda (x y #!rest z) ...)
+            Body,           // (lambda (x y #!body z) ...)
+            End             // after #!res value
+        }
+
+        public Type ArgType;
+        public Binding Refrence;
+        public AST Initializer;
+        public ArgumentBinding(Environment environment, Syntax identifier, Type type, AST initializer) : base(environment, identifier)
+        {
+            Debug.Assert(initializer != null);
+            this.Initializer = initializer;
+            this.ArgType = type;
+        }
+
+        public override bool IsUpvalue { get { return true; } }
+
+        #region ValueType Methods
+        public override bool AsBool() { return true; }
+        public override string ToString() { return string.Format("#<opt-binding {0}>", Identifier.Name); }
         #endregion
     }
 

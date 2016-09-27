@@ -35,7 +35,7 @@ namespace VARP.Scheme.Stx
     using Exception;
     using Tokenizing;
     using DataStructures;
-
+    using REPL;
 
     public sealed class Syntax : ValueClass
     {
@@ -47,6 +47,10 @@ namespace VARP.Scheme.Stx
 
         public Syntax() : base()
         {
+        }
+        public Syntax(ValueClass expression) : base()
+        {
+            this.expression = new Value(expression);
         }
         public Syntax(Value expression, Location location)
         {
@@ -170,6 +174,23 @@ namespace VARP.Scheme.Stx
 
         #endregion
 
+
+        #region DebuggerDisplay 
+        public override string DebuggerDisplay
+        {
+            get
+            {
+                try
+                {
+                    return string.Format(Inspector.Inspect(this));
+                }
+                catch (System.Exception ex)
+                {
+                    return string.Format("#<syntax ispect-error='{0}'>", ex.Message);
+                }
+            }
+        }
+        #endregion
 
     }
 }

@@ -25,11 +25,14 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System.Collections.Generic;
+
 namespace VARP.Scheme.Stx.Primitives
 {
 
     using Data;
     using DataStructures;
+
 
     public sealed class PrimitiveLambda : BasePrimitive
     {
@@ -39,16 +42,14 @@ namespace VARP.Scheme.Stx.Primitives
             LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
             AssertArgsMinimum("lambda", "arity mismatch", 1, argc, list, stx);
+
             var x = list[0];
             var xs = x.ToString();
             xs = x.DebuggerDisplay;
             Syntax kwdr = list[0].AsSyntax();
             Syntax args = list[1].AsSyntax();
 
-            LambdaArguments arguments = new LambdaArguments();
-            LambdaArguments.Parse(stx, args.AsLinkedList<Value>(), env, ref arguments);
-
-            Environment localEnv = env.CreateEnvironment(stx, arguments);
+            Environment localEnv = ArgumentsParser.ParseLambda(stx, args.AsLinkedList<Value>(), env);
 
             LinkedList<Value> body = new LinkedList<Value>();
 
@@ -61,7 +62,7 @@ namespace VARP.Scheme.Stx.Primitives
                     curent = curent.Next;
                 }
             }
-            return new AstLambda(stx, kwdr, arguments, body);
+            return new AstLambda(stx, kwdr, localEnv, body);
         }
     }
 }

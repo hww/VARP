@@ -104,194 +104,89 @@ namespace VARP.Scheme.Codegen
         /// </summary>
         /// <param name="gen"></param>
         /// <param name="args"></param>
-        public CodeGenerator(BaseArguments args)
-        {
-            if (args is LambdaArguments)
-                Initialize(args as LambdaArguments);
-            else if (args is LetArguments)
-                Initialize(args as LetArguments);
-        }
-
-        /// <summary>
-        /// Defined lambda function
-        /// </summary>
-        /// <param name="gen"></param>
-        /// <param name="args"></param>
-        private void Initialize(LetArguments args)
-        {
+        public CodeGenerator(Stx.Binding[] args)
+        { 
             Code = new List<Instruction>(initialCodeSize);
             Literals = new List<Value>(initialLiteralsSize);
 
-            int req_count = args.required.Count;
+            Values = new List<Template.LocalVarInfo>(args.Length);
+            OptVals = new List<Template.KeyVarInfo>(args.Length);
+            KeyVals = new List<Template.KeyVarInfo>(args.Length);
+            UpValues = new List<Template.UpValInfo>(args.Length);
 
-            Values = new List<Template.LocalVarInfo>(req_count);
-            OptVals = new List<Template.KeyVarInfo>();
-            KeyVals = new List<Template.KeyVarInfo>();
-            UpValues = new List<Template.UpValInfo>();
-
-            OptValueIdx = KeyValueIdx = UpValueIdx = RestValueIdx = -1;
-            TempIndex = (ushort)req_count;
-
-
-            // -----------------------------------------
-            // setup required arguments
-            // -----------------------------------------
-
-            if (args.required != null)
+            foreach (var v in args)
             {
 
-                foreach (var pair in args.required)
-                {
-                    // optional arguments are all the time pairs
-                    // of identifier and initializer
-                    Symbol identifier = null;
-                    Template code = null;
-                    GetIdentifierAndInitializer(pair, out identifier, out code);
-                    int literal = DefineLiteral(new Value(code));
-
-                    // set up local variable item
-                    Values.Add(new Template.LocalVarInfo()
-                    {
-                        Name = identifier,
-                        ArgIndex = (byte)Values.Count
-                    });
-
-                    // setup optional variable item
-                    OptVals.Add(new Template.KeyVarInfo()
-                    {
-                        Name = identifier,
-                        LitIndex = literal,
-                        ArgIndex = (byte)OptVals.Count
-                    });
-                }
-            }
-        }
-
-        /// <summary>
-        /// Defined lambda function
-        /// </summary>
-        /// <param name="gen"></param>
-        /// <param name="args"></param>
-        private void Initialize(LambdaArguments args)
-        {
-            Code = new List<Instruction>(initialCodeSize);
-            Literals = new List<Value>(initialLiteralsSize);
-
-            int req_count = args.required != null ? args.required.Count : 0;
-            int opt_count = args.optional != null ? args.optional.Count : 0;
-            int key_count = args.key != null ? args.key.Count : 0;
-            int rest_count = args.restIdent != null ? 1 : 0;
-
-            int args_count = req_count + opt_count + key_count + rest_count;
-
-            Values = new List<Template.LocalVarInfo>(args_count);
-            OptVals = new List<Template.KeyVarInfo>(opt_count);
-            KeyVals = new List<Template.KeyVarInfo>(key_count);
-            UpValues = new List<Template.UpValInfo>();
-
-            TempIndex = (ushort)args_count;
-
-            byte idx = 0; //< index of the argument
-
-            // -----------------------------------------
-            // setup required arguments
-            // -----------------------------------------
-
-            foreach (var arg in args.required)
-            {
+                // ---------------------------------------------
+                // all values list. this will be frame size
+                // ---------------------------------------------
                 Values.Add(new Template.LocalVarInfo()
                 {
-                    Name = arg.AsSyntax().AsIdentifier(),
-                    ArgIndex = idx++
+                    Name = v.Id.AsIdentifier(),
+                    ArgIndex = v.Index
                 });
-            }
 
-            // -----------------------------------------
-            // setup optional arguments
-            // -----------------------------------------
-
-            if (args.optional != null)
-            {
-                byte opt_idx = 0; //< index of the optional argument
-
-                foreach (var pair in args.optional)
+                if (v is ArgumentBinding)
                 {
-                    // optional arguments are all the time pairs
-                    // of identifier and initializer
-                    Symbol identifier = null;
-                    Template code = null;
-                    GetIdentifierAndInitializer(pair, out identifier, out code);
-                    int literal = DefineLiteral(new Value(code));
-
-                    // set up local variable item
-                    Values.Add(new Template.LocalVarInfo()
+                    ArgumentBinding arg = v as ArgumentBinding;
+                    switch (arg.ArgType)
                     {
-                        Name = identifier,
-                        ArgIndex = idx
-                    });
+                        case ArgumentBinding.Type.Required:
 
-                    // setup optional variable item
-                    OptVals.Add(new Template.KeyVarInfo()
-                    {
-                        Name = identifier,
-                        LitIndex = literal,
-                        ArgIndex = idx
-                    });
-                    idx++; opt_idx++;
+                            break;
+                        case ArgumentBinding.Type.Optionals:
+                            {
+                                // optional arguments are all the time pairs
+                                // of identifier and initializer
+                                Symbol identifier = arg.Identifier;
+                                Template code = GenerateCode(arg.Initializer);
+                                int literal = DefineLiteral(new Value(code));
+                                // setup optional variable item
+                                OptVals.Add(new Template.KeyVarInfo()
+                                {
+                                    Name = identifier,
+                                    LitIndex = literal,
+                                    ArgIndex = v.Index
+                                });
+                            }
+                            break;
+                        case ArgumentBinding.Type.Key:
+                            {
+                                // optional arguments are all the time pairs
+                                // of identifier and initializer
+                                Symbol identifier = arg.Identifier;
+                                Template code = GenerateCode(arg.Initializer);
+                                int literal = DefineLiteral(new Value(code));
+                                // setup optional variable item
+                                KeyVals.Add(new Template.KeyVarInfo()
+                                {
+                                    Name = identifier,
+                                    LitIndex = literal,
+                                    ArgIndex = v.Index
+                                });
+                            }
+                            break;
+
+                        case ArgumentBinding.Type.Rest:
+                            RestValueIdx = arg.Index;
+                            break;
+                    }
                 }
-            }
-
-            // -----------------------------------------
-            // setup key arguments
-            // -----------------------------------------
-
-            if (args.key != null)
-            {
-                byte key_idx = 0; //< index of the optional argument
-
-                foreach (var pair in args.optional)
+                else if (v is UpBinding)
                 {
-                    // optional arguments are all the time pairs
-                    // of identifier and initializer
-                    Symbol identifier = null;
-                    Template code = null;
-                    GetIdentifierAndInitializer(pair, out identifier, out code);
-                    int literal = DefineLiteral(new Value(code));
-
-                    // set up local variable item
-                    Values.Add(new Template.LocalVarInfo()
-                    {
-                        Name = identifier,
-                        ArgIndex = idx
-                    });
-
+                    UpBinding arg = v as UpBinding;
                     // setup optional variable item
-                    KeyVals.Add(new Template.KeyVarInfo()
+                    UpValues.Add(new Template.UpValInfo()
                     {
-                        Name = identifier,
-                        LitIndex = literal,
-                        ArgIndex = idx
+                        Name = arg.Identifier,
+                        ArgIndex = arg.Index,
+                        VarIndex = arg.Refrence.Index,
+                        EnvIndex = arg.EnvIndex
                     });
-
-                    idx++; key_idx++;
                 }
+
             }
-
-            // -----------------------------------------
-            // setup rest arguments
-            // -----------------------------------------
-
-            if (args.restIdent != null)
-            {
-                Values[idx] = new Template.LocalVarInfo()
-                {
-                    Name = args.restIdent.AsIdentifier(),
-                    ArgIndex = idx
-                };
-                RestValueIdx = idx;
-
-                idx++;
-            }
+            TempIndex = (ushort)Values.Count;
         }
 
         void GetIdentifierAndInitializer(Value value, out Symbol identifier, out Template code)

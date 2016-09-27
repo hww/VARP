@@ -87,11 +87,17 @@ namespace VARP.Scheme.Stx
         public static AST ExpandIdentifier(Syntax syntax, Environment env)
         {
             if (!syntax.IsIdentifier) throw SchemeError.SyntaxError("ast-builder-expand-identifier", "expected identifier", syntax);
+
             Symbol varname = syntax.GetDatum().AsSymbol();
             Binding binding = env.Lookup(varname);
+            /// If variable is not found designate it as global variable
             if (binding == null)
-                throw SchemeError.SyntaxError("ast-builder-expand-identifier", "Expected identifier", syntax);
-            return new AstReference(syntax, env.Index - binding.Env.Index, binding.Index);
+                return new AstReference(syntax, -1, -1);
+            if (binding.Env != env)
+                binding = env.DefineUpVariable(binding);
+            if (binding.IsUpvalue)
+                return new AstReference(syntax, env.Index - binding.Env.Index, binding.Index);
+            return new AstReference(syntax, 0, binding.Index);
         }
 
         // aka: (...)
@@ -106,10 +112,10 @@ namespace VARP.Scheme.Stx
                 if (binding != null)
                 {
                     if (binding.IsPrimitive)
-                        return binding.Primitive(syntax, env);
+                        return (binding as PrimitiveBinding).Primitive(syntax, env);
                 }
             }
-            // we do not find priitive. expand all expression with keyword at firs element
+            // we do not find primitive. expand all expression with keyword at firs element
             return new AstApplication(syntax, ExpandListElements(list, 0, env));
         }
 

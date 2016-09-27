@@ -99,9 +99,24 @@ namespace VARP.Scheme.Data
             return new Value(this); 
         }
 
+
         #region DebuggerDisplay 
-        public string DebuggerDisplay { get { return string.Format("#<{0}>", this.GetType().ToString()); } }
+        public virtual string DebuggerDisplay
+        {
+            get
+            {
+                try
+                {
+                    return string.Format(Inspector.Inspect(this));
+                }
+                catch (System.Exception ex)
+                {
+                    return string.Format("#<value-class ispect-error='{0}'>", ex.Message);
+                }
+            }
+        }
         #endregion
+
     }
 
     // =================================================================================
