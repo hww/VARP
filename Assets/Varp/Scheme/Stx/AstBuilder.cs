@@ -92,12 +92,15 @@ namespace VARP.Scheme.Stx
             Binding binding = env.Lookup(varname);
             /// If variable is not found designate it as global variable
             if (binding == null)
-                return new AstReference(syntax, -1, -1);
-            if (binding.Env != env)
-                binding = env.DefineUpVariable(binding);
+                return new AstReference(syntax, 0, -1, -1);
+            /// Check the case of up-value
             if (binding.IsUpvalue)
-                return new AstReference(syntax, env.Index - binding.Env.Index, binding.Index);
-            return new AstReference(syntax, 0, binding.Index);
+            {
+                UpBinding ubind = binding as UpBinding;
+                return new AstReference(syntax, ubind.VarIdx, ubind.EnvOffset, ubind.RefVarIdx);
+            }
+            /// It is ordinary local variable reference
+            return new AstReference(syntax, binding.VarIdx, 0, 0);
         }
 
         // aka: (...)

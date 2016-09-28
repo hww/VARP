@@ -57,7 +57,7 @@ namespace VARP.Scheme.Stx
         // Create new environment and parent it to given
         public Environment(Environment parent = null)
         {
-            Index = parent == null ? 0 : parent.Index + 1;
+            Index = parent == null ? -1 : parent.Index + 1;
             Parent = parent;
             UpValuesCount = 0;
             Bindings = new List<Binding>();
@@ -129,12 +129,13 @@ namespace VARP.Scheme.Stx
         /// </summary>
         /// <param name="name">identifier</param>
         /// <param name="value">binding</param>
-        public void Define(Binding value)
+        public Binding Define(Binding value)
         {
             BindingsMap[value.Identifier] = value;
-            Debug.Assert(Bindings.Count < 256);
-            value.Index = (byte)Bindings.Count;
+            if (Bindings.Count > 255) SchemeError.Error("define", "too many variables in frame", value.Id);
+            value.VarIdx = (byte)Bindings.Count;
             Bindings.Add(value);
+            return value;
         }
 
         /// <summary>

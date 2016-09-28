@@ -37,22 +37,22 @@ namespace VARP.Scheme.VM
     {
         internal struct UpValInfo
         {
-            public Symbol Name;     //< variable name
-            public byte ArgIndex;   //< variable index
-            public byte EnvIndex;   //< the environment index
-            public byte VarIndex;   //< index of the variable in frame
+            public Symbol Name;                 //< variable name
+            public byte VarIdx;                 //< index of variable in local environment
+            public byte RefEnvIdx;              //< index of referenced environment 
+            public byte RefVarIndex;            //< index of variable in referenced environment 
         }
         internal struct LocalVarInfo
         {
             public Symbol Name;                 //< variable name
-            public byte ArgIndex;               //< variable index
+            public byte VarIdx;                 //< index of variable in local environment
         }
 
         internal struct KeyVarInfo
         {
             public Symbol Name;                 //< variable name
-            public byte ArgIndex;               //< variable index
-            public int LitIndex;                //< initializer
+            public byte VarIdx;                 //< index of variable in local environment
+            public int LitIdx;                  //< initializer
         }
 
         internal Instruction[] Code;            //< code sequence
@@ -114,7 +114,7 @@ namespace VARP.Scheme.VM
                 sb.Append(" ");
                 sb.Append(v.Name.ToString());
                 sb.Append(":");
-                sb.Append(v.LitIndex.ToString());
+                sb.Append(v.LitIdx.ToString());
             }
             sb.AppendLine();
             /// &keys ///
@@ -125,7 +125,7 @@ namespace VARP.Scheme.VM
                 sb.Append(" ");
                 sb.Append(v.Name.ToString());
                 sb.Append(":");
-                sb.Append(v.LitIndex.ToString());
+                sb.Append(v.LitIdx.ToString());
             }
             /// &rest ///
             if (RestValueIdx >= 0)

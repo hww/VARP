@@ -54,12 +54,25 @@ namespace VARP.Scheme.Stx.Primitives
                 // identifier aka: (define x ...)
                 // ----------------------------------------------------------------
                 AST value = Expand(val_stx, env);
-
                 Symbol var_id = var_stx.AsIdentifier();
-                Binding bind = env.Lookup(var_id);
-                if (bind == null) env.DefineVariable(var_id);
+                Binding binding = env.Lookup(var_id);
 
-                return new AstDefine(stx, def_stx, var_stx, value, bind);
+                if (binding == null)
+                {
+                    /// Global variable
+                    return new AstDefine(stx, var_stx, value, -1, -1, -1);
+                }
+                else if (binding.IsUpvalue)
+                {
+                    /// Up-value variable
+                    UpBinding ubind = binding as UpBinding;
+                    return new AstDefine(stx, var_stx, value, binding.VarIdx, ubind.RefEnvIdx, ubind.RefVarIdx);
+                }
+                else
+                {
+                    /// Local variable
+                    return new AstDefine(stx, var_stx, value, binding.VarIdx, 0, 0);
+                }
             }
             else if (var_stx.IsExpression)
             {
@@ -68,18 +81,31 @@ namespace VARP.Scheme.Stx.Primitives
                 // ----------------------------------------------------------------
                 LinkedList<Value> args_list = var_stx.AsLinkedList<Value>();
 
-                LambdaArguments arguments = new LambdaArguments();
-                LambdaArguments.Parse(stx, args_list, env, ref arguments);
+                Environment newenv = ArgumentsParser.ParseLambda(stx, args_list, env);
 
-                LinkedList<Value> lambda_body = AstBuilder.ExpandListElements(list, 2, env);
-                AstLambda lambda = new AstLambda(stx, def_stx, arguments, lambda_body);
+                LinkedList<Value> lambda_body = AstBuilder.ExpandListElements(list, 2, newenv);
+                AstLambda lambda = new AstLambda(stx, def_stx, newenv, lambda_body);
 
                 Syntax identifier_stx = args_list[0].AsSyntax();
                 Symbol identifier = identifier_stx.AsIdentifier();
                 Binding binding = env.Lookup(identifier);
-                if (binding == null) env.DefineVariable(identifier);
 
-                return new AstDefine(stx, def_stx, identifier_stx, lambda, binding);
+                if (binding == null)
+                {
+                    /// Global variable
+                    return new AstDefine(stx, var_stx, lambda, -1, -1, -1);
+                }
+                else if (binding.IsUpvalue)
+                {
+                    /// Up-value variable
+                    UpBinding ubind = binding as UpBinding;
+                    return new AstDefine(stx, var_stx, lambda, binding.VarIdx, ubind.RefEnvIdx, ubind.RefVarIdx);
+                }
+                else
+                {
+                    /// Local variable
+                    return new AstDefine(stx, var_stx, lambda, binding.VarIdx, 0, 0);
+                }
             }
             else
                 throw SchemeError.ArgumentError("define", "symbol? or list?", var_stx);

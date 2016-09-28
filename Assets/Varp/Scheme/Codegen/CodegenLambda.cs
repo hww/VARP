@@ -123,7 +123,7 @@ namespace VARP.Scheme.Codegen
                 Values.Add(new Template.LocalVarInfo()
                 {
                     Name = v.Id.AsIdentifier(),
-                    ArgIndex = v.Index
+                    VarIdx = v.VarIdx
                 });
 
                 if (v is ArgumentBinding)
@@ -145,8 +145,8 @@ namespace VARP.Scheme.Codegen
                                 OptVals.Add(new Template.KeyVarInfo()
                                 {
                                     Name = identifier,
-                                    LitIndex = literal,
-                                    ArgIndex = v.Index
+                                    LitIdx = literal,
+                                    VarIdx = v.VarIdx
                                 });
                             }
                             break;
@@ -161,14 +161,14 @@ namespace VARP.Scheme.Codegen
                                 KeyVals.Add(new Template.KeyVarInfo()
                                 {
                                     Name = identifier,
-                                    LitIndex = literal,
-                                    ArgIndex = v.Index
+                                    LitIdx = literal,
+                                    VarIdx = v.VarIdx
                                 });
                             }
                             break;
 
                         case ArgumentBinding.Type.Rest:
-                            RestValueIdx = arg.Index;
+                            RestValueIdx = arg.VarIdx;
                             break;
                     }
                 }
@@ -179,9 +179,9 @@ namespace VARP.Scheme.Codegen
                     UpValues.Add(new Template.UpValInfo()
                     {
                         Name = arg.Identifier,
-                        ArgIndex = arg.Index,
-                        VarIndex = arg.Refrence.Index,
-                        EnvIndex = arg.EnvIndex
+                        VarIdx = arg.VarIdx,
+                        RefVarIndex = arg.RefVarIdx,
+                        RefEnvIdx = arg.EnvOffset
                     });
                 }
 
@@ -232,9 +232,9 @@ namespace VARP.Scheme.Codegen
             UpValues.Add(new Template.UpValInfo()
             {
                 Name = id,
-                EnvIndex = envIdx,
-                VarIndex = varIdx,
-                ArgIndex = localid
+                RefEnvIdx = envIdx,
+                RefVarIndex = varIdx,
+                VarIdx = localid
             });
             return localid;
         }
@@ -252,9 +252,9 @@ namespace VARP.Scheme.Codegen
             Debug.Assert(Values.Count < 0xFF);
             Template.LocalVarInfo info = new Template.LocalVarInfo();
             info.Name = name;
-            info.ArgIndex = (byte)Values.Count;
+            info.VarIdx = (byte)Values.Count;
             Values.Add(info);
-            return info.ArgIndex;
+            return info.VarIdx;
         }
 
         /// <summary>

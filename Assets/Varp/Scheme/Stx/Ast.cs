@@ -161,15 +161,43 @@ namespace VARP.Scheme.Stx
     // variable reference  e.g. x
     public sealed class AstReference : AST
     {
-        public int EnvIdx;                   // index of environment 
-        public int VarIdx;                   // index of variables
-        public AstReference(Syntax syntax, int envIdx, int varIdx) : base(syntax)
-        {
-            this.EnvIdx = envIdx;
-            this.VarIdx = varIdx;
+        /// <summary>
+        /// index of the argument (local var index)
+        /// </summary>
+        public byte ArgIdx;
+
+        /// <summary>
+        /// index of the referenced environment
+        /// 0 for local
+        /// -1 for global
+        /// </summary>
+        public short RefEnvIdx;
+
+        /// <summary>
+        /// Index of variable in the referenced environment
+        /// -1 for global
+        /// </summary>
+        public short RefVarIdx;
+
+        /// <summary>
+        /// Create new reference
+        /// </summary>
+        /// <param name="syntax">reference's syntax</param>
+        /// <param name="argIdx">index in local scope</param>
+        /// <param name="envIdx">index (relative offset) of environment</param>
+        /// <param name="varIdx">index of variable inside referenced environment</param>
+        public AstReference(Syntax syntax, int argIdx, int envIdx, int varIdx) : base(syntax)
+        { 
+            if (argIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
+            if (envIdx > 255) SchemeError.Error("ast-reference", "environment index should be less that 256", syntax);
+            if (varIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
+
+            this.ArgIdx = (byte)argIdx;
+            this.RefEnvIdx = (short)envIdx;
+            this.RefVarIdx = (short)varIdx;
         }
-        public bool IsGlobal { get { return VarIdx < 0; } }
-        public bool IsUpValue { get { return EnvIdx > 0; } }
+        public bool IsGlobal { get { return RefVarIdx < 0; } }
+        public bool IsUpValue { get { return RefEnvIdx > 0; } }
         public Symbol Identifier { get { return Expression.AsIdentifier(); } }
 
         #region ValueType Methods
@@ -180,21 +208,26 @@ namespace VARP.Scheme.Stx
     // variable assignment e.g. (set! x 99)
     public sealed class AstSet : AST
     {
-        private Syntax Keyword;              // set!                                     
         public Syntax Variable;              // x   
         public AST Value;                    // 99
-        public int EnvIdx;                   // index of environment 
-        public int VarIdx;                   // index of variables
-        public AstSet(Syntax syntax, Syntax keyword, Syntax variable, AST value, int envIdx, int varIdx) : base(syntax)
+        public int VarIdx;
+        public int RefEnvIdx;                // index of environment 
+        public int RefVarIdx;                // index of variables
+        public AstSet(Syntax syntax, Syntax variable, AST value, int varIdx, int refEnvIdx, int refVarIdx) : base(syntax)
         {
-            this.Keyword = keyword;
+            if (varIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
+            if (refEnvIdx > 255) SchemeError.Error("ast-reference", "environment index should be less that 256", syntax);
+            if (refVarIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
+
+            this.VarIdx = (byte)varIdx;
+            this.RefEnvIdx = (short)refEnvIdx;
+            this.RefVarIdx = (short)refVarIdx;
+
             this.Variable = variable;
             this.Value = value;
-            this.EnvIdx = envIdx;
-            this.VarIdx = varIdx;
         }
-        public bool IsGlobal { get { return VarIdx < 0; } }
-        public bool IsUpValue { get { return EnvIdx > 0; } }
+        public bool IsGlobal { get { return RefVarIdx < 0; } }
+        public bool IsUpValue { get { return RefEnvIdx > 0; } }
         public Symbol Identifier { get { return Variable.AsIdentifier(); } }
 
         #region ValueType Methods
@@ -206,16 +239,23 @@ namespace VARP.Scheme.Stx
     // same as set! but does not require previous declaration
     public sealed class AstDefine : AST
     {
-        private Syntax Keyword;              // set!                                     
         private Syntax Variable;             // x   
         private AST Value;                   // 99
-        private Binding Binding;      //
-        public AstDefine(Syntax syntax, Syntax keyword, Syntax variable, AST value, Binding binding) : base(syntax)
+        public int VarIdx;
+        public int RefEnvIdx;                // index of environment 
+        public int RefVarIdx;                // index of variables
+        public AstDefine(Syntax syntax, Syntax variable, AST value, int VarIdx, int refEnvIdx, int refVarIdx) : base(syntax)
         {
-            this.Keyword = keyword;
+            if (VarIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
+            if (refEnvIdx > 255) SchemeError.Error("ast-reference", "environment index should be less that 256", syntax);
+            if (refVarIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
+
+            this.VarIdx = (byte)VarIdx;
+            this.RefEnvIdx = (short)refEnvIdx;
+            this.RefVarIdx = (short)refVarIdx;
+
             this.Variable = variable;
             this.Value = value;
-            this.Binding = binding;
         }
  
         #region ValueType Methods

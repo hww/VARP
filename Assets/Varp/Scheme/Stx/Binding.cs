@@ -31,13 +31,13 @@ using System.Diagnostics;
 namespace VARP.Scheme.Stx
 {
     using Data;
-
+    using Exception;
 
     public class Binding : ValueClass
     {
         public Syntax Id;
-        public Environment Env;     //< the variable binded to environment
-        public byte Index;          //< variable index in the environment
+        public byte EnvIdx;           //< the variable binded to environment
+        public byte VarIdx;           //< variable index in the environment
 
         /// <summary>
         /// Create global binding
@@ -49,10 +49,12 @@ namespace VARP.Scheme.Stx
         {
             Debug.Assert(environment != null);
             Debug.Assert(variable != null);
-            this.Env = environment;
+            if (environment.Index > 255) SchemeError.Error("binding", "too many environments", variable);
+            this.EnvIdx = (byte)environment.Index;
             this.Id = variable;
-            this.Index = 0;
+            this.VarIdx = 0;
         }
+
 
         /// <summary>
         /// variable identifier
@@ -60,8 +62,8 @@ namespace VARP.Scheme.Stx
         public virtual Symbol Identifier { get { return Id.AsIdentifier(); } }
 
         public virtual bool IsPrimitive { get { return false; } }
-        public virtual bool IsGlobal { get { return Env == null; } }
-        public virtual bool IsLocal { get { return Env != null; } }
+        public virtual bool IsGlobal { get { return EnvIdx < 0; } }
+        public virtual bool IsLocal { get { return EnvIdx >= 0; } }
         public virtual bool IsUpvalue { get { return false; } }
 
         #region ValueType Methods
@@ -91,20 +93,26 @@ namespace VARP.Scheme.Stx
     }
     public sealed class UpBinding : Binding
     {
-        public Binding Refrence;
+        public byte RefEnvIdx;
+        public byte RefVarIdx;
         public UpBinding(Environment environment, Syntax identifier, Binding other) : base(environment, identifier)
         {
             Debug.Assert(other != null);
-            this.Refrence = other;
-        }
 
-        public byte EnvIndex {
-            get {
-                int diff = Env.Index - Refrence.Env.Index;
-                Debug.Assert(diff < 256);
-                return (byte)diff;
+            if (other is UpBinding)
+            {
+                UpBinding ub = other as UpBinding;
+                this.RefEnvIdx = ub.RefEnvIdx;
+                this.RefVarIdx = ub.RefVarIdx;
+            }
+            else
+            {
+                this.RefEnvIdx = other.EnvIdx;
+                this.RefVarIdx = other.VarIdx;
             }
         }
+
+        public byte EnvOffset { get { return (byte)(EnvIdx - RefEnvIdx); } }
         public override bool IsUpvalue { get { return true; } }
 
         #region ValueType Methods
@@ -123,6 +131,7 @@ namespace VARP.Scheme.Stx
             Key,            // (lambda (x y #!key z) ...)
             Rest,           // (lambda (x y #!rest z) ...)
             Body,           // (lambda (x y #!body z) ...)
+            Define,
             End             // after #!res value
         }
 
@@ -135,8 +144,6 @@ namespace VARP.Scheme.Stx
             this.Initializer = initializer;
             this.ArgType = type;
         }
-
-        public override bool IsUpvalue { get { return true; } }
 
         #region ValueType Methods
         public override bool AsBool() { return true; }

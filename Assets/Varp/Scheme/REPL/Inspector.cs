@@ -126,7 +126,7 @@ namespace VARP.Scheme.REPL
                 if (bind.IsGlobal)
                     return string.Format("{0} {1}", prefix, bind.Identifier.Name);
                 else
-                    return string.Format("[{0}] {1} {2}>", bind.Index, prefix, bind.Identifier.Name);
+                    return string.Format("[{0}] {1} {2}>", bind.VarIdx, prefix, bind.Identifier.Name);
         }
 
         static string InspectInternal(Stx.Environment env, InspectOptions options = InspectOptions.Default)

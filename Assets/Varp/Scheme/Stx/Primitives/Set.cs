@@ -46,9 +46,23 @@ namespace VARP.Scheme.Stx.Primitives
 
             Symbol var_id = var_stx.AsIdentifier();
             Binding binding = env.Lookup(var_id); // TODO! Maybe error when it is not defined
-            if (binding == null) env.DefineVariable(var_id);
-
-            return new AstSet(stx, set_kwd, var_stx, AstBuilder.Expand(val_stx, env), env.Index - binding.Env.Index, binding.Index);
+            AST value = AstBuilder.Expand(val_stx, env);
+            if (binding == null)
+            {
+                /// Global variable
+                return new AstSet(stx, var_stx, value, -1, -1, -1);
+            }
+            else if (binding.IsUpvalue)
+            {
+                /// Up-value variable
+                UpBinding ubind = binding as UpBinding;
+                return new AstSet(stx, var_stx, value, binding.VarIdx, ubind.RefEnvIdx, ubind.RefVarIdx);
+            }
+            else
+            {
+                /// Local variable
+                return new AstSet(stx, var_stx, value, binding.VarIdx, 0, 0);
+            }
         }
     }
 }

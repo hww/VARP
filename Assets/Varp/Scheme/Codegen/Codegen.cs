@@ -133,8 +133,8 @@ namespace VARP.Scheme.Codegen
             }
             else
             {
-                byte envIdx = (byte)ast.EnvIdx;
-                byte varIdx = (byte)ast.VarIdx;
+                byte envIdx = (byte)ast.RefEnvIdx;
+                byte varIdx = (byte)ast.RefVarIdx;
                 if (envIdx > 0)
                 {
                     // UpValue case
@@ -167,8 +167,8 @@ namespace VARP.Scheme.Codegen
             }
             else
             {
-                int envIdx = ast.EnvIdx;
-                int varIdx = ast.VarIdx;
+                int envIdx = ast.RefEnvIdx;
+                int varIdx = ast.RefVarIdx;
                 if (envIdx > 0)
                 {
                     // UpValue case
