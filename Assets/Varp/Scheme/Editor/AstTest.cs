@@ -63,7 +63,7 @@ namespace VARP.Scheme.Test
         "(lambda (x y) (+ x y) (- x y))","(lambda (x y) (+ x y) (- x y))",
         "(lambda (x y &optional (o 1) (o 2) &key (k 1) (k 2) &rest r))","(lambda (x y &optional (o 1) (o 2) &key (k 1) (k 2) &rest r))",
         // Let
-        "(let ((x 1) (y 2)) 3 4)","((lambda (x y) 3 4) 1 2)",
+        "(let ((x 1) (y 2)) 3 4)","(let ((x 1) (y 2)) 3 4)",
         // Conditions
         "(if 1 2)","(if 1 2)",
         "(if 1 2 3)","(if 1 2 3)",
@@ -77,7 +77,7 @@ namespace VARP.Scheme.Test
         // Primitives
         "(not 1)","(not 1)",
         "(display 1 2 2 3)","(display 1 2 2 3)",
-        "(and 1 2 2 3)","(and 1 (and 2 (and 2 3)))"
+        "(and 1 2 2 3)","(and 1 2 2 3)"
         };
 
         [Test]
