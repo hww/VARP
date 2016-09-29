@@ -70,6 +70,7 @@ namespace VARP.Scheme.Codegen
             template.RestValueIdx = RestValueIdx;
             template.Literals = Literals.ToArray();
             template.Code = Code.ToArray();
+            template.FrameSize = maxTempVar;
 
             Literals = null;
             UpValues = null;

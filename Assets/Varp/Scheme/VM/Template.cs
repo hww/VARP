@@ -66,6 +66,8 @@ namespace VARP.Scheme.VM
         internal int KeyValueIdx;               //< index of first element
         internal int UpValueIdx;                //< index of first element
         internal int RestValueIdx;              //< index of first element
+        internal int FrameSize;
+
         public Template()
         {
             this.OptValueIdx = -1;

@@ -35,20 +35,18 @@ namespace VARP.Scheme.VM
     using Exception;
     public sealed class VarpVM
     {
-        public object RunTemplate(Template template)
+        public Value RunTemplate(Template template)
         {
-            return RunClosure(new Frame(null, template));
+            return RunClosure(new Frame(null, template), template);
         }
 
         delegate ValueType RkDelegate(int i);
 
-        private object RunClosure(Frame frame, params ValueType[] args)
+        private Value RunClosure(Frame frame, Template template, params ValueType[] args)
         {
             Environment environment = frame.environment;
-            Template template = frame.template;
             Value[] literals = template.Literals;
             Value[] values = frame.Values;
-            Value[] upvalues = frame.Upvalues;
 
 #if PROFILER
             _profiler.EnterFunction(null, TEMPLATE);
@@ -87,7 +85,14 @@ namespace VARP.Scheme.VM
                             break;
 
                         case OpCode.GETUPVAL:
-                            ReadUpValue(frame, ref upvalues[op.B], out values[op.A]);
+                            {
+                                // R(A) := U[B]
+                                Value uv = values[op.B];
+                                int varNum = (int)uv.NumVal;
+                                Frame uframe = uv.RefVal as Frame;
+                                if (uframe == null) throw SchemeError.Error("vm", "can't read up value");
+                                values[op.A] = uframe.Values[varNum];
+                            }
                             break;
 
                         case OpCode.GETGLOBAL:
@@ -97,13 +102,13 @@ namespace VARP.Scheme.VM
                                     literals[c & ~Instruction.BitK] :
                                     values[c];
 
-                                Value upVal;
-                                ReadUpValue(frame, ref upvalues[op.B], out upVal);
-                                Binding bind = environment.LookupRecursively(upVal.AsSymbol());
-                                if (bind != null)
-                                    values[op.A].Set(bind.value);
-                                else
-                                    throw SchemeError.Error("vm-get-gloabal", "undefined variable", upVal.AsSymbol());
+                                //Value upVal;
+                                //ReadUpValue(frame, ref upvalues[op.B], out upVal);
+                                //Binding bind = environment.LookupRecursively(upVal.AsSymbol());
+                                //if (bind != null)
+                                //    values[op.A].Set(bind.value);
+                                //else
+                                //    throw SchemeError.Error("vm-get-gloabal", "undefined variable", upVal.AsSymbol());
                             }
                             break;
 
@@ -122,19 +127,26 @@ namespace VARP.Scheme.VM
                                     literals[c & ~Instruction.BitK] :
                                     values[c];
 
-                                Value upVal;
-                                ReadUpValue(frame, ref upvalues[op.A], out upVal);
-
-                                Binding bind = environment.LookupRecursively(upVal.AsSymbol());
-                                if (bind != null)
-                                    bind.value.Set(value);
-                                else
-                                    throw SchemeError.Error("vm-set-gloabal", "undefined variable", upVal.AsSymbol());
+                                //Value upVal;
+                                //ReadUpValue(frame, ref upvalues[op.A], out upVal);
+                                //
+                                //Binding bind = environment.LookupRecursively(upVal.AsSymbol());
+                                //if (bind != null)
+                                //    bind.value.Set(value);
+                                //else
+                                //    throw SchemeError.Error("vm-set-gloabal", "undefined variable", upVal.AsSymbol());
                             }
                             break;
 
                         case OpCode.SETUPVAL:
-                            WriteUpValue(frame, ref upvalues[op.B], ref values[op.A]);
+                            {
+                                // U[B] := R(A)
+                                Value uv = values[op.B];
+                                int varNum = (int)uv.NumVal;
+                                Frame uframe = uv.RefVal as Frame;
+                                if (uframe == null) throw SchemeError.Error("vm", "can't write up value");
+                                uframe.Values[varNum] = values[op.A];
+                            }
                             break;
 
                         case OpCode.SETTABLE:
@@ -362,14 +374,66 @@ namespace VARP.Scheme.VM
 
                                 var func = values[op.A];
                                 var closure = func.As<Frame>();
+                                var closureTemp = closure.template;
 
                                 int numArgs = op.B;
                                 int numRetVals = op.C;
 
-                                pc++; //return to the next instruction
+                                pc++; /// return to the next instruction
 
-                                closure.BeforeCall(numArgs, numRetVals);
+                                if (numArgs < closureTemp.OptValueIdx)
+                                    throw SchemeError.Error("vm", "not enough arguments");
 
+                                if (numArgs > 0)
+                                {
+                                    /// -------------------------------
+                                    /// required and optional arguments
+                                    /// -------------------------------
+                                    int optidx = closureTemp.OptValueIdx;
+                                    int keyidx = closureTemp.KeyValueIdx;
+                                    int cnt = numArgs < keyidx ? numArgs : keyidx;
+                                    int src = op.A + 1;
+                                    int dst = 0;
+                                    while (cnt > 0)
+                                    {
+                                        closure.Values[dst++] = values[src++];
+                                        cnt++;
+                                    }
+                                    /// now initialize optional values
+                                    while (dst < optidx)
+                                    {
+                                        var optv = closureTemp.OptVals[dst];
+                                        Template ovtinit = closureTemp.Literals[optv.LitIdx].As<Template>();
+                                        closure.Values[dst++] = RunClosure(frame, ovtinit); 
+                                    }
+
+
+                                    /// -------------------------------
+                                    /// key arguments
+                                    /// -------------------------------
+                                }
+
+                                /// -------------------------------
+                                /// upvalues 
+                                /// -------------------------------
+                                {
+                                    int dst = closure.template.UpValueIdx;
+                                    foreach (var v in closure.template.UpValues)
+                                    {
+                                        Frame curFrame = closure;             // get current frame
+                                        int curFrameIndex = v.RefEnvIdx;      // get referenced frame index
+                                        while (curFrameIndex > 0)
+                                        {
+                                            if (frame == null) throw SchemeError.Error("vm", "can't find environment");
+                                            curFrame = curFrame.parent;
+                                            curFrameIndex--;
+                                        }
+
+                                        closure.Values[dst++] = new Value() { RefVal = curFrame, NumVal = v.RefVarIndex };
+                                    }
+                                }
+
+                                values[frame.SP] = RunClosure(closure, closure.template);
                             }
                             break;
 
@@ -377,6 +441,7 @@ namespace VARP.Scheme.VM
                             break;
 
                         case OpCode.RETURN:
+                            Value res = values[frame.SP];
                             frame = frame.parent;
                             break;
 
@@ -465,7 +530,7 @@ namespace VARP.Scheme.VM
 #if PROFILER
             _profiler.EnterFunction(null, TEMPLATE);
 #endif
-            return null;
+            return Value.Void;
         }
 
         /// <summary>
@@ -519,71 +584,6 @@ namespace VARP.Scheme.VM
             }
 
             throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Read up-value
-        /// </summary>
-        /// <param name="frame">current frame</param>
-        /// <param name="upVal">up value</param>
-        /// <param name="ret">return value</param>
-        private void ReadUpValue(Frame frame, ref Value upVal, out Value ret)
-        {
-            if (upVal.RefVal is Frame)
-            {
-                int varNum = (int)upVal.NumVal;
-                ret = frame.Values[varNum];
-                return;
-            }
-            if (upVal.RefVal is UpvalueClass)
-            {
-                // Get frame number and value number
-                int number = (int)upVal.NumVal;
-                ushort vindex = (ushort)number;  
-                ushort vfridx = (ushort)(number >> 16);
-                // Find requested frame
-                while (vfridx>0)
-                { frame = frame.parent; vfridx--; }
-                // Update up-value reference
-                upVal.RefVal = frame;
-                upVal.NumVal = vindex;
-                // Read upvalue
-                ret = frame.Values[vindex];
-                return;
-            }
-            throw new SystemException();
-        }
-        /// <summary>
-        /// Write up-value
-        /// </summary>
-        /// <param name="frame">current frame</param>
-        /// <param name="upVal">upvalue</param>
-        /// <param name="value">value</param>
-        private void WriteUpValue(Frame frame, ref Value upVal, ref Value value)
-        {
-            if (upVal.RefVal is Frame)
-            {
-                int varNum = (int)upVal.NumVal;
-                (upVal.RefVal as Frame).Values[varNum] = value;
-                return;
-            }
-            if (upVal.RefVal is UpvalueClass)
-            {
-                // Get frame number and value number
-                int number = (int)upVal.NumVal;
-                ushort vindex = (ushort)number;
-                ushort vfridx = (ushort)(number >> 16);
-                // Find requested frame
-                while (vfridx > 0)
-                { frame = frame.parent; vfridx--; }
-                // Update up-value reference
-                upVal.RefVal = frame;
-                upVal.NumVal = vindex;
-                // Write up-value
-                (upVal.RefVal as Frame).Values[vindex] = value;
-                return;
-            }
-            throw new SystemException();
         }
 
         private void DoGetLen(ref Value val, out Value ret)

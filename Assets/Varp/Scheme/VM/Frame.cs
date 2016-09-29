@@ -35,47 +35,26 @@ namespace VARP.Scheme.VM
 
         public Frame parent;            //< pointer to parent frame
         public Template template;       //< pointer to template
-        public int PC;                  //< program counter
         public Value[] Values;          //< register set
-        public Value[] Upvalues;        //< up-variables
-        public int VarArgsIndex;        //< where starts variable arguments
-        public int VarArgsCount;        //< quantity of variable augments
+        public int PC;                  //< program counter
+        public int SP;                  //< stack pointer
 
         public Frame(Frame parent, Template template)
         {
             this.parent = parent;
             this.template = template;
+            this.Values = new Value[template.FrameSize];
             this.environment = parent == null ? Environment.Top : parent.environment;
-        }
-
-        public Frame(Frame parent, Template template, int values, int upvalues)
-        {
-            this.parent = parent;
-            this.template = template;
-            this.Values = new Value[values];
-            this.Upvalues = new Value[upvalues];
-            this.environment = parent==null ? Environment.Top : parent.environment;
+            this.SP = Values.Length;
         }
 
         /// <summary>
-        /// Return size of this frame
+        /// Return string of current location in the source code
         /// </summary>
-        public int ValuesCount
+        /// <returns></returns>
+        public string GetLocationString()
         {
-            get { return Values.Length; }
-        }
-
-        /// <summary>
-        /// Return size of this frame
-        /// </summary>
-        public int UpvaluesCount
-        {
-            get { return Upvalues.Length; }
-        }
-
-        public void BeforeCall(int numArgs, int numRetVals)
-        {
-
+            return string.Empty;
         }
     }
 }
