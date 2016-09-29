@@ -97,6 +97,7 @@ namespace VARP.Scheme.Codegen
             UpValues = new List<Template.UpValInfo>();
 
             OptValueIdx = KeyValueIdx = UpValueIdx = RestValueIdx = -1;
+
             TempIndex = 0;
         }
         /// <summary>
@@ -113,6 +114,8 @@ namespace VARP.Scheme.Codegen
             OptVals = new List<Template.KeyVarInfo>(args.Length);
             KeyVals = new List<Template.KeyVarInfo>(args.Length);
             UpValues = new List<Template.UpValInfo>(args.Length);
+
+            OptValueIdx = KeyValueIdx = UpValueIdx = RestValueIdx = -1;
 
             foreach (var v in args)
             {
@@ -132,15 +135,23 @@ namespace VARP.Scheme.Codegen
                     switch (arg.ArgType)
                     {
                         case ArgumentBinding.Type.Required:
-
                             break;
                         case ArgumentBinding.Type.Optionals:
                             {
+                                if (OptValueIdx < 0) OptValueIdx = v.VarIdx;
                                 // optional arguments are all the time pairs
                                 // of identifier and initializer
                                 Symbol identifier = arg.Identifier;
-                                Template code = GenerateCode(arg.Initializer);
-                                int literal = DefineLiteral(new Value(code));
+                                int literal = -1;
+                                if (arg.Initializer != null)
+                                {
+                                    Template code = GenerateCode(arg.Initializer);
+                                    literal = DefineLiteral(new Value(code));
+                                }
+                                else
+                                {
+                                    literal = DefineLiteral(Value.Void);
+                                }
                                 // setup optional variable item
                                 OptVals.Add(new Template.KeyVarInfo()
                                 {
@@ -152,11 +163,20 @@ namespace VARP.Scheme.Codegen
                             break;
                         case ArgumentBinding.Type.Key:
                             {
+                                if (KeyValueIdx < 0) KeyValueIdx = v.VarIdx;
                                 // optional arguments are all the time pairs
                                 // of identifier and initializer
                                 Symbol identifier = arg.Identifier;
-                                Template code = GenerateCode(arg.Initializer);
-                                int literal = DefineLiteral(new Value(code));
+                                int literal = -1;
+                                if (arg.Initializer != null)
+                                {
+                                    Template code = GenerateCode(arg.Initializer);
+                                    literal = DefineLiteral(new Value(code));
+                                }
+                                else
+                                {
+                                    literal = DefineLiteral(Value.Void);
+                                }
                                 // setup optional variable item
                                 KeyVals.Add(new Template.KeyVarInfo()
                                 {
@@ -174,6 +194,7 @@ namespace VARP.Scheme.Codegen
                 }
                 else if (v is UpBinding)
                 {
+                    if (UpValueIdx < 0) UpValueIdx = v.VarIdx;
                     UpBinding arg = v as UpBinding;
                     // setup optional variable item
                     UpValues.Add(new Template.UpValInfo()
@@ -187,19 +208,6 @@ namespace VARP.Scheme.Codegen
 
             }
             TempIndex = (ushort)Values.Count;
-        }
-
-        void GetIdentifierAndInitializer(Value value, out Symbol identifier, out Template code)
-        {
-            // optional arguments are all the time pairs
-            // of identifier and initializer
-            ValuePair pair = value.AsValuePair();
-            // get identifier
-            Syntax syn = pair.Item1.AsSyntax();
-            identifier = syn.AsIdentifier();
-            // get initializer
-            AST ast = pair.Item2.AsAST();
-            code = GenerateCode(ast);
         }
 
         #region Temporary Variables

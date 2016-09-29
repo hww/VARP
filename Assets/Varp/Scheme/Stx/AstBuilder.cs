@@ -94,6 +94,8 @@ namespace VARP.Scheme.Stx
             if (binding == null)
                 return new AstReference(syntax, 0, -1, -1);
             /// Check the case of up-value
+            if (binding.EnvIdx != env.Index)
+                binding = env.Define(new UpBinding(env, binding.Id, binding));
             if (binding.IsUpvalue)
             {
                 UpBinding ubind = binding as UpBinding;

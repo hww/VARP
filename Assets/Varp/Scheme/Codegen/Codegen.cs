@@ -35,6 +35,7 @@ namespace VARP.Scheme.Codegen
     using Data;
     using DataStructures;
     using Stx;
+    using Exception;
 
     public sealed partial class CodeGenerator
     {
@@ -63,7 +64,7 @@ namespace VARP.Scheme.Codegen
         private int Generate(AST ast)
         {
             if (ast is AstLiteral)
-                return GenerateListeral(ast as AstLiteral);
+                return GenerateLiteral(ast as AstLiteral);
 
             if (ast is AstReference)
                 return GenerateReference(ast as AstReference);
@@ -89,7 +90,14 @@ namespace VARP.Scheme.Codegen
             if (ast is AstSequence)
                 return GenerateSequence(ast as AstSequence);
 
-            throw new SystemException();
+            throw SchemeError.Error("codegen-generate", "unexpected ast", ast);
+        }
+
+        public int GenerateReturn(ushort argument, ushort quatntity)
+        {
+            // return R(A), ... ,R(A+B-2) (see note)
+            AddAB(OpCode.RETURN, argument, quatntity);
+            return argument;
         }
 
         /// <summary>
@@ -98,7 +106,7 @@ namespace VARP.Scheme.Codegen
         /// </summary>
         /// <param name="ast"></param>
         /// <returns></returns>
-        private int GenerateListeral(AstLiteral ast)
+        private int GenerateLiteral(AstLiteral ast)
         {
             Value value = ast.GetDatum();
             object refval = value.RefVal;
@@ -185,16 +193,23 @@ namespace VARP.Scheme.Codegen
 
         private int GenerateLambda(AstLambda ast)
         {
-            /// R(A) := closure(KPROTO[Bx], R(A), ... , R(A + n))
-            byte temp = (byte)TempIndex;
 
             // create empty lambda function.
             // there are no any arguments
             CodeGenerator lambda = new CodeGenerator(ast.ArgList);
 
+            /// R(A) := closure(KPROTO[Bx], R(A), ... , R(A + n))
+            byte temp = (byte)lambda.TempIndex;
+
             // now generate the code, and get target register
             foreach (var v in ast.BodyExpression)
-                lambda.Generate(v.AsAST());
+            {
+                int tgt = lambda.Generate(v.AsAST());
+                if (tgt != temp)
+                    lambda.AddAB(OpCode.MOVE, temp, (byte)tgt);
+
+            }
+            lambda.GenerateReturn(temp, 1);
 
             // now lets create template from dummy lambda
             Template template = lambda.GetTemplate();
@@ -269,7 +284,7 @@ namespace VARP.Scheme.Codegen
                 Generate(val.AsAST());
             }
             // now temp[] = [function, arg, arg, arg, ...]
-            AddAB(OpCode.CALL, temp, (byte)(ast.list.Count - 1));
+            AddABC(OpCode.CALL, temp, (byte)(ast.list.Count - 1), 1);
             TempIndex = temp;
             return 1;
         }
@@ -282,13 +297,5 @@ namespace VARP.Scheme.Codegen
                 Generate(val.AsAST());
             return temp;
         }
-
-        
-
-
-
-
     }
-
-
 }

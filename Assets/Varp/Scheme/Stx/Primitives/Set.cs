@@ -52,7 +52,11 @@ namespace VARP.Scheme.Stx.Primitives
                 /// Global variable
                 return new AstSet(stx, var_stx, value, -1, -1, -1);
             }
-            else if (binding.IsUpvalue)
+
+            if (binding.EnvIdx != env.Index)
+                binding = env.Define(new UpBinding(env, binding.Id, binding));
+
+            if (binding.IsUpvalue)
             {
                 /// Up-value variable
                 UpBinding ubind = binding as UpBinding;

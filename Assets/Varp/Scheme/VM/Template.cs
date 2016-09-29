@@ -92,23 +92,21 @@ namespace VARP.Scheme.VM
 
         public string Inspect(int ident)
         {
-            string sident = new string(' ', ident * 2);
+            string sident = new string(' ', ident * 4);
 
             StringBuilder sb = new StringBuilder();
             sb.Append(sident);
             sb.AppendLine("Template");
             /// arguments ///
             sb.Append(sident);
-            sb.Append("  arguments:");
+            sb.Append("|  arguments:");
             foreach (var v in Values)
             {
                 sb.Append(" ");
                 sb.Append(v.Name.ToString());
             }
-            sb.AppendLine();
             /// &optionals ///
-            sb.Append(sident);
-            sb.Append("  optionals:");
+            if (OptVals.Length > 0) sb.Append(" &optional");
             foreach (var v in OptVals)
             {
                 sb.Append(" ");
@@ -116,11 +114,9 @@ namespace VARP.Scheme.VM
                 sb.Append(":");
                 sb.Append(v.LitIdx.ToString());
             }
-            sb.AppendLine();
             /// &keys ///
-            sb.Append(sident);
-            sb.Append("  key:");
-            foreach (var v in OptVals)
+            if (KeyVals.Length > 0) sb.Append(" &key");
+            foreach (var v in KeyVals)
             {
                 sb.Append(" ");
                 sb.Append(v.Name.ToString());
@@ -130,47 +126,59 @@ namespace VARP.Scheme.VM
             /// &rest ///
             if (RestValueIdx >= 0)
             {
-                sb.AppendLine();
-                sb.Append(sident);
-                sb.Append("  rest: ");
+                sb.Append(" &rest: ");
                 sb.Append(Values[RestValueIdx].Name.ToString());
+            }
+            sb.AppendLine();
+            /// &upvals ///
+            sb.Append(sident);
+            sb.Append("|  upvalues:");
+            foreach (var v in UpValues)
+            {
+                sb.Append(" ");
+                sb.Append(v.Name.ToString());
+                sb.Append(":");
+                sb.Append(v.RefEnvIdx);
+                sb.Append(":");
+                sb.Append(v.RefVarIndex);
             }
             sb.AppendLine();
             /// code ///
             sb.Append(sident);
-            sb.AppendLine("  code:");
+            sb.AppendLine("|  code:");
             int pc = 0;
             foreach (var v in Code)
             {
                 sb.Append(sident);
-                sb.Append(string.Format("  [{0}] ", pc));
+                sb.Append(string.Format("|  [{0}] ", pc));
                 sb.Append(Code[pc++].ToString());
                 sb.AppendLine();
             }
 
-
-            sb.Append(sident);
-            sb.Append("  literals:");
-            sb.AppendLine();
-            string lident = new string(' ', (ident + 1) * 2);
-            int lidx = 0;
-            foreach (var v in Literals)
+            if (Literals.Length > 0)
             {
-                sb.Append(lident);
-                if (v.Is<Template>())
+                sb.Append(sident);
+                sb.Append("|  literals:");
+                sb.AppendLine();
+                string lident = new string(' ', (ident + 1) * 4);
+                int lidx = 0;
+                foreach (var v in Literals)
                 {
-                    sb.AppendLine(string.Format("  [{0}] -->", lidx++));
-                    sb.Append(v.As<Template>().Inspect(ident + 2));
-                    sb.AppendLine();
-                }
-                else
-                {
-                    sb.Append(string.Format("  [{0}] ", lidx++));
-                    sb.Append(v.ToString());
-                    sb.AppendLine();
+                    sb.Append(lident);
+                    if (v.Is<Template>())
+                    {
+                        sb.AppendLine(string.Format("  [{0}] -->", lidx++));
+                        sb.Append(v.As<Template>().Inspect(ident + 2));
+       
+                    }
+                    else
+                    {
+                        sb.Append(string.Format("  [{0}] ", lidx++));
+                        sb.Append(v.ToString());
+                        sb.AppendLine();
+                    }
                 }
             }
-
             return sb.ToString();
         }
 

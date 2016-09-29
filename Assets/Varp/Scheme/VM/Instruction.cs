@@ -336,23 +336,24 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.CALL:
-                    if (C == 0)
-                        ret.AppendFormat(": R{0}... =", A);
-                    else if (C == 2)
-                        ret.AppendFormat(": R{0} =", A);
-                    else if (C > 2)
-                        ret.AppendFormat(": R{0}..R{1} =", A, A + C - 2);
-
-                    ret.AppendFormat(" R{0}", A);
-
-                    if (B == 0)
-                        ret.AppendFormat("( R{0}... )", A + 1);
-                    else if (B == 1)
-                        ret.Append("()");
-                    else if (B == 2)
-                        ret.AppendFormat("( R{0} )", A + 1);
-                    else
-                        ret.AppendFormat("( R{0}..R{1} )", A + 1, A + 1 + B - 2);
+                    {
+                        /// result
+                        if (C == 0)
+                            ret.AppendFormat(":");
+                        else if (C == 1)
+                            ret.AppendFormat(": R{0} =", A);
+                        else
+                            ret.AppendFormat(": R{0}..R{1} =", A, A + C - 1);
+                        /// function
+                        ret.AppendFormat(" R{0}", A);
+                        /// arguments
+                        if (B == 0)
+                            ret.AppendFormat("()");
+                        else if (B == 1)
+                            ret.AppendFormat("(R{0})", A);
+                        else
+                            ret.AppendFormat("(R{0}..R{1})", A + 1, A + 1 + B - 1);
+                    }
                     break;
 
 
@@ -370,14 +371,10 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.RETURN:
-                    if (B == 0)
-                        ret.AppendFormat(": return R{0}...", A);
-                    else if (B == 1)
-                        ret.Append(": return");
-                    else if (B == 2)
+                    if (B == 1)
                         ret.AppendFormat(": return R{0}", A);
                     else
-                        ret.AppendFormat(": return R{0}..R{1}", A, A + B - 1);
+                        ret.AppendFormat(": return R{0}..R{1}", A, A + B);
                     break;
 
                 case OpCode.FORLOOP:
