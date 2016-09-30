@@ -167,7 +167,7 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        public static Instruction MakeA(OpCode code, ushort a)
+        public static Instruction MakeA(OpCode code, short a)
         {
             Instruction inst = new Instruction();
             inst.OpCode = code;
@@ -180,7 +180,7 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        public static Instruction MakeAB(OpCode code, ushort a, ushort b)
+        public static Instruction MakeAB(OpCode code, short a, short b)
         {
             Instruction inst = new Instruction();
             inst.OpCode = code;
@@ -194,7 +194,7 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        public static Instruction MakeABC(OpCode code, ushort a, ushort b, ushort c)
+        public static Instruction MakeABC(OpCode code, short a, short b, short c)
         {
             Instruction inst = new Instruction();
             inst.OpCode = code;
@@ -208,7 +208,7 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        public static Instruction MakeABX(OpCode code, ushort a, int bx)
+        public static Instruction MakeABX(OpCode code, short a, int bx)
         {
             Instruction inst = new Instruction();
             inst.OpCode = code;
@@ -222,7 +222,7 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        public static Instruction MakeASBX(OpCode code, ushort a, int sbx)
+        public static Instruction MakeASBX(OpCode code, short a, int sbx)
         {
             Instruction inst = new Instruction();
             inst.OpCode = code;
@@ -350,7 +350,7 @@ namespace VARP.Scheme.VM
                         if (B == 0)
                             ret.AppendFormat("()");
                         else if (B == 1)
-                            ret.AppendFormat("(R{0})", A);
+                            ret.AppendFormat("(R{0})", A + 1);
                         else
                             ret.AppendFormat("(R{0}..R{1})", A + 1, A + 1 + B - 1);
                     }

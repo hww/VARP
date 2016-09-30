@@ -66,7 +66,7 @@ namespace VARP.Scheme.VM
                             break;
 
                         case OpCode.LOADK:
-                            values[op.A] = literals[op.B];
+                            values[op.A] = literals[op.Bx];
                             break;
 
                         case OpCode.LOADBOOL:
@@ -381,7 +381,7 @@ namespace VARP.Scheme.VM
 
                                 pc++; /// return to the next instruction
 
-                                if (numArgs < closureTemp.OptValueIdx)
+                                if (numArgs < closureTemp.ReqArgsNumber)
                                     throw SchemeError.Error("vm", "not enough arguments");
 
                                 if (numArgs > 0)
@@ -389,35 +389,39 @@ namespace VARP.Scheme.VM
                                     /// -------------------------------
                                     /// required and optional arguments
                                     /// -------------------------------
-                                    int optidx = closureTemp.OptValueIdx;
-                                    int keyidx = closureTemp.KeyValueIdx;
-                                    int cnt = numArgs < keyidx ? numArgs : keyidx;
+                                    int reqnum = closureTemp.ReqArgsNumber;
+                                    int optnum = closureTemp.OptArgsNumber;
+                                    int keynum = closureTemp.KeyArgsNumber;
                                     int src = op.A + 1;
                                     int dst = 0;
-                                    while (cnt > 0)
-                                    {
+
+                                    while (reqnum-- > 0)
                                         closure.Values[dst++] = values[src++];
-                                        cnt++;
-                                    }
+
                                     /// now initialize optional values
-                                    while (dst < optidx)
+                                    while (optnum-- > 0)
                                     {
                                         var optv = closureTemp.OptVals[dst];
                                         Template ovtinit = closureTemp.Literals[optv.LitIdx].As<Template>();
                                         closure.Values[dst++] = RunClosure(frame, ovtinit); 
                                     }
 
-
                                     /// -------------------------------
                                     /// key arguments
                                     /// -------------------------------
+
+                                    dst += keynum;
+
+                                    /// -------------------------------
+                                    /// rest arguments
+                                    /// -------------------------------
+
                                 }
 
                                 /// -------------------------------
-                                /// upvalues 
+                                /// up-values 
                                 /// -------------------------------
                                 {
-                                    int dst = closure.template.UpValueIdx;
                                     foreach (var v in closure.template.UpValues)
                                     {
                                         Frame curFrame = closure;             // get current frame
@@ -429,7 +433,7 @@ namespace VARP.Scheme.VM
                                             curFrameIndex--;
                                         }
 
-                                        closure.Values[dst++] = new Value() { RefVal = curFrame, NumVal = v.RefVarIndex };
+                                        closure.Values[v.VarIdx] = new Value() { RefVal = curFrame, NumVal = v.RefVarIndex };
                                     }
                                 }
 
@@ -441,8 +445,10 @@ namespace VARP.Scheme.VM
                             break;
 
                         case OpCode.RETURN:
-                            Value res = values[frame.SP];
+                            // return R(A)
+                            Value res = values[op.A];
                             frame = frame.parent;
+                            return res;
                             break;
 
                         case OpCode.FORLOOP:
@@ -530,7 +536,7 @@ namespace VARP.Scheme.VM
 #if PROFILER
             _profiler.EnterFunction(null, TEMPLATE);
 #endif
-            return Value.Void;
+            return values[frame.SP];
         }
 
         /// <summary>

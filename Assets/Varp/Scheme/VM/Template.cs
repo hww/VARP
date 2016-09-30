@@ -62,28 +62,34 @@ namespace VARP.Scheme.VM
         internal UpValInfo[] UpValues;          //< up-values info
         internal KeyVarInfo[] KeyVals;          //< local vars info
         internal KeyVarInfo[] OptVals;          //< local vars info
-        internal int OptValueIdx;               //< index of first element
-        internal int KeyValueIdx;               //< index of first element
-        internal int UpValueIdx;                //< index of first element
+        internal int ReqArgsNumber;             //< quantity of arguments
+        internal int OptArgsNumber;             //< quantity of arguments
+        internal int KeyArgsNumber;             //< quantity of arguments
+        internal int UpValsNumber;              //< quantity of arguments
         internal int RestValueIdx;              //< index of first element
-        internal int FrameSize;
+        internal int SP;                        //< stack pointer position
+        internal int FrameSize;                 //< full frame size
 
         public Template()
         {
-            this.OptValueIdx = -1;
-            this.KeyValueIdx = -1;
-            this.UpValueIdx = -1;
+            this.ReqArgsNumber = 0;
+            this.OptArgsNumber = 0;
+            this.KeyArgsNumber = 0;
+            this.UpValsNumber = 0;
             this.RestValueIdx = -1;
+            this.SP = -1;
         }
 
         public Template(Value[] literals, Instruction[] code)
         {
             this.Literals = literals;
             this.Code = code;
-            this.OptValueIdx = -1;
-            this.KeyValueIdx = -1;
-            this.UpValueIdx = -1;
+            this.ReqArgsNumber = 0;
+            this.OptArgsNumber = 0;
+            this.KeyArgsNumber = 0;
+            this.UpValsNumber = 0;
             this.RestValueIdx = -1;
+            this.SP = -1;
         }
 
 
@@ -98,8 +104,10 @@ namespace VARP.Scheme.VM
 
             StringBuilder sb = new StringBuilder();
             sb.Append(sident);
-            sb.AppendLine("Template");
+            sb.AppendFormat("Template: vals: {0} frame: {1}\n", Values.Length, FrameSize);
+            /////////////////
             /// arguments ///
+            /////////////////
             sb.Append(sident);
             sb.Append("|  arguments:");
             foreach (var v in Values)
@@ -107,7 +115,9 @@ namespace VARP.Scheme.VM
                 sb.Append(" ");
                 sb.Append(v.Name.ToString());
             }
+            //////////////////
             /// &optionals ///
+            //////////////////
             if (OptVals.Length > 0) sb.Append(" &optional");
             foreach (var v in OptVals)
             {
@@ -116,7 +126,9 @@ namespace VARP.Scheme.VM
                 sb.Append(":");
                 sb.Append(v.LitIdx.ToString());
             }
+            /////////////
             /// &keys ///
+            /////////////
             if (KeyVals.Length > 0) sb.Append(" &key");
             foreach (var v in KeyVals)
             {
@@ -125,14 +137,18 @@ namespace VARP.Scheme.VM
                 sb.Append(":");
                 sb.Append(v.LitIdx.ToString());
             }
+            /////////////
             /// &rest ///
+            /////////////
             if (RestValueIdx >= 0)
             {
                 sb.Append(" &rest: ");
                 sb.Append(Values[RestValueIdx].Name.ToString());
             }
             sb.AppendLine();
+            ///////////////
             /// &upvals ///
+            ///////////////
             sb.Append(sident);
             sb.Append("|  upvalues:");
             foreach (var v in UpValues)
@@ -145,7 +161,17 @@ namespace VARP.Scheme.VM
                 sb.Append(v.RefVarIndex);
             }
             sb.AppendLine();
+            ///////////
+            /// &sp ///
+            ///////////
+            sb.Append(sident);
+            sb.Append("|  temp:");
+            for (int i = SP; i < FrameSize; i++)
+                sb.AppendFormat(" T{0}", i);
+            sb.AppendLine();
+            ////////////
             /// code ///
+            ////////////
             sb.Append(sident);
             sb.AppendLine("|  code:");
             int pc = 0;

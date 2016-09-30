@@ -45,7 +45,7 @@ namespace VARP.Scheme.VM
             this.template = template;
             this.Values = new Value[template.FrameSize];
             this.environment = parent == null ? Environment.Top : parent.environment;
-            this.SP = Values.Length;
+            this.SP = template.SP;
         }
 
         /// <summary>

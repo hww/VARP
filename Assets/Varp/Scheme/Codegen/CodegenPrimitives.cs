@@ -53,7 +53,7 @@ namespace VARP.Scheme.Codegen
         Symbol symLEN = Symbol.Intern("length");
         Symbol symCONCAT = Symbol.Intern("concat");
 
-        private int GeneratePrimitive(AstPrimitive ast)
+        private short GeneratePrimitive(AstPrimitive ast)
         {
             Symbol sym = ast.Identifier.AsIdentifier();
             if (sym == symADD)
@@ -88,9 +88,9 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal int GenerateArith1(AstPrimitive ast, OpCode opcode)
+        internal short GenerateArith1(AstPrimitive ast, OpCode opcode)
         {
-            ushort temp = TempIndex;
+            short temp = SP;
 
             LinkedList<Value> args = ast.Arguments;
             foreach (var arg in args)
@@ -107,9 +107,9 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal int GenerateArith2(AstPrimitive ast, OpCode opcode)
+        internal short GenerateArith2(AstPrimitive ast, OpCode opcode)
         {
-            ushort temp = TempIndex;
+            short temp = SP;
 
             LinkedList<Value> args = ast.Arguments;
             int arg0 = Generate(args[0].AsAST());
@@ -125,17 +125,17 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal int GenerateArithX(AstPrimitive ast, OpCode opcode)
+        internal short GenerateArithX(AstPrimitive ast, OpCode opcode)
         {
             // R(A) := R(B) .. ... .. R(C)
 
-            ushort temp = TempIndex;
+            short temp = SP;
 
             LinkedList<Value> args = ast.Arguments;
             foreach (var arg in args)
                 Generate(arg.AsAST());
 
-            AddABC(OpCode.CONCAT, temp, temp, (ushort)(temp + args.Count));
+            AddABC(OpCode.CONCAT, temp, temp, (short)(temp + args.Count));
             return temp;
         }
 
@@ -148,10 +148,10 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal int GenerateAndOr(AstPrimitive ast, OpCode opcode, bool expects)
+        internal short GenerateAndOr(AstPrimitive ast, OpCode opcode, bool expects)
         {
-            ushort temp = TempIndex;
-            ushort exp = expects ? (ushort)1 : (ushort)0;
+            short temp = SP;
+            short exp = expects ? (short)1 : (short)0;
             LinkedList<Value> args = ast.Arguments;
             int[] jumps = new int[args.Count];
             int i = 0;

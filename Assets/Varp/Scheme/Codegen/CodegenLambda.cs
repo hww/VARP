@@ -48,11 +48,11 @@ namespace VARP.Scheme.Codegen
         private List<Template.LocalVarInfo> Values;
         private List<Template.KeyVarInfo> OptVals;
         private List<Template.KeyVarInfo> KeyVals;
-
-        private int OptValueIdx;
-        private int KeyValueIdx;
-        private int UpValueIdx;
-        private int RestValueIdx;
+        private short ReqArgsNumber;
+        private short OptArgsNumber;
+        private short KeyArgsNumber;
+        private short UpValueIdx;
+        private short RestValueIdx;
 
         private List<Instruction> Code;
 
@@ -64,13 +64,14 @@ namespace VARP.Scheme.Codegen
             template.UpValues = UpValues.ToArray();
             template.OptVals = OptVals.ToArray();
             template.KeyVals = KeyVals.ToArray();
-            template.OptValueIdx = OptValueIdx;
-            template.KeyValueIdx = KeyValueIdx;
-            template.UpValueIdx = UpValueIdx;
+            template.ReqArgsNumber = ReqArgsNumber;
+            template.OptArgsNumber = KeyArgsNumber;
+            template.UpValsNumber = UpValueIdx;
             template.RestValueIdx = RestValueIdx;
             template.Literals = Literals.ToArray();
             template.Code = Code.ToArray();
-            template.FrameSize = maxTempVar;
+            template.FrameSize = TempValueMax + 1;
+            template.SP = TempValueMin;
 
             Literals = null;
             UpValues = null;
@@ -97,9 +98,9 @@ namespace VARP.Scheme.Codegen
             KeyVals = new List<Template.KeyVarInfo>();
             UpValues = new List<Template.UpValInfo>();
 
-            OptValueIdx = KeyValueIdx = UpValueIdx = RestValueIdx = -1;
+            OptArgsNumber = KeyArgsNumber = UpValueIdx = RestValueIdx = -1;
 
-            TempIndex = 0;
+            SP = 0;
         }
         /// <summary>
         /// Defined lambda function
@@ -116,7 +117,8 @@ namespace VARP.Scheme.Codegen
             KeyVals = new List<Template.KeyVarInfo>(args.Length);
             UpValues = new List<Template.UpValInfo>(args.Length);
 
-            OptValueIdx = KeyValueIdx = UpValueIdx = RestValueIdx = -1;
+            ReqArgsNumber = OptArgsNumber = KeyArgsNumber = 0;
+            UpValueIdx = RestValueIdx = -1;
 
             foreach (var v in args)
             {
@@ -136,10 +138,11 @@ namespace VARP.Scheme.Codegen
                     switch (arg.ArgType)
                     {
                         case ArgumentBinding.Type.Required:
+                            ReqArgsNumber++;
                             break;
                         case ArgumentBinding.Type.Optionals:
                             {
-                                if (OptValueIdx < 0) OptValueIdx = v.VarIdx;
+                                OptArgsNumber++;
                                 // optional arguments are all the time pairs
                                 // of identifier and initializer
                                 Symbol identifier = arg.Identifier;
@@ -164,7 +167,7 @@ namespace VARP.Scheme.Codegen
                             break;
                         case ArgumentBinding.Type.Key:
                             {
-                                if (KeyValueIdx < 0) KeyValueIdx = v.VarIdx;
+                                KeyArgsNumber++;
                                 // optional arguments are all the time pairs
                                 // of identifier and initializer
                                 Symbol identifier = arg.Identifier;
@@ -208,19 +211,21 @@ namespace VARP.Scheme.Codegen
                 }
 
             }
-            TempIndex = (ushort)Values.Count;
+            SP = TempValueMin = (short)Values.Count;
         }
 
         #region Temporary Variables
 
-        private ushort maxTempVar;
-        private ushort curTempVar;
-        public ushort TempIndex
+        private short TempValueMin;
+        private short TempValueMax;
+        private short sp;
+        public short SP
         {
-            get { return curTempVar; }
+            get { return sp; }
             set
             {
-                maxTempVar = System.Math.Max(curTempVar = value, maxTempVar);
+                sp = value;
+                TempValueMax = (short)System.Math.Max(value, TempValueMax);
             }
         }
 
@@ -327,7 +332,7 @@ namespace VARP.Scheme.Codegen
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        private int AddA(OpCode opcode, ushort a)
+        private int AddA(OpCode opcode, short a)
         {
             Code.Add(Instruction.MakeA(opcode, a));
             return PC - 1;
@@ -339,7 +344,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="code"></param>
         /// <param name="a"></param>
         /// <param name="b"></param>
-        private int AddAB(OpCode opcode, ushort a, ushort b)
+        private int AddAB(OpCode opcode, short a, short b)
         {
             Code.Add(Instruction.MakeAB(opcode, a, b));
             return PC - 1;
@@ -352,7 +357,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <param name="c"></param>
-        private int AddABC(OpCode opcode, ushort a, ushort b, ushort c)
+        private int AddABC(OpCode opcode, short a, short b, short c)
         {
             Code.Add(Instruction.MakeABC(opcode, a, b, c));
             return PC - 1;
@@ -363,7 +368,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="code"></param>
         /// <param name="a"></param>
         /// <param name="bx"></param>
-        private int AddABX(OpCode opcode, ushort a, int bx)
+        private int AddABX(OpCode opcode, short a, int bx)
         {
             Code.Add(Instruction.MakeABX(opcode, a, bx));
             return PC - 1;
@@ -375,7 +380,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="code"></param>
         /// <param name="a"></param>
         /// <param name="sbx"></param>
-        private int AddASBX(OpCode opcode, ushort a, int sbx)
+        private int AddASBX(OpCode opcode, short a, int sbx)
         {
             Code.Add(Instruction.MakeASBX(opcode, a, sbx));
             return PC - 1;

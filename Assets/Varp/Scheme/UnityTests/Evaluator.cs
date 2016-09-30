@@ -61,72 +61,65 @@ public class Evaluator : MonoBehaviour
 
     void OnValidate()
     {
-        System.Text.StringBuilder sb;
+        System.Text.StringBuilder sbsyntax = new System.Text.StringBuilder();
+        System.Text.StringBuilder sbast = new System.Text.StringBuilder();
+        System.Text.StringBuilder sbcode = new System.Text.StringBuilder();
+        System.Text.StringBuilder sbeval = new System.Text.StringBuilder();
+
         try
         {
             // ------------------------------------------------------------------
-            // Just tokenized it
-            // ------------------------------------------------------------------
-            sb = new System.Text.StringBuilder();
-            lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
-            Token token = lexer.ReadToken();
-            while (token != null)
-            {
-                sb.Append(Inspector.Inspect(token) + " ");
-                token = lexer.ReadToken();
-            }
-
-
-            // ------------------------------------------------------------------
-            // Parse scheme
-            // ------------------------------------------------------------------
-            lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
-            sb = new System.Text.StringBuilder();
-            do
-            {
-                ValueClass result = Parser.Parse(lexer);
-                if (result == null) break;
-                sb.AppendLine(result.Inspect());
-            } while (lexer.LastToken != null);
-            syntaxString = sb.ToString();
-
-            // ------------------------------------------------------------------
             // Parse scheme
             // ------------------------------------------------------------------
 
             lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
 
-            sb = new System.Text.StringBuilder();
-            System.Text.StringBuilder sbcode = new System.Text.StringBuilder();
             do
             {
-                Syntax result = Parser.Parse(lexer);
-                if (result == null) break;
-                AST ast = AstBuilder.Expand(result);
-                sb.AppendLine(ast.Inspect());
+                Syntax syntax = Parser.Parse(lexer);
+                if (syntax == null) break;
+                sbsyntax.AppendLine(Inspector.Inspect(syntax));
+
+                AST ast = AstBuilder.Expand(syntax);
+                sbast.AppendLine(ast.Inspect());
+
                 Template temp = CodeGenerator.GenerateCode(ast);
+                sbcode.AppendLine(temp.Inspect());
+
                 VarpVM vm = new VarpVM();
                 Value vmres = vm.RunTemplate(temp);
-                evalString = Inspector.Inspect(vmres);
-                sbcode.AppendLine(temp.Inspect());
+                sbeval.Append(Inspector.Inspect(vmres));
+
             } while (lexer.LastToken != null);
-            astString = sb.ToString();
+
+            syntaxString = sbsyntax.ToString();
+            astString = sbast.ToString();
             codeString = sbcode.ToString();
-
-
-
-
-
-
+            evalString = sbeval.ToString();
             envString = AstBuilder.environment.Inspect();
 
         }
         catch (SchemeError ex)
         {
-            astString = ex.Message;
+            sbeval.Append(ex.Message);
+
+            syntaxString = sbsyntax.ToString();
+            astString = sbast.ToString();
+            codeString = sbcode.ToString();
+            evalString = sbeval.ToString();
+            envString = AstBuilder.environment.Inspect();
+        }
+        catch (System.Exception ex)
+        {
+            syntaxString = sbsyntax.ToString();
+            astString = sbast.ToString();
+            codeString = sbcode.ToString();
+            evalString = sbeval.ToString();
+            envString = AstBuilder.environment.Inspect();
+
             throw ex;
         }
+
+
     }
-
-
 }

@@ -206,7 +206,15 @@ namespace VARP.Scheme.Data
         {
             get
             {
-                return string.Format("#<Value Ref={0} Num={1}>", RefVal==null ? "null" : RefVal, NumVal);
+                try
+                {
+                    return string.Format("#<Value Ref={0} Num={1}>", RefVal == null ? "null" : RefVal, NumVal);
+                }
+                catch (System.Exception ex)
+                {
+                    return string.Format("#<Value Ref={0} Num={1} Err={2}>", RefVal == null ? "null" : RefVal.GetType().ToString(), NumVal, ex.Message);
+                }
+
             }
         }
         #endregion
