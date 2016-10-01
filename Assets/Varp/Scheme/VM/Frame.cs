@@ -47,6 +47,14 @@ namespace VARP.Scheme.VM
             this.environment = parent == null ? Environment.Top : parent.environment;
             this.SP = template.SP;
         }
+        public Frame(Frame parent, Template template, Environment environment)
+        {
+            this.parent = parent;
+            this.template = template;
+            this.Values = new Value[template.FrameSize];
+            this.environment = environment;
+            this.SP = template.SP;
+        }
 
         /// <summary>
         /// Return string of current location in the source code

@@ -94,8 +94,8 @@ namespace VARP.Scheme.REPL
                 return InspectInternal(x as AST, options);
             if (x is Binding)
                 return InspectInternal(x as Binding, options);
-            if (x is Stx.Environment)
-                return InspectInternal(x as Stx.Environment, options);
+            if (x is Stx.AstEnvironment)
+                return InspectInternal(x as Stx.AstEnvironment, options);
             // all another just convert to string
             return x.ToString();
         }
@@ -129,7 +129,7 @@ namespace VARP.Scheme.REPL
                     return string.Format("[{0}] {1} {2}>", bind.VarIdx, prefix, bind.Identifier.Name);
         }
 
-        static string InspectInternal(Stx.Environment env, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(Stx.AstEnvironment env, InspectOptions options = InspectOptions.Default)
         {
             int tabs = env.GetEnvironmentIndex();
             string tabstr = new string(' ', tabs * 4);

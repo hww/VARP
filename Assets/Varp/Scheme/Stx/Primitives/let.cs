@@ -34,7 +34,7 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class PrimitiveLet : BasePrimitive
     {
         // (let () ...)
-        public static AST Expand(Syntax stx, Environment env)
+        public static AST Expand(Syntax stx, AstEnvironment env)
         {
             LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
@@ -45,7 +45,7 @@ namespace VARP.Scheme.Stx.Primitives
 
             if (!arguments.IsExpression) throw SchemeError.SyntaxError("let", "bad syntax (missing name or binding pairs)", stx);
 
-            Environment localEnv = ArgumentsParser.ParseLet(stx, arguments.AsLinkedList<Value>(), env);
+            AstEnvironment localEnv = ArgumentsParser.ParseLet(stx, arguments.AsLinkedList<Value>(), env);
 
             AST lambda = new AstLambda(stx, keyword, localEnv, AstBuilder.ExpandListElements(list, 2, localEnv));
 

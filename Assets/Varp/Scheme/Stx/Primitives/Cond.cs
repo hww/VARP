@@ -35,7 +35,7 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class PrimitiveCond : BasePrimitive
     {
         // (cond () ...)
-        public static AST Expand(Syntax stx, Environment env)
+        public static AST Expand(Syntax stx, AstEnvironment env)
         {
             LinkedList<Value> list = stx.AsLinkedList<Value>();    //< list of syntax objects
             int argc = GetArgsCount(list);

@@ -44,7 +44,7 @@ namespace VARP.Scheme.Stx
         /// <summary>
         /// Build argument pair from identifier and initializer only (lambda (:optional (x 1) (y 2) (z 3)) ...)
         /// </summary>
-        static void ParseArg(string name, Syntax stx, LinkedList<Value> list, Environment env, out Syntax id, out AST ast)
+        static void ParseArg(string name, Syntax stx, LinkedList<Value> list, AstEnvironment env, out Syntax id, out AST ast)
         {
             Debug.Assert(stx != null);
             Debug.Assert(list != null);
@@ -67,7 +67,7 @@ namespace VARP.Scheme.Stx
         /// <summary>
         /// Build argument pair from identifier only (lambda (:optional x y z) ...)
         /// </summary>
-        static void ParseArg(string name, Syntax stx, Syntax identifier, Environment env, out Syntax var)
+        static void ParseArg(string name, Syntax stx, Syntax identifier, AstEnvironment env, out Syntax var)
         {
             Debug.Assert(stx != null);
             Debug.Assert(identifier != null);
@@ -77,7 +77,7 @@ namespace VARP.Scheme.Stx
             var = identifier;
         }
 
-        static Binding ParseRequired(string name, Syntax stx, Syntax definition, Environment env, ArgumentBinding.Type type)
+        static Binding ParseRequired(string name, Syntax stx, Syntax definition, AstEnvironment env, ArgumentBinding.Type type)
         {
             Syntax var = null;
             ParseArg(name, stx, definition, env, out var);
@@ -86,7 +86,7 @@ namespace VARP.Scheme.Stx
             return binding;
         }
 
-        static Binding ParseOptional(string name, Syntax stx, Syntax definition, Environment env, ArgumentBinding.Type type)
+        static Binding ParseOptional(string name, Syntax stx, Syntax definition, AstEnvironment env, ArgumentBinding.Type type)
         {
             Syntax var = null;
             AST val = null;
@@ -101,7 +101,7 @@ namespace VARP.Scheme.Stx
             return binding;
         }
 
-        static Binding ParseBody(string name, Syntax stx, Syntax definition, Environment env)
+        static Binding ParseBody(string name, Syntax stx, Syntax definition, AstEnvironment env)
         {
             throw new System.NotImplementedException();
         }
@@ -109,9 +109,9 @@ namespace VARP.Scheme.Stx
 
         #region Parser Methods
 
-        public static Environment ParseLet(Syntax expression, LinkedList<Value> arguments, Environment environment)
+        public static AstEnvironment ParseLet(Syntax expression, LinkedList<Value> arguments, AstEnvironment environment)
         {
-            Environment newenv = new Environment(environment);
+            AstEnvironment newenv = new AstEnvironment(environment);
 
             if (arguments == null)
                 return newenv;
@@ -141,9 +141,9 @@ namespace VARP.Scheme.Stx
         /// <param name="arguments">the arguments list (syntax syntax syntax ...)</param>
         /// <param name="env">environment</param>
         /// <param name="args">destination arguments structure</param>
-        public static Environment ParseLambda(Syntax expression, LinkedList<Value> arguments, Environment environment)
+        public static AstEnvironment ParseLambda(Syntax expression, LinkedList<Value> arguments, AstEnvironment environment)
         {
-            Environment newenv = new Environment(environment);
+            AstEnvironment newenv = new AstEnvironment(environment);
 
             if (arguments == null)
                 return newenv;

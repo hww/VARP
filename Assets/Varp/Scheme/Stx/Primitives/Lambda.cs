@@ -37,7 +37,7 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class PrimitiveLambda : BasePrimitive
     {
         // (lambda () ...)
-        public static AST Expand(Syntax stx, Environment env)
+        public static AST Expand(Syntax stx, AstEnvironment env)
         {
             LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);
@@ -49,7 +49,7 @@ namespace VARP.Scheme.Stx.Primitives
             Syntax kwdr = list[0].AsSyntax();
             Syntax args = list[1].AsSyntax();
 
-            Environment localEnv = ArgumentsParser.ParseLambda(stx, args.AsLinkedList<Value>(), env);
+            AstEnvironment localEnv = ArgumentsParser.ParseLambda(stx, args.AsLinkedList<Value>(), env);
 
             LinkedList<Value> body = new LinkedList<Value>();
 

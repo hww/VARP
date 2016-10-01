@@ -45,6 +45,7 @@ namespace VARP.Scheme.Codegen
         Symbol symDIV = Symbol.Intern("/");
         Symbol symMOD = Symbol.Intern("%");
         Symbol symNEG = Symbol.Intern("neg");
+        Symbol symPOW = Symbol.Intern("pow");
         Symbol symNOT = Symbol.Intern("not");
         Symbol symAND = Symbol.Intern("and");
         Symbol symOR = Symbol.Intern("or");
@@ -62,18 +63,20 @@ namespace VARP.Scheme.Codegen
                 return GenerateArith2(ast, OpCode.SUB);
             else if (sym == symMUL)
                 return GenerateArith2(ast, OpCode.MUL);
-            else if (sym == symMUL)
+            else if (sym == symDIV)
                 return GenerateArith2(ast, OpCode.DIV);
-            else if (sym == symMUL)
+            else if (sym == symMOD)
                 return GenerateArith2(ast, OpCode.MOD);
             else if (sym == symNEG)
                 return GenerateArith1(ast, OpCode.NEG);
+            else if (sym == symPOW)
+                return GenerateArith2(ast, OpCode.POW);
             else if (sym == symNOT)
                 return GenerateArith1(ast, OpCode.NOT);
             else if (sym == symAND)
-                return GenerateAndOr(ast, OpCode.AND, true);
+                return GenerateAndOr(ast, OpCode.AND, false);
             else if (sym == symOR)
-                return GenerateAndOr(ast, OpCode.OR, false);
+                return GenerateAndOr(ast, OpCode.OR, true);
             else if (sym == symLEN)
                 return GenerateArith1(ast, OpCode.LEN);
             else if (sym == symCONCAT)
@@ -90,15 +93,15 @@ namespace VARP.Scheme.Codegen
         /// <returns></returns>
         internal short GenerateArith1(AstPrimitive ast, OpCode opcode)
         {
-            short temp = SP;
-
+            short result = Push();
             LinkedList<Value> args = ast.Arguments;
             foreach (var arg in args)
             {
-                Generate(arg.AsAST());
+                short expres = Generate(arg.AsAST());
+                AddAB(opcode, result, expres);
+                Pop();
             }
-            AddAB(opcode, temp, temp);
-            return temp;
+            return result;
         }
 
         /// <summary>
@@ -109,7 +112,7 @@ namespace VARP.Scheme.Codegen
         /// <returns></returns>
         internal short GenerateArith2(AstPrimitive ast, OpCode opcode)
         {
-            short temp = SP;
+            short temp = Push();
 
             LinkedList<Value> args = ast.Arguments;
             int arg0 = Generate(args[0].AsAST());
@@ -129,13 +132,20 @@ namespace VARP.Scheme.Codegen
         {
             // R(A) := R(B) .. ... .. R(C)
 
-            short temp = SP;
+            short temp = (short)(SP + 1);
 
             LinkedList<Value> args = ast.Arguments;
             foreach (var arg in args)
-                Generate(arg.AsAST());
-
-            AddABC(OpCode.CONCAT, temp, temp, (short)(temp + args.Count));
+            {
+                short res = Generate(arg.AsAST());
+                if (res < SpMin)
+                {
+                    /// Case if it is addressed directly to the variable
+                    /// MOVE R(A) := R(B)
+                    AddAB(OpCode.MOVE, Push(), res);
+                }
+            }
+            AddABC(OpCode.CONCAT, temp, temp, (short)(temp + args.Count - 1));
             return temp;
         }
 
@@ -148,27 +158,36 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal short GenerateAndOr(AstPrimitive ast, OpCode opcode, bool expects)
+        internal short GenerateAndOr(AstPrimitive ast, OpCode opcode, bool isOrOperation)
         {
-            short temp = SP;
-            short exp = expects ? (short)1 : (short)0;
+            short expected = isOrOperation ? (short)1 : (short)0;
+            /// This is the arguments list
             LinkedList<Value> args = ast.Arguments;
+            /// Here will be jump instruction position for each argument
             int[] jumps = new int[args.Count];
-            int i = 0;
-            foreach (var arg in args)
+            /// Put result to this value
+            short result = Push();
+            Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, result, isOrOperation ? (short)0 : (short)1));
+            for (var i=0; i<args.Count; i++)
             {
-                Generate(arg.AsAST());
-
-                // if ((bool)R(A) != (bool)C) then {skip next instruction}
-                AddABC(OpCode.TEST, temp, 0, exp);
-                jumps[i++] = AddOpcode(Instruction.Nop);
+                short argpos = Generate(args[i].AsAST());
+                /// =======================================================
+                /// if (R(B).AsBool == (bool)C) 
+                ///     {skip next instruction}
+                /// else
+                ///     R(A) = R(B)
+                /// =======================================================
+                AddABC(OpCode.TESTSET, result, argpos, expected);
+                jumps[i] = AddOpcode(Instruction.Nop);
+                Pop();
             }
-            // now make all jumps to the 
+
+            /// now make all jumps to the 
             int pc = PC;
             foreach (var jmp in jumps)
                 Code[jmp] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(jmp, pc));
 
-            return temp;
+            return result;
         }
     }
 

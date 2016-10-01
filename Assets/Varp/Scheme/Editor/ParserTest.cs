@@ -69,21 +69,19 @@ namespace VARP.Scheme.Test
 
         void Test(string source, string expectedResult)
         {
-            //Prse
-
             try
             {
                 Tokenizer lexer = new Tokenizer(new StringReader(source), "TokenizerTest");
                 Parser parser = new Parser();
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                bool assSpace = false;
+                bool addSpace = false;
                 do
                 {
                     ValueClass result = Parser.Parse(lexer);
                     if (result == null) break;
-                    if (assSpace) sb.Append(" ");
+                    if (addSpace) sb.Append(" "); else addSpace = true; 
                     sb.Append(result.Inspect());
-                    assSpace = true;
+                    
                 } while (lexer.LastToken != null);
                 string sresult = sb.ToString();
                 Debug.Assert(sresult == expectedResult, FoundAndExpected(sresult, expectedResult));

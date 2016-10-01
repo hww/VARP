@@ -329,10 +329,11 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.TEST:
-                    ret.AppendFormat(": if( R{0} <=> {1} ) then R{2} = {0} else PC++", B, C, A);
+                    ret.AppendFormat(": if( R{0}.AsBool == {1} ) then PC++", A, C);
                     break;
 
                 case OpCode.TESTSET:
+                    ret.AppendFormat(": if( R{0}.AsBool == {1} ) then PC++ else R{2} = {0}", B, C, A);
                     break;
 
                 case OpCode.CALL:
@@ -371,10 +372,12 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.RETURN:
-                    if (B == 1)
+                    if (B <= 0)
+                        ret.AppendFormat(": return");
+                    else if (B == 1)
                         ret.AppendFormat(": return R{0}", A);
                     else
-                        ret.AppendFormat(": return R{0}..R{1}", A, A + B);
+                        ret.AppendFormat(": return R{0}..R{1}", A, A + B - 1);
                     break;
 
                 case OpCode.FORLOOP:

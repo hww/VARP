@@ -39,7 +39,11 @@ namespace VARP.Scheme.VM
         {
             return RunClosure(new Frame(null, template), template);
         }
-
+        public Value RunTemplate(Template template, Environment environment)
+        {
+            return RunClosure(new Frame(null, template, environment), template);
+        }
+        
         delegate ValueType RkDelegate(int i);
 
         private Value RunClosure(Frame frame, Template template, params ValueType[] args)
@@ -47,7 +51,7 @@ namespace VARP.Scheme.VM
             Environment environment = frame.environment;
             Value[] literals = template.Literals;
             Value[] values = frame.Values;
-
+            int sp = frame.SP;
 #if PROFILER
             _profiler.EnterFunction(null, TEMPLATE);
 #endif
@@ -219,7 +223,10 @@ namespace VARP.Scheme.VM
                                         case OpCode.POW: rv = Math.Pow(bv, cv); break;
                                         default: throw new NotImplementedException();
                                     }
-                                    values[op.A].Set(rv);
+                                    if (c.RefVal is FixnumClass && c.RefVal is FixnumClass)
+                                        values[op.A].Set((int)rv);
+                                    else
+                                        values[op.A].Set(rv);
                                 }
                                 else
                                 {
@@ -235,8 +242,10 @@ namespace VARP.Scheme.VM
                                     literals[ib & ~Instruction.BitK] :
                                     values[ib];
 
-                                if (b.RefVal is INumeric)
+                                if (b.RefVal is FloatClass)
                                     values[op.A].Set(-b.NumVal);
+                                else if (b.RefVal is FixnumClass)
+                                    values[op.A].Set(-(int)b.NumVal);
                                 else
                                     DoArith(op.OpCode, b, b, ref values[op.A]);
                             }
@@ -263,7 +272,7 @@ namespace VARP.Scheme.VM
                                 int end = op.C + 1;
                                 StringBuilder sb = new StringBuilder();
                                 for (var n = op.B; n < end; n++)
-                                    sb.Append(values[n].AsString());
+                                    sb.Append(values[n].ToString());
                                 values[op.A].Set(sb.ToString());
                             }
                             break;
@@ -395,15 +404,26 @@ namespace VARP.Scheme.VM
                                     int src = op.A + 1;
                                     int dst = 0;
 
-                                    while (reqnum-- > 0)
+                                    while (reqnum-- > 0 && dst < numArgs)
                                         closure.Values[dst++] = values[src++];
 
                                     /// now initialize optional values
+                                    while (optnum-- > 0 && dst < numArgs)
+                                        closure.Values[dst++] = values[src++];
+
                                     while (optnum-- > 0)
                                     {
-                                        var optv = closureTemp.OptVals[dst];
-                                        Template ovtinit = closureTemp.Literals[optv.LitIdx].As<Template>();
-                                        closure.Values[dst++] = RunClosure(frame, ovtinit); 
+                                        var optv = closureTemp.Values[src++];
+                                        var lidx = optv.LitIdx;
+                                        if (lidx >= 0)
+                                        {
+                                            Template ovtinit = closureTemp.Literals[lidx].As<Template>();
+                                            closure.Values[dst++] = RunClosure(frame, ovtinit);
+                                        }
+                                        else
+                                        {
+                                            closure.Values[dst++].Set(false);
+                                        }
                                     }
 
                                     /// -------------------------------
@@ -437,7 +457,7 @@ namespace VARP.Scheme.VM
                                     }
                                 }
 
-                                values[frame.SP] = RunClosure(closure, closure.template);
+                                values[op.A] = RunClosure(closure, closure.template);
                             }
                             break;
 

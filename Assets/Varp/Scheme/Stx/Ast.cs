@@ -235,35 +235,6 @@ namespace VARP.Scheme.Stx
         #endregion
     }
 
-    // variable assignment e.g. (define (x) ...) or (define x ...)
-    // same as set! but does not require previous declaration
-    public sealed class AstDefine : AST
-    {
-        private Syntax Variable;             // x   
-        private AST Value;                   // 99
-        public int VarIdx;
-        public int RefEnvIdx;                // index of environment 
-        public int RefVarIdx;                // index of variables
-        public AstDefine(Syntax syntax, Syntax variable, AST value, int VarIdx, int refEnvIdx, int refVarIdx) : base(syntax)
-        {
-            if (VarIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
-            if (refEnvIdx > 255) SchemeError.Error("ast-reference", "environment index should be less that 256", syntax);
-            if (refVarIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
-
-            this.VarIdx = (byte)VarIdx;
-            this.RefEnvIdx = (short)refEnvIdx;
-            this.RefVarIdx = (short)refVarIdx;
-
-            this.Variable = variable;
-            this.Value = value;
-        }
- 
-        #region ValueType Methods
-        public override string Inspect() { return string.Format("#<ast-def{0} {1}>", GetLocationString(), Inspector.Inspect(GetDatum())); }
-        #endregion
-    }
-
-
     // conditional e.g. (if 1 2 3)
     public sealed class AstConditionIf : AST
     {
@@ -346,7 +317,7 @@ namespace VARP.Scheme.Stx
         private Syntax Keyword;                      // (<lambda> (...) ...)
         public Binding[] ArgList;                // (lambda <(...)> )
         public LinkedList<Value> BodyExpression;     // (lambda (...) <...>)
-        public AstLambda(Syntax syntax, Syntax keyword, Environment environment, LinkedList<Value> expression) : base(syntax)
+        public AstLambda(Syntax syntax, Syntax keyword, AstEnvironment environment, LinkedList<Value> expression) : base(syntax)
         {
             this.ArgList = environment.ToArray();
             this.BodyExpression = expression;

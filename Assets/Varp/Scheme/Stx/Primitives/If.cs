@@ -33,7 +33,7 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class PrimitiveIf : BasePrimitive
     {
         // (if () ...)
-        public static AST Expand(Syntax stx, Environment env)
+        public static AST Expand(Syntax stx, AstEnvironment env)
         {
             LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);

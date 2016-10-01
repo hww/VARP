@@ -33,7 +33,7 @@ namespace VARP.Scheme.Stx.Primitives
     public sealed class PrimitiveBegin : BasePrimitive
     {
         // (begin ...)
-        public static AST Expand(Syntax stx, Environment env)
+        public static AST Expand(Syntax stx, AstEnvironment env)
         {
             LinkedList<Value> list = stx.AsLinkedList<Value>();
             Syntax kwdr = list[0].AsSyntax();

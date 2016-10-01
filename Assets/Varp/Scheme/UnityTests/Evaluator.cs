@@ -87,7 +87,7 @@ public class Evaluator : MonoBehaviour
                 sbcode.AppendLine(temp.Inspect());
 
                 VarpVM vm = new VarpVM();
-                Value vmres = vm.RunTemplate(temp);
+                Value vmres = vm.RunTemplate(temp, VARP.Scheme.VM.Environment.Top);
                 sbeval.Append(Inspector.Inspect(vmres));
 
             } while (lexer.LastToken != null);
@@ -96,7 +96,7 @@ public class Evaluator : MonoBehaviour
             astString = sbast.ToString();
             codeString = sbcode.ToString();
             evalString = sbeval.ToString();
-            envString = AstBuilder.environment.Inspect();
+            envString = VARP.Scheme.VM.Environment.Top.Inspect();
 
         }
         catch (SchemeError ex)
@@ -107,7 +107,7 @@ public class Evaluator : MonoBehaviour
             astString = sbast.ToString();
             codeString = sbcode.ToString();
             evalString = sbeval.ToString();
-            envString = AstBuilder.environment.Inspect();
+            envString = VARP.Scheme.VM.Environment.Top.Inspect();
         }
         catch (System.Exception ex)
         {
@@ -115,7 +115,7 @@ public class Evaluator : MonoBehaviour
             astString = sbast.ToString();
             codeString = sbcode.ToString();
             evalString = sbeval.ToString();
-            envString = AstBuilder.environment.Inspect();
+            envString = VARP.Scheme.VM.Environment.Top.Inspect();
 
             throw ex;
         }

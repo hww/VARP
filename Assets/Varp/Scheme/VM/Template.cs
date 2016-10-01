@@ -35,6 +35,7 @@ namespace VARP.Scheme.VM
 
     public sealed class Template : Inspectable
     {
+
         internal struct UpValInfo
         {
             public Symbol Name;                 //< variable name
@@ -42,26 +43,18 @@ namespace VARP.Scheme.VM
             public byte RefEnvIdx;              //< index of referenced environment 
             public byte RefVarIndex;            //< index of variable in referenced environment 
         }
-        internal struct LocalVarInfo
+        internal struct ArgumentInfo
         {
             public Symbol Name;                 //< variable name
             public byte VarIdx;                 //< index of variable in local environment
-        }
-
-        internal struct KeyVarInfo
-        {
-            public Symbol Name;                 //< variable name
-            public byte VarIdx;                 //< index of variable in local environment
-            public int LitIdx;                  //< initializer
+            public int LitIdx;                  //< initializer: -1 for required
         }
 
         internal Instruction[] Code;            //< code sequence
         internal Location[] Locations;          //< the location in source code
         internal Value[] Literals;              //< list of literals, there will be child templates
-        internal LocalVarInfo[] Values;         //< local vars info, include required, and optional
+        internal ArgumentInfo[] Values;         //< local vars info, include required, and optional
         internal UpValInfo[] UpValues;          //< up-values info
-        internal KeyVarInfo[] KeyVals;          //< local vars info
-        internal KeyVarInfo[] OptVals;          //< local vars info
         internal int ReqArgsNumber;             //< quantity of arguments
         internal int OptArgsNumber;             //< quantity of arguments
         internal int KeyArgsNumber;             //< quantity of arguments
@@ -104,7 +97,7 @@ namespace VARP.Scheme.VM
 
             StringBuilder sb = new StringBuilder();
             sb.Append(sident);
-            sb.AppendFormat("Template: vals: {0} frame: {1}\n", Values.Length, FrameSize);
+            sb.AppendFormat("Template: args: {0} frame: {1}\n", Values.Length, FrameSize);
             /////////////////
             /// arguments ///
             /////////////////
@@ -114,28 +107,18 @@ namespace VARP.Scheme.VM
             {
                 sb.Append(" ");
                 sb.Append(v.Name.ToString());
-            }
-            //////////////////
-            /// &optionals ///
-            //////////////////
-            if (OptVals.Length > 0) sb.Append(" &optional");
-            foreach (var v in OptVals)
-            {
-                sb.Append(" ");
-                sb.Append(v.Name.ToString());
-                sb.Append(":");
-                sb.Append(v.LitIdx.ToString());
-            }
-            /////////////
-            /// &keys ///
-            /////////////
-            if (KeyVals.Length > 0) sb.Append(" &key");
-            foreach (var v in KeyVals)
-            {
-                sb.Append(" ");
-                sb.Append(v.Name.ToString());
-                sb.Append(":");
-                sb.Append(v.LitIdx.ToString());
+                switch (v.LitIdx)
+                {
+                    case -1:
+                        break;
+                    case -2:
+                        sb.Append(":#f");
+                        break;
+                    default:
+                        sb.Append(":");
+                        sb.Append(v.LitIdx.ToString());
+                        break;
+                }
             }
             /////////////
             /// &rest ///

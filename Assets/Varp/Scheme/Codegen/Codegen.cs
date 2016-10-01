@@ -93,10 +93,13 @@ namespace VARP.Scheme.Codegen
             throw SchemeError.Error("codegen-generate", "unexpected ast", ast);
         }
 
-        public short GenerateReturn(short argument, short quatntity)
+        public short GenerateReturn(short argument)
         {
             // return R(A), ... ,R(A+B-2) (see note)
-            AddAB(OpCode.RETURN, argument, quatntity);
+            if (argument < 1)
+                AddAB(OpCode.RETURN, 0, 0);
+            else
+                AddAB(OpCode.RETURN, argument, 1);
             return argument;
         }
 
@@ -110,17 +113,17 @@ namespace VARP.Scheme.Codegen
         {
             Value value = ast.GetDatum();
             object refval = value.RefVal;
-
+            short sp = Push();
             if (refval is BoolClass)
             {
-                Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, (byte)SP, value.AsBool() ? (short)1 : (short)0));
-                return SP++;
+                Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, sp, value.AsBool() ? (short)1 : (short)0));
+                return sp;
             }
             else
             {
                 int kid = DefineLiteral(value);
-                Code.Add(Instruction.MakeABX(OpCode.LOADK, (byte)SP, kid));
-                return SP++;
+                Code.Add(Instruction.MakeABX(OpCode.LOADK, sp, kid));
+                return sp;
             }
         }
 
@@ -203,14 +206,14 @@ namespace VARP.Scheme.Codegen
                 //    lambda.AddAB(OpCode.MOVE, temp, (byte)tgt);
 
             }
-            lambda.GenerateReturn(temp, 1);
+            lambda.GenerateReturn(temp);
 
             // now lets create template from dummy lambda
             Template template = lambda.GetTemplate();
             // -----------------------------------------
             // now generate code for current function
             // -----------------------------------------
-            temp = SP++;
+            temp = Push();
             int closureId = DefineLiteral(new Value(template));
             AddABX(OpCode.CLOSURE, temp, closureId);
             return temp;
@@ -274,15 +277,20 @@ namespace VARP.Scheme.Codegen
         private short GenerateApplication(AstApplication ast)
         {
             // R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
-            byte temp = (byte)SP;
+            short temp = (short)(SP + 1);
             foreach (var val in ast.list)
             {
-                Generate(val.AsAST());
+                short res = Generate(val.AsAST());
+                if (res < SpMin)
+                {
+                    /// Case if it is addressed directly to the variable
+                    /// MOVE R(A) := R(B)
+                    AddAB(OpCode.MOVE, Push(), res);
+                }
             }
             // now temp[] = [function, arg, arg, arg, ...]
             AddABC(OpCode.CALL, temp, (byte)(ast.list.Count - 1), 1);
-            SP = temp;
-            return 1;
+            return temp;
         }
 
         private short GenerateSequence(AstSequence ast)
@@ -293,5 +301,7 @@ namespace VARP.Scheme.Codegen
                 temp = Generate(val.AsAST());
             return temp;
         }
+
+
     }
 }

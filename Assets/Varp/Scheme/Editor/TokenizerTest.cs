@@ -29,10 +29,11 @@ using UnityEngine;
 using UnityEditor;
 using NUnit.Framework;
 using System.IO;
-using VARP.Scheme.Tokenizing;
 
 namespace VARP.Scheme.Test
 {
+    using Tokenizing;
+
     public class TokenizerTest
     {
 
@@ -71,14 +72,15 @@ namespace VARP.Scheme.Test
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             Tokenizer lexer = new Tokenizer(new StringReader(source), "TokenizerTest");
             Token token = lexer.ReadToken();
-            bool separator = false;
+
+            bool addSpace = false;
             while (token != null)
             {
-                if (separator) sb.Append(" ");
+                if (addSpace) sb.Append(" "); else addSpace = true;
                 sb.Append(token.Value + ":" + token.Type.ToString());
                 token = lexer.ReadToken();
-                separator = true;
             }
+
             string result = sb.ToString();
             Debug.Assert(result == expectedResult, FoundAndExpected(result, expectedResult));
         }

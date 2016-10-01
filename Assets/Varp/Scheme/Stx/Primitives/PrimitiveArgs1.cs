@@ -35,7 +35,7 @@ namespace VARP.Scheme.Stx.Primitives
         // one arguments primitive.
         // more that one arguments will be raped to list of primitives
         // (foo 1)
-        public static AST Expand(Syntax stx, Environment env)
+        public static AST Expand(Syntax stx, AstEnvironment env)
         {
             LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);

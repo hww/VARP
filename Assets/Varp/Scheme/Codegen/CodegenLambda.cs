@@ -43,11 +43,8 @@ namespace VARP.Scheme.Codegen
         const int initialCodeSize = 10;
 
         private List<Value> Literals;
-
         private List<Template.UpValInfo> UpValues;
-        private List<Template.LocalVarInfo> Values;
-        private List<Template.KeyVarInfo> OptVals;
-        private List<Template.KeyVarInfo> KeyVals;
+        private List<Template.ArgumentInfo> Values;
         private short ReqArgsNumber;
         private short OptArgsNumber;
         private short KeyArgsNumber;
@@ -62,22 +59,19 @@ namespace VARP.Scheme.Codegen
 
             template.Values = Values.ToArray();
             template.UpValues = UpValues.ToArray();
-            template.OptVals = OptVals.ToArray();
-            template.KeyVals = KeyVals.ToArray();
             template.ReqArgsNumber = ReqArgsNumber;
-            template.OptArgsNumber = KeyArgsNumber;
+            template.OptArgsNumber = OptArgsNumber;
+            template.KeyArgsNumber = KeyArgsNumber;
             template.UpValsNumber = UpValueIdx;
             template.RestValueIdx = RestValueIdx;
             template.Literals = Literals.ToArray();
             template.Code = Code.ToArray();
-            template.FrameSize = TempValueMax + 1;
-            template.SP = TempValueMin;
+            template.FrameSize = SpMax + 1;
+            template.SP = SpMin;
 
             Literals = null;
             UpValues = null;
             Values = null;
-            OptVals = null;
-            KeyVals = null;
             Code = null;
 
             return template;
@@ -93,14 +87,12 @@ namespace VARP.Scheme.Codegen
             Code = new List<Instruction>(initialCodeSize);
             Literals = new List<Value>(initialLiteralsSize);
             // Locals 
-            Values = new List<Template.LocalVarInfo>();
-            OptVals = new List<Template.KeyVarInfo>();
-            KeyVals = new List<Template.KeyVarInfo>();
+            Values = new List<Template.ArgumentInfo>();
             UpValues = new List<Template.UpValInfo>();
 
             OptArgsNumber = KeyArgsNumber = UpValueIdx = RestValueIdx = -1;
-
-            SP = 0;
+            SpMin = 0;
+            SP = -1;
         }
         /// <summary>
         /// Defined lambda function
@@ -112,9 +104,7 @@ namespace VARP.Scheme.Codegen
             Code = new List<Instruction>(initialCodeSize);
             Literals = new List<Value>(initialLiteralsSize);
 
-            Values = new List<Template.LocalVarInfo>(args.Length);
-            OptVals = new List<Template.KeyVarInfo>(args.Length);
-            KeyVals = new List<Template.KeyVarInfo>(args.Length);
+            Values = new List<Template.ArgumentInfo>(args.Length);
             UpValues = new List<Template.UpValInfo>(args.Length);
 
             ReqArgsNumber = OptArgsNumber = KeyArgsNumber = 0;
@@ -126,11 +116,6 @@ namespace VARP.Scheme.Codegen
                 // ---------------------------------------------
                 // all values list. this will be frame size
                 // ---------------------------------------------
-                Values.Add(new Template.LocalVarInfo()
-                {
-                    Name = v.Id.AsIdentifier(),
-                    VarIdx = v.VarIdx
-                });
 
                 if (v is ArgumentBinding)
                 {
@@ -138,8 +123,15 @@ namespace VARP.Scheme.Codegen
                     switch (arg.ArgType)
                     {
                         case ArgumentBinding.Type.Required:
+                            Values.Add(new Template.ArgumentInfo()
+                            {
+                                Name = v.Id.AsIdentifier(),
+                                VarIdx = v.VarIdx,
+                                LitIdx = -1
+                            });
                             ReqArgsNumber++;
                             break;
+
                         case ArgumentBinding.Type.Optionals:
                             {
                                 OptArgsNumber++;
@@ -154,17 +146,18 @@ namespace VARP.Scheme.Codegen
                                 }
                                 else
                                 {
-                                    literal = DefineLiteral(Value.Void);
+                                    literal = -2;
                                 }
                                 // setup optional variable item
-                                OptVals.Add(new Template.KeyVarInfo()
+                                Values.Add(new Template.ArgumentInfo()
                                 {
-                                    Name = identifier,
+                                    Name = v.Id.AsIdentifier(),
+                                    VarIdx = v.VarIdx,
                                     LitIdx = literal,
-                                    VarIdx = v.VarIdx
                                 });
                             }
                             break;
+
                         case ArgumentBinding.Type.Key:
                             {
                                 KeyArgsNumber++;
@@ -179,14 +172,14 @@ namespace VARP.Scheme.Codegen
                                 }
                                 else
                                 {
-                                    literal = DefineLiteral(Value.Void);
+                                    literal = -2;
                                 }
                                 // setup optional variable item
-                                KeyVals.Add(new Template.KeyVarInfo()
+                                Values.Add(new Template.ArgumentInfo()
                                 {
-                                    Name = identifier,
+                                    Name = v.Id.AsIdentifier(),
+                                    VarIdx = v.VarIdx,
                                     LitIdx = literal,
-                                    VarIdx = v.VarIdx
                                 });
                             }
                             break;
@@ -211,13 +204,14 @@ namespace VARP.Scheme.Codegen
                 }
 
             }
-            SP = TempValueMin = (short)Values.Count;
+            SpMin = (short)Values.Count;
+            SP = (short)(SpMin - 1);
         }
 
         #region Temporary Variables
 
-        private short TempValueMin;
-        private short TempValueMax;
+        private short SpMin;
+        private short SpMax;
         private short sp;
         public short SP
         {
@@ -225,10 +219,17 @@ namespace VARP.Scheme.Codegen
             set
             {
                 sp = value;
-                TempValueMax = (short)System.Math.Max(value, TempValueMax);
+                SpMax = (short)System.Math.Max(value, SpMax);
             }
         }
-
+        public short Pop()
+        {
+            return --SP;
+        }
+        public short Push()
+        {
+            return ++SP;
+        }
         #endregion
 
 
@@ -264,7 +265,7 @@ namespace VARP.Scheme.Codegen
             if (idx != 0xFF) return idx;
             // variable is not exists so we have to construct it
             Debug.Assert(Values.Count < 0xFF);
-            Template.LocalVarInfo info = new Template.LocalVarInfo();
+            Template.ArgumentInfo info = new Template.ArgumentInfo();
             info.Name = name;
             info.VarIdx = (byte)Values.Count;
             Values.Add(info);

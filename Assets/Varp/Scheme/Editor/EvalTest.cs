@@ -29,71 +29,87 @@ using UnityEngine;
 using NUnit.Framework;
 using System.IO;
 
+using System.CodeDom.Compiler;
 
 namespace VARP.Scheme.Test
 {
     using Tokenizing;
     using Stx;
     using REPL;
+    using VM;
+    using Data;
+    using Codegen;
 
-    public class AstTest
+    public class EvalTest
     {
 
-        string[] tests = new string[]
-        {
-        // List
-        "()","nil",
-        "'()","(quote nil)",
-        "(()())","(nil nil)", // Nested List
-        // Numbers
-        "1 1.0 #xFF","1 1.0 255",           
-        // Strings    
-        "\"foo\" \"bar\"","\"foo\" \"bar\"",  
-        // Symbols
-        "+ -","+ -",
-        // Boolean
-        "#t #f","#t #f",            
-        // Characters
-        "#\\A #\\space","#\\A #\\space",
-        // Array
-        "#(1 2)","#(1 2)",
-        // Dot syntax
-        "'(1 . 2)","(quote (1 . 2))",
-        // Quotes
-        "'(,() `() ,@())","(quote ((unquote nil) (quasiquote nil) (unquote-splicing nil)))",
-        // Lambda
-        "(lambda (x y) (+ x y) (- x y))","(lambda (x y) (+ x y) (- x y))",
-        "(lambda (x y &optional (o 1) (o 2) &key (k 1) (k 2) &rest r))","(lambda (x y &optional (o 1) (o 2) &key (k 1) (k 2) &rest r))",
-        // Let
-        "(let ((x 1) (y 2)) 3 4)","(let ((x 1) (y 2)) 3 4)",
-        // Conditions
-        "(if 1 2)","(if 1 2)",
-        "(if 1 2 3)","(if 1 2 3)",
-        "(if (1) (2) (3))","(if (1) (2) (3))",
-        "(cond (1 2) (3 4) (else 5))","(cond (1 2) (3 4) (else 5))",
-        "(cond (1 2) (3 4))","(cond (1 2) (3 4))",
-        // Application
-        "(display 1 2)","(display 1 2)",
-        // Variable reference
-        "+", "+",
-        // Primitives
-        "(not 1)","(not 1)",
-        "(display 1 2 2 3)","(display 1 2 2 3)",
-        "(and 1 2 2 3)","(and 1 2 2 3)"
-        };
-
         [Test]
-        public void AstTestRun()
+        public void Literals()
         {
-            for (int i = 0; i < tests.Length; i += 2)
-                Test(tests[i], tests[i + 1]);
+            Evaluate("0", "0");
+            Evaluate("1234567890", "1234567890");
+            Evaluate("#f", "#f");
+            Evaluate("#t", "#t");
+            Evaluate("\"hello world\"", "\"hello world\"");
+            Evaluate(":key", ":key"); //< recognized as keyword
+            Evaluate("#\\A", "#\\A");
         }
 
-        void Test(string source, string expectedResult)
+        [Test]
+        public void Math()
         {
+            Evaluate("(+ 6 4)", "10");
+            Evaluate("(- 6 4)", "2");
+            Evaluate("(* 6 4)", "24");
+            Evaluate("(/ 6 4)", "1");
+            Evaluate("(% 6 4)", "2");
+            Evaluate("(neg 6)", "-6");
+            Evaluate("(pow 6 2)", "36");
+        }
+
+        [Test]
+        public void Logical()
+        {
+            Evaluate("(not #t)", "#f");
+            Evaluate("(not #f)", "#t");
+
+            Evaluate("(and #t #t #t)", "#t");
+            Evaluate("(and #f #t #t)", "#f");
+            Evaluate("(and #t #f #t)", "#f");
+            Evaluate("(and #t #t #f)", "#f");
+            Evaluate("(and #f #f #f)", "#f");
+
+            Evaluate("(or #f #f #f)", "#f");
+            Evaluate("(or #t #f #f)", "#t");
+            Evaluate("(or #f #t #f)", "#t");
+            Evaluate("(or #f #f #t)", "#t");
+            Evaluate("(or #t #t #t)", "#t");
+        }
+
+        [Test]
+        public void Concat()
+        {
+            Evaluate("(concat 1 2 3 4)", "\"1234\"");
+            Evaluate("(concat \"hello\" \"world\")", "\"helloworld\"");
+        }
+
+        [Test]
+        public void Lambda()
+        {
+            Evaluate("(lambda ())", "#<VARP.Scheme.VM.Frame>");
+            Evaluate("((lambda ()))", "nil");
+            Evaluate("((lambda () 999))", "999");
+            Evaluate("((lambda (x) x) 999)", "999");
+            Evaluate("((lambda (x y) (+ x y)) 1 2)", "3");
+        }
+
+        void Evaluate (string source, string expectedResult)
+        {
+            
+
             try
             {
-                Tokenizer lexer = new Tokenizer(new StringReader(source), "AstTest.cs/sample code");
+                Tokenizer lexer = new Tokenizer(new StringReader(source), "EvalTest.cs/sample code");
 
                 System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
@@ -101,16 +117,20 @@ namespace VARP.Scheme.Test
                 do
                 {
                     Syntax result = Parser.Parse(lexer);
-
                     if (result == null) break;
 
                     AST ast = AstBuilder.Expand(result);
+                    Template temp = CodeGenerator.GenerateCode(ast);
+                    VarpVM vm = new VarpVM();
+                    Value vmres = vm.RunTemplate(temp);
 
                     if (addSpace) sb.Append(" "); else addSpace = true;
-                    sb.Append(Inspector.Inspect(ast.GetDatum()));
+                    sb.Append(Inspector.Inspect(vmres));
                     
                 } while (lexer.LastToken != null);
+
                 string sresult = sb.ToString();
+
                 Debug.Assert(sresult == expectedResult, FoundAndExpected(source, sresult, expectedResult));
             }
             catch (System.Exception ex)

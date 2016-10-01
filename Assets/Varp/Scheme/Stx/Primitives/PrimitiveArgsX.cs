@@ -34,7 +34,7 @@ namespace VARP.Scheme.Stx.Primitives
     {
 
         // (display 1 2 3 4 ...)
-        public static AST Expand(Syntax stx, Environment env)
+        public static AST Expand(Syntax stx, AstEnvironment env)
         {
             LinkedList<Value> list = stx.AsLinkedList<Value>();
             int argc = GetArgsCount(list);

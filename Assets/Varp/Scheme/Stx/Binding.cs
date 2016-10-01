@@ -45,7 +45,7 @@ namespace VARP.Scheme.Stx
         /// <param name="environment"></param>
         /// <param name="variable"></param>
         /// <param name="index"></param>
-        public Binding(Environment environment, Syntax variable)
+        public Binding(AstEnvironment environment, Syntax variable)
         {
             Debug.Assert(environment != null);
             Debug.Assert(variable != null);
@@ -73,12 +73,12 @@ namespace VARP.Scheme.Stx
     }
     public sealed class PrimitiveBinding : Binding
     {
-        public delegate AST CompilerPrimitive(Syntax expression, Environment context);
+        public delegate AST CompilerPrimitive(Syntax expression, AstEnvironment context);
 
         public CompilerPrimitive Primitive;     
 
         // define global variable
-        public PrimitiveBinding(Environment environment, Syntax identifier, CompilerPrimitive primitive) : base (environment, identifier)
+        public PrimitiveBinding(AstEnvironment environment, Syntax identifier, CompilerPrimitive primitive) : base (environment, identifier)
         {
             Debug.Assert(primitive != null);
             this.Primitive = primitive;
@@ -95,7 +95,7 @@ namespace VARP.Scheme.Stx
     {
         public byte RefEnvIdx;
         public byte RefVarIdx;
-        public UpBinding(Environment environment, Syntax identifier, Binding other) : base(environment, identifier)
+        public UpBinding(AstEnvironment environment, Syntax identifier, Binding other) : base(environment, identifier)
         {
             Debug.Assert(other != null);
 
@@ -138,7 +138,7 @@ namespace VARP.Scheme.Stx
         public Type ArgType;
         public Binding Refrence;
         public AST Initializer;
-        public ArgumentBinding(Environment environment, Syntax identifier, Type type, AST initializer) : base(environment, identifier)
+        public ArgumentBinding(AstEnvironment environment, Syntax identifier, Type type, AST initializer) : base(environment, identifier)
         {
             Debug.Assert(initializer != null);
             this.Initializer = initializer;

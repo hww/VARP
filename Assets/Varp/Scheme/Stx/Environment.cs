@@ -38,11 +38,11 @@ namespace VARP.Scheme.Stx
     /// <summary>
     /// The lexical environment
     /// </summary>
-    public class Environment : ValueClass, IEnumerable<Binding>
+    public class AstEnvironment : ValueClass, IEnumerable<Binding>
     {
         // Pointer to the parent environment.
         // For global environment it is null
-        public Environment Parent;
+        public AstEnvironment Parent;
 
         // List of binding in order of adding to environment
         private List<Binding> Bindings = new List<Binding>();
@@ -55,7 +55,7 @@ namespace VARP.Scheme.Stx
         public int UpValuesCount;   //< how many up values
 
         // Create new environment and parent it to given
-        public Environment(Environment parent = null)
+        public AstEnvironment(AstEnvironment parent = null)
         {
             Index = parent == null ? -1 : parent.Index + 1;
             Parent = parent;
@@ -185,7 +185,7 @@ namespace VARP.Scheme.Stx
         public int GetEnvironmentIndex()
         {
             int index = 0;
-            Environment env = Parent;
+            AstEnvironment env = Parent;
             while (env != null) {
                 env = env.Parent; index++;
             }
@@ -197,9 +197,9 @@ namespace VARP.Scheme.Stx
         /// </summary>
         /// <param name="index">index of the enviromnet</param>
         /// <returns>environment</returns>
-        public Environment GetEnvironmentAtIndex(int index)
+        public AstEnvironment GetEnvironmentAtIndex(int index)
         {
-            Environment env = this;
+            AstEnvironment env = this;
             while (index>0 && env.Parent != null)
                 env = env.Parent;
             return env;

@@ -30,6 +30,8 @@
 namespace VARP.Scheme.VM
 {
     using Data;
+    using REPL;
+    using System.Text;
 
     public sealed class Binding
     {
@@ -123,6 +125,11 @@ namespace VARP.Scheme.VM
         public override string ToString() { return string.Format("#<lexical-environment size={0}>", Bindings.Count); }
 
         #endregion
-
+        public override string Inspect() {
+            StringBuilder sb = new StringBuilder();
+            foreach (var v in Bindings)
+                sb.AppendLine( Inspector.Inspect(v.Value));
+            return sb.ToString();
+        }
     }
 }

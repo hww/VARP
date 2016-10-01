@@ -46,7 +46,7 @@ namespace VARP.Scheme.Stx
         }
 
         // Expand string @expression to abstract syntax tree, in given @env environment
-        public static AST Expand(string expression, string filepath, Environment env)
+        public static AST Expand(string expression, string filepath, AstEnvironment env)
         {
             Syntax syntax = Parser.Parse(expression, filepath);
             return Expand(syntax, env);
@@ -59,7 +59,7 @@ namespace VARP.Scheme.Stx
         }
 
         // Expand string @syntax to abstract syntax tree, in given @env environment
-        public static AST Expand(Syntax syntax, Environment env)
+        public static AST Expand(Syntax syntax, AstEnvironment env)
         {
             if (syntax == null)
                 return null;
@@ -77,14 +77,14 @@ namespace VARP.Scheme.Stx
         #region Private Expand Methods
 
         // aka: 99
-        public static AST ExpandLiteral(Syntax syntax, Environment env)
+        public static AST ExpandLiteral(Syntax syntax, AstEnvironment env)
         {
             // n.b. value '() is null it will be as literal
             return new AstLiteral(syntax);
         }
 
         // aka: x
-        public static AST ExpandIdentifier(Syntax syntax, Environment env)
+        public static AST ExpandIdentifier(Syntax syntax, AstEnvironment env)
         {
             if (!syntax.IsIdentifier) throw SchemeError.SyntaxError("ast-builder-expand-identifier", "expected identifier", syntax);
 
@@ -106,7 +106,7 @@ namespace VARP.Scheme.Stx
         }
 
         // aka: (...)
-        public static AST ExpandExpression(Syntax syntax, Environment env)
+        public static AST ExpandExpression(Syntax syntax, AstEnvironment env)
         {
             LinkedList<Value> list = syntax.AsValueLinkedList();
             if (list == null) return new AstApplication(syntax, null);
@@ -126,7 +126,7 @@ namespace VARP.Scheme.Stx
 
         // Expand list of syntax objects as: (#<syntax> #<syntax> ...)
         // aka: (...)
-        public static LinkedList<Value> ExpandListElements(LinkedList<Value> list, int index, Environment env)
+        public static LinkedList<Value> ExpandListElements(LinkedList<Value> list, int index, AstEnvironment env)
         {
             if (list == null) return null;
 
