@@ -255,7 +255,7 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.LOADNIL:
-                    ret.AppendFormat(B == 0 ? ": R({0}) = nil" : ": R({0}..{1}) = nil", A, A + B);
+                    ret.AppendFormat(B == 1 ? ": R({0}) = nil" : ": R({0}..{1}) = nil", A, A + B - 1);
                     break;
 
                 case OpCode.GETUPVAL:

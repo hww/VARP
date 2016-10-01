@@ -84,7 +84,8 @@ namespace VARP.Scheme.VM
                             {
                                 int a = op.A;
                                 int b = op.B;
-                                do { values[a++].SetNil(); } while (b-- != 0);
+                                while(b-- != 0)
+                                { values[a++].SetNil(); } 
                             }
                             break;
 
@@ -393,7 +394,7 @@ namespace VARP.Scheme.VM
                                 if (numArgs < closureTemp.ReqArgsNumber)
                                     throw SchemeError.Error("vm", "not enough arguments");
 
-                                if (numArgs > 0)
+                                
                                 {
                                     /// -------------------------------
                                     /// required and optional arguments
@@ -404,12 +405,16 @@ namespace VARP.Scheme.VM
                                     int src = op.A + 1;
                                     int dst = 0;
 
-                                    while (reqnum-- > 0 && dst < numArgs)
-                                        closure.Values[dst++] = values[src++];
+                                    while (reqnum > 0 && dst < numArgs)
+                                    { closure.Values[dst++] = values[src++]; reqnum--; }
 
                                     /// now initialize optional values
-                                    while (optnum-- > 0 && dst < numArgs)
-                                        closure.Values[dst++] = values[src++];
+                                    while (optnum > 0 && dst < numArgs)
+                                    { closure.Values[dst++] = values[src++]; optnum--; }
+
+                                    src--;  // because argument 0 is method we minus 1
+                                            // to make index address in template's
+                                            // value array
 
                                     while (optnum-- > 0)
                                     {
@@ -417,8 +422,15 @@ namespace VARP.Scheme.VM
                                         var lidx = optv.LitIdx;
                                         if (lidx >= 0)
                                         {
-                                            Template ovtinit = closureTemp.Literals[lidx].As<Template>();
-                                            closure.Values[dst++] = RunClosure(frame, ovtinit);
+                                            Value initval = closureTemp.Literals[lidx];
+                                            if (initval.Is<Template>())
+                                            {
+                                                Template ovtinit = closureTemp.Literals[lidx].As<Template>();
+                                                closure.Values[dst++] = RunClosure(frame, ovtinit);
+                                            }
+                                            else
+                                                closure.Values[dst++] = initval;
+
                                         }
                                         else
                                         {

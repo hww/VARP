@@ -141,8 +141,13 @@ namespace VARP.Scheme.Codegen
                                 int literal = -1;
                                 if (arg.Initializer != null)
                                 {
-                                    Template code = GenerateCode(arg.Initializer);
-                                    literal = DefineLiteral(new Value(code));
+                                    if (arg.Initializer is AstLiteral)
+                                        literal = DefineLiteral(new Value(arg.Initializer.GetDatum()));
+                                    else
+                                    {
+                                        Template code = GenerateCode(arg.Initializer);
+                                        literal = DefineLiteral(new Value(code));
+                                    }
                                 }
                                 else
                                 {
@@ -167,8 +172,13 @@ namespace VARP.Scheme.Codegen
                                 int literal = -1;
                                 if (arg.Initializer != null)
                                 {
-                                    Template code = GenerateCode(arg.Initializer);
-                                    literal = DefineLiteral(new Value(code));
+                                    if (arg.Initializer is AstLiteral)
+                                        literal = DefineLiteral(new Value(arg.Initializer.GetDatum()));
+                                    else
+                                    {
+                                        Template code = GenerateCode(arg.Initializer);
+                                        literal = DefineLiteral(new Value(code));
+                                    }
                                 }
                                 else
                                 {

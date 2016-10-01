@@ -89,6 +89,10 @@ namespace VARP.Scheme.Stx
             if (!syntax.IsIdentifier) throw SchemeError.SyntaxError("ast-builder-expand-identifier", "expected identifier", syntax);
 
             Symbol varname = syntax.GetDatum().AsSymbol();
+
+            if (varname == Symbol.NULL)
+                return new AstLiteral(syntax);
+
             Binding binding = env.Lookup(varname);
             /// If variable is not found designate it as global variable
             if (binding == null)

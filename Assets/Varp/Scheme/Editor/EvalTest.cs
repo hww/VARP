@@ -46,6 +46,8 @@ namespace VARP.Scheme.Test
         [Test]
         public void Literals()
         {
+            Evaluate("()", "nil");
+            Evaluate("nil", "nil");
             Evaluate("0", "0");
             Evaluate("1234567890", "1234567890");
             Evaluate("#f", "#f");
@@ -101,6 +103,16 @@ namespace VARP.Scheme.Test
             Evaluate("((lambda () 999))", "999");
             Evaluate("((lambda (x) x) 999)", "999");
             Evaluate("((lambda (x y) (+ x y)) 1 2)", "3");
+        }
+
+        [Test]
+        public void LmabdaOptionalArgs()
+        {
+            Evaluate("((lambda (x &optional y (z 9)) x) 5)", "5");
+            Evaluate("((lambda (x &optional y (z 9)) y) 5 6)", "6");
+            Evaluate("((lambda (x &optional y (z 9)) y) 5)", "#f");
+            Evaluate("((lambda (x &optional y (z 8)) z) 5 6)", "8");
+            Evaluate("((lambda (x &optional y (z 8)) z) 5 6 7)", "7");
         }
 
         void Evaluate (string source, string expectedResult)

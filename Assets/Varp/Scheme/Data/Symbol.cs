@@ -129,7 +129,7 @@ namespace VARP.Scheme.Data
         public static Symbol MD_ARRAY = Symbol.Intern("md-array");
         public static Symbol NEW = Symbol.Intern("new");
         public static Symbol NTH = Symbol.Intern("nth");
-        public static Symbol NULL = Symbol.Intern("null");
+        public static Symbol NULL = Symbol.Intern("nil");
         public static Symbol BEGIN = Symbol.Intern("begin");
         public static Symbol RETURN = Symbol.Intern("return");
         public static Symbol SELF = Symbol.Intern("self");

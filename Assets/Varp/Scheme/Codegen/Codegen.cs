@@ -96,7 +96,7 @@ namespace VARP.Scheme.Codegen
         public short GenerateReturn(short argument)
         {
             // return R(A), ... ,R(A+B-2) (see note)
-            if (argument < 1)
+            if (argument < 0)
                 AddAB(OpCode.RETURN, 0, 0);
             else
                 AddAB(OpCode.RETURN, argument, 1);
@@ -117,6 +117,24 @@ namespace VARP.Scheme.Codegen
             if (refval is BoolClass)
             {
                 Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, sp, value.AsBool() ? (short)1 : (short)0));
+                return sp;
+            }
+            else if (refval is NillClass)
+            {
+                Code.Add(Instruction.MakeAB(OpCode.LOADNIL, sp, 1));
+                return sp;
+            }
+            else if (refval is Symbol)
+            {
+                if (refval == Symbol.NULL)
+                {
+                    Code.Add(Instruction.MakeAB(OpCode.LOADNIL, sp, 1));
+                }
+                else
+                {
+                    int kid = DefineLiteral(value);
+                    Code.Add(Instruction.MakeABX(OpCode.LOADK, sp, kid));
+                }
                 return sp;
             }
             else
