@@ -55,7 +55,7 @@ namespace VARP.Scheme.Stx.Primitives
                 // ----------------------------------------------------------------
                 AST value = AstBuilder.Expand(val_stx, env);
                 Symbol var_id = var_stx.AsIdentifier();
-                Binding binding = env.Lookup(var_id);
+                AstBinding binding = env.Lookup(var_id);
 
                 if (binding == null)
                 {
@@ -88,7 +88,7 @@ namespace VARP.Scheme.Stx.Primitives
 
                 Syntax identifier_stx = args_list[0].AsSyntax();
                 Symbol identifier = identifier_stx.AsIdentifier();
-                Binding binding = env.Lookup(identifier);
+                AstBinding binding = env.Lookup(identifier);
 
                 if (binding == null)
                 {

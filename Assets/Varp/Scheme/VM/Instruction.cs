@@ -61,6 +61,9 @@ namespace VARP.Scheme.VM
         EQ,         //<    A B C    if ((RK(B) == RK(C)) ~= A) then PC++
         LT,         //<    A B C    if ((RK(B) < RK(C)) ~= A) then PC++
         LE,         //<    A B C    if ((RK(B) <= RK(C)) ~= A) then PC++
+        GT,
+        GE,
+        NE,
         TEST,       //<    A B C    if not (R(A) <=> C) then PC++
         TESTSET,    //<    A B C	if (R(B) <=> C) then R(A) := R(B) else pc++
         CALL,       //<    A B C    R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
@@ -325,7 +328,10 @@ namespace VARP.Scheme.VM
                 case OpCode.EQ:
                 case OpCode.LT:
                 case OpCode.LE:
-                    ret.AppendFormat(": if( {0} {2} {1} ) PC++", Rk(B), Rk(C), GetCmpOp(OpCode, A != 0));
+                case OpCode.NE:
+                case OpCode.GT:
+                case OpCode.GE:
+                    ret.AppendFormat(": R({0}) = {1} {2} {3}", A, Rk(B), GetCmpOp(OpCode), Rk(C));
                     break;
 
                 case OpCode.TEST:
@@ -433,13 +439,16 @@ namespace VARP.Scheme.VM
             }
         }
 
-        private static string GetCmpOp(OpCode op, bool reverse)
+        private static string GetCmpOp(OpCode op)
         {
             switch (op)
             {
-                case OpCode.EQ: return reverse ? "!=" : "==";
-                case OpCode.LT: return reverse ? ">=" : "<";
-                case OpCode.LE: return reverse ? ">" : "<=";
+                case OpCode.EQ: return "==";
+                case OpCode.LT: return "<";
+                case OpCode.LE: return "<=";
+                case OpCode.NE: return "!=";
+                case OpCode.GT: return ">";
+                case OpCode.GE: return ">=";
                 default: return string.Empty;
             }
         }

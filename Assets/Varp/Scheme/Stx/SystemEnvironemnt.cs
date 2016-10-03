@@ -30,6 +30,8 @@ namespace VARP.Scheme.Stx
     using Primitives;
     public sealed class SystemEnvironemnt : AstEnvironment
     {
+        public static SystemEnvironemnt environment = new SystemEnvironemnt();
+
         public SystemEnvironemnt() : base(null)
         {
             DefinePrimitive("define", PrimitiveDefine.Expand);
@@ -40,19 +42,29 @@ namespace VARP.Scheme.Stx
             DefinePrimitive("begin", PrimitiveBegin.Expand);
             DefinePrimitive("let", PrimitiveLet.Expand);
 
-            DefinePrimitive("=", PrimitiveArgs2.Expand);
-            DefinePrimitive("<", PrimitiveArgs2.Expand);
-            DefinePrimitive(">", PrimitiveArgs2.Expand);
             DefinePrimitive("+", PrimitiveArgs2.Expand);
             DefinePrimitive("-", PrimitiveArgs2.Expand);
             DefinePrimitive("*", PrimitiveArgs2.Expand);
-            DefinePrimitive("pow", PrimitiveArgs2.Expand);
             DefinePrimitive("/", PrimitiveArgs2.Expand);
             DefinePrimitive("%", PrimitiveArgs2.Expand);
+
+            DefinePrimitive("=", PrimitiveArgs2.Expand);
+            DefinePrimitive("<", PrimitiveArgs2.Expand);
+            DefinePrimitive(">", PrimitiveArgs2.Expand);
+
+            DefinePrimitive("!=", PrimitiveArgs2.Expand);
+            DefinePrimitive("<=", PrimitiveArgs2.Expand);
+            DefinePrimitive(">=", PrimitiveArgs2.Expand);
+
+            DefinePrimitive("pow", PrimitiveArgs2.Expand);
+
             DefinePrimitive("neg", PrimitiveArgs1.Expand);
+            DefinePrimitive("not", PrimitiveArgs1.Expand);
+            DefinePrimitive("len", PrimitiveArgs1.Expand);
+
             DefinePrimitive("or", PrimitiveArgsX.Expand);
             DefinePrimitive("and", PrimitiveArgsX.Expand);
-            DefinePrimitive("not", PrimitiveArgs1.Expand);
+
             DefinePrimitive("display", PrimitiveArgsX.Expand);
             DefinePrimitive("concat", PrimitiveArgsX.Expand);
 

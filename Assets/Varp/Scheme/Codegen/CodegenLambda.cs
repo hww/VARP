@@ -99,7 +99,7 @@ namespace VARP.Scheme.Codegen
         /// </summary>
         /// <param name="gen"></param>
         /// <param name="args"></param>
-        public CodeGenerator(Stx.Binding[] args)
+        public CodeGenerator(Stx.AstBinding[] args)
         { 
             Code = new List<Instruction>(initialCodeSize);
             Literals = new List<Value>(initialLiteralsSize);

@@ -77,7 +77,7 @@ namespace VARP.Scheme.Stx
             var = identifier;
         }
 
-        static Binding ParseRequired(string name, Syntax stx, Syntax definition, AstEnvironment env, ArgumentBinding.Type type)
+        static AstBinding ParseRequired(string name, Syntax stx, Syntax definition, AstEnvironment env, ArgumentBinding.Type type)
         {
             Syntax var = null;
             ParseArg(name, stx, definition, env, out var);
@@ -86,7 +86,7 @@ namespace VARP.Scheme.Stx
             return binding;
         }
 
-        static Binding ParseOptional(string name, Syntax stx, Syntax definition, AstEnvironment env, ArgumentBinding.Type type)
+        static AstBinding ParseOptional(string name, Syntax stx, Syntax definition, AstEnvironment env, ArgumentBinding.Type type)
         {
             Syntax var = null;
             AST val = null;
@@ -101,7 +101,7 @@ namespace VARP.Scheme.Stx
             return binding;
         }
 
-        static Binding ParseBody(string name, Syntax stx, Syntax definition, AstEnvironment env)
+        static AstBinding ParseBody(string name, Syntax stx, Syntax definition, AstEnvironment env)
         {
             throw new System.NotImplementedException();
         }

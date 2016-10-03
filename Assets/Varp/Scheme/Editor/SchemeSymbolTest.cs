@@ -42,20 +42,20 @@ namespace VARP.Scheme.Test
         {
             int quantity = 100;
 
-            Symbol sym1 = Symbol.Intern("QWERTYUIOP{{{{SDFGHJKL");
             Symbol[] syms = new Symbol[quantity];
             for (int i = 0; i < quantity; i++)
             {
                 syms[i] = Symbol.Intern(i.ToString());
             }
 
+            Symbol abcd = Symbol.Intern("ABCDEFGH");
+
             for (int i = 0; i < quantity; i++)
             {
                 string s = i.ToString();
                 Symbol sym = Symbol.Intern(s);
-                Debug.Assert(sym == syms[i]);
-                Debug.Assert(sym != sym1);
-                Debug.Assert(sym.Name == s);
+                Assert.AreEqual(sym, syms[i]);
+                Assert.AreNotEqual(sym, abcd);
             }
         }
     }

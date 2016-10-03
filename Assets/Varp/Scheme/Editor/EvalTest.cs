@@ -106,13 +106,45 @@ namespace VARP.Scheme.Test
         }
 
         [Test]
-        public void LmabdaOptionalArgs()
+        public void LambdaOptionalArgs()
         {
             Evaluate("((lambda (x &optional y (z 9)) x) 5)", "5");
             Evaluate("((lambda (x &optional y (z 9)) y) 5 6)", "6");
             Evaluate("((lambda (x &optional y (z 9)) y) 5)", "#f");
             Evaluate("((lambda (x &optional y (z 8)) z) 5 6)", "8");
             Evaluate("((lambda (x &optional y (z 8)) z) 5 6 7)", "7");
+        }
+
+        [Test]
+        public void LambdaReturnValue()
+        {
+            /// Test of using by primitive the result of
+            /// other lambda function
+            Evaluate("(+ ((lambda() 2)) ((lambda() 3)))", "5");
+            Evaluate("(+ ((lambda(x) x) 2) ((lambda(x) x) 3))", "5");
+        }
+
+        [Test]
+        public void Conditions()
+        {
+            Evaluate("(= 1 2)", "#f");
+            Evaluate("(= 2 2)", "#t");
+
+            Evaluate("(!= 2 2)", "#f");
+            Evaluate("(!= 1 2)", "#t");
+
+            Evaluate("(> 2 2)", "#f");
+            Evaluate("(> 3 2)", "#t");
+            Evaluate("(< 2 2)", "#f");
+            Evaluate("(< 1 2)", "#t");
+
+            Evaluate("(>= 1 2)", "#f");
+            Evaluate("(>= 2 2)", "#t");
+            Evaluate("(>= 3 2)", "#t");
+
+            Evaluate("(<= 3 2)", "#f");
+            Evaluate("(<= 2 2)", "#t");
+            Evaluate("(<= 1 2)", "#t");
         }
 
         void Evaluate (string source, string expectedResult)
@@ -143,17 +175,12 @@ namespace VARP.Scheme.Test
 
                 string sresult = sb.ToString();
 
-                Debug.Assert(sresult == expectedResult, FoundAndExpected(source, sresult, expectedResult));
+                Assert.AreEqual(sresult, expectedResult);
             }
             catch (System.Exception ex)
             {
                 Debug.LogError(string.Format("{0}\n{1}\n{2}", source, ex.Message, ex.StackTrace));
             }
-        }
-
-        string FoundAndExpected(string source, string found, string expected)
-        {
-            return string.Format(" SOURCE: {0}\n EXPECTED:\n{1}\n FOUND:\n{2}", source, expected, found);
         }
     }
 }

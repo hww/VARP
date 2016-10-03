@@ -315,7 +315,7 @@ namespace VARP.Scheme.Stx
     public sealed class AstLambda : AST
     {
         private Syntax Keyword;                      // (<lambda> (...) ...)
-        public Binding[] ArgList;                // (lambda <(...)> )
+        public AstBinding[] ArgList;                // (lambda <(...)> )
         public LinkedList<Value> BodyExpression;     // (lambda (...) <...>)
         public AstLambda(Syntax syntax, Syntax keyword, AstEnvironment environment, LinkedList<Value> expression) : base(syntax)
         {

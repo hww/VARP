@@ -33,7 +33,7 @@ namespace VARP.Scheme.Stx
     using Data;
     using Exception;
 
-    public class Binding : ValueClass
+    public class AstBinding : ValueClass
     {
         public Syntax Id;
         public byte EnvIdx;           //< the variable binded to environment
@@ -45,7 +45,7 @@ namespace VARP.Scheme.Stx
         /// <param name="environment"></param>
         /// <param name="variable"></param>
         /// <param name="index"></param>
-        public Binding(AstEnvironment environment, Syntax variable)
+        public AstBinding(AstEnvironment environment, Syntax variable)
         {
             Debug.Assert(environment != null);
             Debug.Assert(variable != null);
@@ -71,7 +71,7 @@ namespace VARP.Scheme.Stx
         public override string ToString() { return string.Format("#<binding {0}>", Identifier.Name); }
         #endregion
     }
-    public sealed class PrimitiveBinding : Binding
+    public sealed class PrimitiveBinding : AstBinding
     {
         public delegate AST CompilerPrimitive(Syntax expression, AstEnvironment context);
 
@@ -91,11 +91,11 @@ namespace VARP.Scheme.Stx
         public override string ToString() { return string.Format("#<primitive {0}>", Identifier.Name); }
         #endregion
     }
-    public sealed class UpBinding : Binding
+    public sealed class UpBinding : AstBinding
     {
         public byte RefEnvIdx;
         public byte RefVarIdx;
-        public UpBinding(AstEnvironment environment, Syntax identifier, Binding other) : base(environment, identifier)
+        public UpBinding(AstEnvironment environment, Syntax identifier, AstBinding other) : base(environment, identifier)
         {
             Debug.Assert(other != null);
 
@@ -122,7 +122,7 @@ namespace VARP.Scheme.Stx
 
     }
 
-    public sealed class ArgumentBinding : Binding
+    public sealed class ArgumentBinding : AstBinding
     {
         public enum Type
         {
@@ -136,7 +136,7 @@ namespace VARP.Scheme.Stx
         }
 
         public Type ArgType;
-        public Binding Refrence;
+        public AstBinding Refrence;
         public AST Initializer;
         public ArgumentBinding(AstEnvironment environment, Syntax identifier, Type type, AST initializer) : base(environment, identifier)
         {

@@ -36,13 +36,13 @@ namespace VARP.Scheme.Stx
 
     public sealed class AstBuilder : ValueClass
     {
-        public static SystemEnvironemnt environment = new SystemEnvironemnt();
+        
 
         #region Public Methods
         // Expand string @expression to abstract syntax tree in global environment
         public static AST Expand(string expression, string filepath)
         {
-            return Expand(expression, filepath, environment);
+            return Expand(expression, filepath, SystemEnvironemnt.environment);
         }
 
         // Expand string @expression to abstract syntax tree, in given @env environment
@@ -55,7 +55,7 @@ namespace VARP.Scheme.Stx
         // Expand string @syntax to abstract syntax tree, in global environment
         public static AST Expand(Syntax syntax)
         {
-            return Expand(syntax, environment);
+            return Expand(syntax, SystemEnvironemnt.environment);
         }
 
         // Expand string @syntax to abstract syntax tree, in given @env environment
@@ -93,7 +93,7 @@ namespace VARP.Scheme.Stx
             if (varname == Symbol.NULL)
                 return new AstLiteral(syntax);
 
-            Binding binding = env.Lookup(varname);
+            AstBinding binding = env.Lookup(varname);
             /// If variable is not found designate it as global variable
             if (binding == null)
                 return new AstReference(syntax, 0, -1, -1);
@@ -117,7 +117,7 @@ namespace VARP.Scheme.Stx
             Syntax ident = list[0].AsSyntax();
             if (ident.IsIdentifier)
             {
-                Binding binding = env.Lookup(ident.AsIdentifier());
+                AstBinding binding = env.Lookup(ident.AsIdentifier());
                 if (binding != null)
                 {
                     if (binding.IsPrimitive)

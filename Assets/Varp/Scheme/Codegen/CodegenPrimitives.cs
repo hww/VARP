@@ -39,50 +39,48 @@ namespace VARP.Scheme.Codegen
 
     public sealed partial class CodeGenerator
     {
-        Symbol symADD = Symbol.Intern("+");
-        Symbol symSUB = Symbol.Intern("-");
-        Symbol symMUL = Symbol.Intern("*");
-        Symbol symDIV = Symbol.Intern("/");
-        Symbol symMOD = Symbol.Intern("%");
-        Symbol symNEG = Symbol.Intern("neg");
-        Symbol symPOW = Symbol.Intern("pow");
-        Symbol symNOT = Symbol.Intern("not");
-        Symbol symAND = Symbol.Intern("and");
-        Symbol symOR = Symbol.Intern("or");
-        Symbol symLE = Symbol.Intern("<=");
-        Symbol symLT = Symbol.Intern("<");
-        Symbol symLEN = Symbol.Intern("length");
-        Symbol symCONCAT = Symbol.Intern("concat");
+        delegate short PrimCodeDelegate(AstPrimitive ast, OpCode opcode);
+        struct PrimCodegenItem
+        {
+            public PrimCodeDelegate method;
+            public OpCode opcode;
+        }
+
+        Dictionary<Symbol, PrimCodegenItem> primitivesTable;
+        void DefinePrimitiveCodegen(string name, PrimCodeDelegate method, OpCode opcode)
+        {
+            primitivesTable[Symbol.Intern(name)] = new PrimCodegenItem() { method = method, opcode = opcode };
+        }
 
         private short GeneratePrimitive(AstPrimitive ast)
         {
-            Symbol sym = ast.Identifier.AsIdentifier();
-            if (sym == symADD)
-                return GenerateArith2(ast, OpCode.ADD);
-            else if (sym == symSUB)
-                return GenerateArith2(ast, OpCode.SUB);
-            else if (sym == symMUL)
-                return GenerateArith2(ast, OpCode.MUL);
-            else if (sym == symDIV)
-                return GenerateArith2(ast, OpCode.DIV);
-            else if (sym == symMOD)
-                return GenerateArith2(ast, OpCode.MOD);
-            else if (sym == symNEG)
-                return GenerateArith1(ast, OpCode.NEG);
-            else if (sym == symPOW)
-                return GenerateArith2(ast, OpCode.POW);
-            else if (sym == symNOT)
-                return GenerateArith1(ast, OpCode.NOT);
-            else if (sym == symAND)
-                return GenerateAndOr(ast, OpCode.AND, false);
-            else if (sym == symOR)
-                return GenerateAndOr(ast, OpCode.OR, true);
-            else if (sym == symLEN)
-                return GenerateArith1(ast, OpCode.LEN);
-            else if (sym == symCONCAT)
-                return GenerateArithX(ast, OpCode.CONCAT);
+            if (primitivesTable == null)
+            {
+                primitivesTable = new Dictionary<Symbol, PrimCodegenItem>();
 
-            throw new SystemException();
+                DefinePrimitiveCodegen("+", GenerateArith2, OpCode.ADD);
+                DefinePrimitiveCodegen("-", GenerateArith2, OpCode.SUB);
+                DefinePrimitiveCodegen("*", GenerateArith2, OpCode.MUL);
+                DefinePrimitiveCodegen("/", GenerateArith2, OpCode.DIV);
+                DefinePrimitiveCodegen("%", GenerateArith2, OpCode.MOD);
+                DefinePrimitiveCodegen("=", GenerateArith2, OpCode.EQ);
+                DefinePrimitiveCodegen(">", GenerateArith2, OpCode.GT);
+                DefinePrimitiveCodegen("<", GenerateArith2, OpCode.LT);
+                DefinePrimitiveCodegen("!=", GenerateArith2, OpCode.NE);
+                DefinePrimitiveCodegen(">=", GenerateArith2, OpCode.GE);
+                DefinePrimitiveCodegen("<=", GenerateArith2, OpCode.LE);
+                DefinePrimitiveCodegen("pow", GenerateArith2, OpCode.POW);
+                DefinePrimitiveCodegen("and", GenerateAndOr, OpCode.AND);
+                DefinePrimitiveCodegen("or", GenerateAndOr, OpCode.OR);
+                DefinePrimitiveCodegen("neg", GenerateArith1, OpCode.NEG);
+                DefinePrimitiveCodegen("not", GenerateArith1, OpCode.NOT);
+                DefinePrimitiveCodegen("len", GenerateArith1, OpCode.LEN);
+                DefinePrimitiveCodegen("concat", GenerateArithX, OpCode.CONCAT);
+            }
+            Symbol sym = ast.Identifier.AsIdentifier();
+
+            PrimCodegenItem prim = primitivesTable[sym];
+            return prim.method(ast, prim.opcode);
         }
 
         /// <summary>
@@ -158,8 +156,9 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal short GenerateAndOr(AstPrimitive ast, OpCode opcode, bool isOrOperation)
+        internal short GenerateAndOr(AstPrimitive ast, OpCode opcode)
         {
+            bool isOrOperation = opcode == OpCode.OR;
             short expected = isOrOperation ? (short)1 : (short)0;
             /// This is the arguments list
             LinkedList<Value> args = ast.Arguments;
@@ -167,7 +166,6 @@ namespace VARP.Scheme.Codegen
             int[] jumps = new int[args.Count];
             /// Put result to this value
             short result = Push();
-            Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, result, isOrOperation ? (short)0 : (short)1));
             for (var i=0; i<args.Count; i++)
             {
                 short argpos = Generate(args[i].AsAST());
@@ -181,6 +179,7 @@ namespace VARP.Scheme.Codegen
                 jumps[i] = AddOpcode(Instruction.Nop);
                 Pop();
             }
+            Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, result, isOrOperation ? (short)0 : (short)1));
 
             /// now make all jumps to the 
             int pc = PC;

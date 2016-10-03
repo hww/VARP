@@ -109,7 +109,7 @@ public class CodegenTest : MonoBehaviour
             } while (lexer.LastToken != null);
             astString = sb.ToString();
             codeString = sbcode.ToString();
-            envString = AstBuilder.environment.Inspect();
+            envString = SystemEnvironemnt.environment.Inspect();
 
         }
         catch (SchemeError ex)

@@ -111,17 +111,12 @@ namespace VARP.Scheme.Test
                     
                 } while (lexer.LastToken != null);
                 string sresult = sb.ToString();
-                Debug.Assert(sresult == expectedResult, FoundAndExpected(source, sresult, expectedResult));
+                Assert.AreEqual(sresult, expectedResult);
             }
             catch (System.Exception ex)
             {
                 Debug.LogError(string.Format("{0}\n{1}\n{2}", source, ex.Message, ex.StackTrace));
             }
-        }
-
-        string FoundAndExpected(string source, string found, string expected)
-        {
-            return string.Format(" SOURCE: {0}\n EXPECTED:\n{1}\n FOUND:\n{2}", source, expected, found);
         }
     }
 }

@@ -92,8 +92,8 @@ namespace VARP.Scheme.REPL
                 return InspectInternal(x as Syntax, options);
             if (x is AST)
                 return InspectInternal(x as AST, options);
-            if (x is Binding)
-                return InspectInternal(x as Binding, options);
+            if (x is AstBinding)
+                return InspectInternal(x as AstBinding, options);
             if (x is Stx.AstEnvironment)
                 return InspectInternal(x as Stx.AstEnvironment, options);
             // all another just convert to string
@@ -120,7 +120,7 @@ namespace VARP.Scheme.REPL
             else
                 return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.GetDatum(), options));
         }
-        static string InspectInternal(Binding bind, InspectOptions options = InspectOptions.Default)
+        static string InspectInternal(AstBinding bind, InspectOptions options = InspectOptions.Default)
         {
             string prefix = bind.IsPrimitive ? "#Prim" : string.Empty; 
                 if (bind.IsGlobal)

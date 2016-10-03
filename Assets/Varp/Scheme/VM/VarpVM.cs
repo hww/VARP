@@ -287,6 +287,9 @@ namespace VARP.Scheme.VM
                         case OpCode.EQ:
                         case OpCode.LT:
                         case OpCode.LE:
+                        case OpCode.NE:
+                        case OpCode.GT:
+                        case OpCode.GE:
                             {
                                 int b = op.B;
                                 var bv = (b & Instruction.BitK) != 0 ?
@@ -304,7 +307,7 @@ namespace VARP.Scheme.VM
                                 {
                                     case OpCode.EQ:
                                         test = bv.RefVal == cv.RefVal ?
-                                            bv.RefVal is NumericalClass || bv.NumVal == cv.NumVal :
+                                            bv.RefVal is NumericalClass && bv.NumVal == cv.NumVal :
                                             Equal(ref bv, ref cv);
                                         break;
 
@@ -320,19 +323,26 @@ namespace VARP.Scheme.VM
                                             LessEqual(ref bv, ref cv);
                                         break;
 
+                                    case OpCode.NE:
+                                        test = bv.RefVal != cv.RefVal ?
+                                            bv.RefVal is NumericalClass && bv.NumVal == cv.NumVal :
+                                            !Equal(ref bv, ref cv);
+                                        break;
+
+                                    case OpCode.GT:
+                                        test = (bv.RefVal is NumericalClass && cv.RefVal is NumericalClass) ?
+                                            bv.NumVal > cv.NumVal :
+                                            !LessEqual(ref bv, ref cv);
+                                        break;
+
+                                    case OpCode.GE:
+                                        test = (bv.RefVal is NumericalClass && cv.RefVal is NumericalClass) ?
+                                            bv.NumVal >= cv.NumVal :
+                                            !Less(ref bv, ref cv);
+                                        break;
                                     default: Debug.Assert(false); test = false; break;
                                 }
-
-                                if (test != (op.A != 0))
-                                {
-                                    pc++;
-                                }
-                                else
-                                {
-                                    op = template.Code[++pc];
-                                    Debug.Assert(op.OpCode == OpCode.JMP);
-                                    goto case OpCode.JMP;
-                                }
+                                values[op.A].Set(test);
                             }
                             break;
 
@@ -389,7 +399,7 @@ namespace VARP.Scheme.VM
                                 int numArgs = op.B;
                                 int numRetVals = op.C;
 
-                                pc++; /// return to the next instruction
+                                //pc++; /// return to the next instruction
 
                                 if (numArgs < closureTemp.ReqArgsNumber)
                                     throw SchemeError.Error("vm", "not enough arguments");
@@ -501,7 +511,7 @@ namespace VARP.Scheme.VM
                         case OpCode.CLOSURE:
                             {
                                 /// R(A) := closure(KPROTO[Bx], R(A), ... , R(A + n))
-                                Template ntempl = literals[op.B].As<Template>();
+                                Template ntempl = literals[op.Bx].As<Template>();
                                 Frame nfram = new Frame(frame, ntempl); 
                                 values[op.A].RefVal = nfram;
                             }

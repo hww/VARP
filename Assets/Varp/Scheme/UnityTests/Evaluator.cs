@@ -51,6 +51,8 @@ public class Evaluator : MonoBehaviour
     public string codeString;
     [TextArea(5, 100)]
     public string evalString;
+
+    public bool astEnvironment;
     [TextArea(5, 100)]
     public string envString;
 
@@ -96,7 +98,7 @@ public class Evaluator : MonoBehaviour
             astString = sbast.ToString();
             codeString = sbcode.ToString();
             evalString = sbeval.ToString();
-            envString = VARP.Scheme.VM.Environment.Top.Inspect();
+            InspectEnvironment();
 
         }
         catch (SchemeError ex)
@@ -107,7 +109,7 @@ public class Evaluator : MonoBehaviour
             astString = sbast.ToString();
             codeString = sbcode.ToString();
             evalString = sbeval.ToString();
-            envString = VARP.Scheme.VM.Environment.Top.Inspect();
+            InspectEnvironment();
         }
         catch (System.Exception ex)
         {
@@ -115,11 +117,19 @@ public class Evaluator : MonoBehaviour
             astString = sbast.ToString();
             codeString = sbcode.ToString();
             evalString = sbeval.ToString();
-            envString = VARP.Scheme.VM.Environment.Top.Inspect();
+            InspectEnvironment();
 
             throw ex;
         }
 
 
+    }
+
+    void InspectEnvironment()
+    {
+        if (astEnvironment)
+            envString = SystemEnvironemnt.environment.Inspect();
+        else
+            envString = VARP.Scheme.VM.Environment.Top.Inspect();
     }
 }

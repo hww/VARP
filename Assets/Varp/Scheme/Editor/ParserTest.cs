@@ -84,7 +84,7 @@ namespace VARP.Scheme.Test
                     
                 } while (lexer.LastToken != null);
                 string sresult = sb.ToString();
-                Debug.Assert(sresult == expectedResult, FoundAndExpected(sresult, expectedResult));
+                Assert.AreEqual(sresult, expectedResult);
             }
             catch (System.Exception ex)
             {

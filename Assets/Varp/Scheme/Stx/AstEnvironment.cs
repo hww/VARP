@@ -38,29 +38,29 @@ namespace VARP.Scheme.Stx
     /// <summary>
     /// The lexical environment
     /// </summary>
-    public class AstEnvironment : ValueClass, IEnumerable<Binding>
+    public class AstEnvironment : ValueClass, IEnumerable<AstBinding>
     {
         // Pointer to the parent environment.
         // For global environment it is null
         public AstEnvironment Parent;
 
         // List of binding in order of adding to environment
-        private List<Binding> Bindings = new List<Binding>();
+        private List<AstBinding> Bindings = new List<AstBinding>();
 
         // Symbol to binding conversion table
-        private Dictionary<Symbol, Binding> BindingsMap = new Dictionary<Symbol, Binding>();
+        private Dictionary<Symbol, AstBinding> BindingsMap = new Dictionary<Symbol, AstBinding>();
 
-        public int Index;           //< index of this environment
+        public byte Index;          //< index of this environment
         public bool isExpanded;     //< was the environment expanded    
         public int UpValuesCount;   //< how many up values
 
         // Create new environment and parent it to given
         public AstEnvironment(AstEnvironment parent = null)
         {
-            Index = parent == null ? -1 : parent.Index + 1;
+            Index = (byte)(parent == null ? 0 : parent.Index + 1);
             Parent = parent;
             UpValuesCount = 0;
-            Bindings = new List<Binding>();
+            Bindings = new List<AstBinding>();
         }
 
 
@@ -86,9 +86,9 @@ namespace VARP.Scheme.Stx
         /// </summary>
         /// <param name="name">identifier</param>
         /// <returns>Binding or null</returns>
-        public Binding LookupLocal(Symbol name)
+        public AstBinding LookupLocal(Symbol name)
         {
-            Binding value;
+            AstBinding value;
             if (BindingsMap.TryGetValue(name, out value))
                 return value;
             return null;
@@ -101,9 +101,9 @@ namespace VARP.Scheme.Stx
         /// </summary>
         /// <param name="name">identifier</param>
         /// <returns>Binding or null</returns>
-        public Binding Lookup(Symbol name)
+        public AstBinding Lookup(Symbol name)
         {
-            Binding value;
+            AstBinding value;
             if (BindingsMap.TryGetValue(name, out value))
                 return value;
             return Parent == null ? null : Parent.Lookup(name);
@@ -114,7 +114,7 @@ namespace VARP.Scheme.Stx
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        public Binding this[int index]
+        public AstBinding this[int index]
         {
             get
             {
@@ -129,8 +129,10 @@ namespace VARP.Scheme.Stx
         /// </summary>
         /// <param name="name">identifier</param>
         /// <param name="value">binding</param>
-        public Binding Define(Binding value)
+        public AstBinding Define(AstBinding value)
         {
+            if (BindingsMap.ContainsKey(value.Identifier))
+                SchemeError.Error("define", "environment already have key", value.Id);
             BindingsMap[value.Identifier] = value;
             if (Bindings.Count > 255) SchemeError.Error("define", "too many variables in frame", value.Id);
             value.VarIdx = (byte)Bindings.Count;
@@ -145,24 +147,14 @@ namespace VARP.Scheme.Stx
         /// <param name="name">identifier</param>
         /// <param name="primitive">primitive</param>
         /// <returns>new binding</returns>
-        public Binding DefinePrimitive(Symbol name, PrimitiveBinding.CompilerPrimitive primitive)
+        public AstBinding DefinePrimitive(string name, PrimitiveBinding.CompilerPrimitive primitive)
         {
             Debug.Assert(IsGlobal); // can be defined only in global 
-            Syntax syntax = new Syntax(name);
-            Binding binding = new PrimitiveBinding(this, syntax, primitive);
+            Symbol sym = Symbol.Intern(name);
+            Syntax syntax = new Syntax(sym);
+            AstBinding binding = new PrimitiveBinding(this, syntax, primitive);
             Define(binding);
             return binding;
-        }
-        /// <summary>
-        /// Define primitive. The primitive is sort of macro which is
-        /// implemented in C# and extract given expression to AST.
-        /// </summary>
-        /// <param name="name">identifier</param>
-        /// <param name="primitive">primitive</param>
-        /// <returns>new binding</returns>
-        public Binding DefinePrimitive(string name, PrimitiveBinding.CompilerPrimitive primitive) 
-        {
-            return DefinePrimitive(Symbol.Intern(name), primitive);
         }
 
         /// <summary>
@@ -209,7 +201,7 @@ namespace VARP.Scheme.Stx
 
         #region IEnumerable<T> Members
 
-        public IEnumerator<Binding> GetEnumerator()
+        public IEnumerator<AstBinding> GetEnumerator()
         {
             foreach (var b in Bindings)
                 yield return b;
@@ -230,7 +222,7 @@ namespace VARP.Scheme.Stx
         #region ValueType Methods
         public override bool AsBool() { return true; }
         public override string ToString() { return string.Format("#<lexical-environment size={0}>", Bindings.Count); }
-        public Binding[] ToArray() { return Bindings.ToArray(); }
+        public AstBinding[] ToArray() { return Bindings.ToArray(); }
 
         #endregion
     }

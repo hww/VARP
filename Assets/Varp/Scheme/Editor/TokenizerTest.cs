@@ -82,12 +82,8 @@ namespace VARP.Scheme.Test
             }
 
             string result = sb.ToString();
-            Debug.Assert(result == expectedResult, FoundAndExpected(result, expectedResult));
+            Assert.AreEqual(result, expectedResult);
         }
 
-        string FoundAndExpected(string found, string expected)
-        {
-            return string.Format(" EXPECTED:\n{0}\n FOUND:\n{1}", expected, found);
-        }
     }
 }
