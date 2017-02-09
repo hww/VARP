@@ -106,9 +106,8 @@ namespace VARP.Scheme.VM
                                 var key = (c & Instruction.BitK) != 0 ?
                                     literals[c & ~Instruction.BitK] :
                                     values[c];
-
                                 //Value upVal;
-                                //ReadUpValue(frame, ref upvalues[op.B], out upVal);
+                                //frame.environment.LookupRecursively(frame, ref upvalues[op.B], out upVal);
                                 //Binding bind = environment.LookupRecursively(upVal.AsSymbol());
                                 //if (bind != null)
                                 //    values[op.A].Set(bind.value);
