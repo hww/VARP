@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using VARP.Scheme.VM;
 
 namespace DMenu
 {
@@ -25,17 +27,40 @@ namespace DMenu
         protected string text;
         protected string help;
         protected string shortcut;
+        protected NativeFunction function;
 
-        public MenuItemSimple(string text, string shortcut = null, string help = null) 
+        public MenuItemSimple(string text, string shortcut = null, string help = null)
         {
             this.text = text;
             this.text = help;
             this.shortcut = shortcut;
         }
 
+        /// <summary>
+        /// New menu item with function binded too
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="function"></param>
+        /// <param name="shortcut"></param>
+        /// <param name="help"></param>
+        public MenuItemSimple(string text, NativeFunction function, string shortcut = null, string help = null) 
+        {
+            this.text = text;
+            this.text = help;
+            this.shortcut = shortcut;
+            this.function = function;
+        }
+
         public override string Text { get { return text; } }
         public override string Help { get { return help; } }
         public override string Shorcut { get { return shortcut; } }
+
+        public object Call(params object[] paramList)
+        {
+            if (function == null)
+                throw new Exception(Dbg.LogExceptionFormat("The function '{0}' does not have method binded", text));
+            return function.Call(paramList);
+        }
     }
 
     public class MenuItemComplex : MenuItemSimple
@@ -59,6 +84,8 @@ namespace DMenu
         /// Non selectable string
         /// </summary>
         /// <param name="text"></param>
+        /// <param name="shortcut"></param>
+        /// <param name="help"></param>
         public MenuItemComplex(string text, string shortcut = null, string help = null) : base(text, shortcut, help)
         {
         }
@@ -67,9 +94,12 @@ namespace DMenu
         /// Non selectable string
         /// </summary>
         /// <param name="text"></param>
-        public MenuItemComplex(string text, Binding real_binding, string shortcut = null, string help = null) : base(text, shortcut, help)
+        /// <param name="function"></param>
+        /// <param name="shortcut"></param>
+        /// <param name="help"></param>
+        public MenuItemComplex(string text, NativeFunction function, string shortcut = null, string help = null) : base(text, function, shortcut, help)
         {
-            this.binding = real_binding;
+
         }
 
         public MenuItemComplex(string text, 

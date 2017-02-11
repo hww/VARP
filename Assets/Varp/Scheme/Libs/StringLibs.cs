@@ -25,7 +25,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
 using System.Globalization;
 using System.Diagnostics;
 
@@ -36,69 +35,69 @@ namespace VARP.Scheme.Libs
 
     public static partial class StringLibs
     {
-        public static int GetInteger(string Value)
+        public static int GetInteger(string value)
         {
             try
             {
-                int val = int.Parse(Value, NumberStyles.AllowLeadingSign);
+                int val = int.Parse(value, NumberStyles.AllowLeadingSign);
                 return val;
             }
             catch (System.Exception ex)
             {
-                throw SchemeError.Error("get-integer", "improperly formed int value", Value);
+                throw SchemeError.Error("get-integer", "improperly formed int value", value);
             }
         }
 
-        public static int GetHexadecimal(string Value)
+        public static int GetHexadecimal(string value)
         {
             try
             {
-                Debug.Assert(Value.Length > 2, "Error in hex literal");
-                int hval = int.Parse(Value.Substring(2), NumberStyles.AllowHexSpecifier);
+                Debug.Assert(value.Length > 2, "Error in hex literal");
+                int hval = int.Parse(value.Substring(2), NumberStyles.AllowHexSpecifier);
                 return hval;
             }
             catch (System.Exception ex)
             {
-                throw SchemeError.Error("get-hexadecimal", "improperly formed int value", Value);
+                throw SchemeError.Error("get-hexadecimal", "improperly formed int value", value);
             }
         }
 
-        public static float GetFloat(string Value)
+        public static float GetFloat(string value)
         {
             float val = 0;
 
-            if (float.TryParse(Value, out val))
+            if (float.TryParse(value, out val))
                 return val;
 
-            throw SchemeError.Error("get-float", "improperly formed float value", Value);
+            throw SchemeError.Error("get-float", "improperly formed float value", value);
         }
 
-        public static double GetDouble(string Value)
+        public static double GetDouble(string value)
         {
             double val = 0;
 
-            if (double.TryParse(Value, out val))
+            if (double.TryParse(value, out val))
                 return val;
 
-            throw SchemeError.Error("get-double", "improperly formed float value", Value);
+            throw SchemeError.Error("get-double", "improperly formed float value", value);
         }
 
         /// <summary>
         /// Return double value from any type of string 
         /// </summary>
-        /// <param name="Value"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
-        public static double GetNumerical(string Value)
+        public static double GetNumerical(string value)
         {
-            if (Value == null || Value == string.Empty)
-                throw SchemeError.Error("get-double", "unexpected empty string", Value);
-            if (char.IsDigit(Value[0]))
-                return GetDouble(Value);
+            if (string.IsNullOrEmpty(value))
+                throw SchemeError.Error("get-double", "unexpected empty string", value);
+            if (char.IsDigit(value[0]))
+                return GetDouble(value);
 
-            if (Value[0] == '#')
-                return GetHexadecimal(Value);
+            if (value[0] == '#')
+                return GetHexadecimal(value);
 
-            throw SchemeError.Error("get-numerical", "improperly formed numerical value", Value);
+            throw SchemeError.Error("get-numerical", "improperly formed numerical value", value);
         }
     }
 }

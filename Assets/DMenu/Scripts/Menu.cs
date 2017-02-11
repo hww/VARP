@@ -11,27 +11,24 @@ namespace DMenu
     /// </summary>
     public class Menu : KeyMap
     {
-        public string text;
         public string help;
-        public string shortcut;
+        public string keys;
 
-        public Menu(string text, string shortcut = null, string help = null) : base()
+        public Menu(string title, string keys = null, string help = null) : base(title)
         {
-            this.text = text;
-            this.text = help;
-            this.shortcut = shortcut;
+            this.title = help;
+            this.keys = keys;
         }
 
-        public Menu(KeyMap parentKeyMap, string text, string shortcut = null, string help = null) : base(parentKeyMap)
+        public Menu(KeyMap parent, string title, string keys = null, string help = null) : base(parent, title)
         {
-            this.text = text;
-            this.text = help;
-            this.shortcut = shortcut;
+            this.title = help;
+            this.keys = keys;
         }
 
-        public virtual string Text { get { return text; } }
+        public virtual string Title { get { return title; } }
         public virtual string Help { get { return help; } }
-        public virtual string Shorcut { get { return shortcut; } }
+        public virtual string Keys { get { return keys; } }
 
         public bool Define(string[] sequence, BindingValue value, bool acceptDefaults = false)
         {
@@ -82,11 +79,11 @@ namespace DMenu
                         if (map != null)
                             curentMap = map;
                         else
-                            throw new Exception(Log.ExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
+                            throw new Exception(Dbg.LogExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
                     }
                 }
             }
-            throw new Exception(Log.ExceptionFormat("We can't be here"));
+            throw new Exception(Dbg.LogExceptionFormat("We can't be here"));
         }
 
     }

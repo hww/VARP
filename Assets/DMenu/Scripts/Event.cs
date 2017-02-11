@@ -19,7 +19,7 @@ namespace DMenu
         /// <summary>
         /// Use for masking the modifyer bits
         /// </summary>
-        public static readonly int AllModifyers = Control | Shift | Alt;
+        public static readonly int AllModifyers = Control | Shift | Alt | Hyper | Super | Meta;
 
         /// <summary>
         /// Used internaly for iteration over modyfier. It is replacement for System.Enum.Values(typeof(Modifyers)).
@@ -192,7 +192,7 @@ namespace DMenu
                         if (KeyCodeToNameTable.TryGetValue(m, out name))
                             modifyerName += name;
                         else
-                            throw new Exception(Log.Format("Unexpected modifyer in keycode '{0:X}'", keyCode));
+                            throw new Exception(Dbg.LogFormat("Unexpected modifyer in keycode '{0:X}'", keyCode));
                     }
                 }
             }
@@ -204,7 +204,7 @@ namespace DMenu
             else if (keyCodeOnly < 32 && keyModifyers == 0)
                 return string.Format("^{0}", (char)(keyCodeOnly + 0x40));
             else
-                throw new Exception(Log.Format("Unexpected keycode '{0:X}'", keyCode));
+                throw new Exception(Dbg.LogFormat("Unexpected keycode '{0:X}'", keyCode));
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace DMenu
             int code;
             if (NameToKeyCodeTable.TryGetValue(name, out code))
                 return code;
-            throw new Exception(Log.Format("Expected key code name, found '{0:X}'", name));
+            throw new Exception(Dbg.LogFormat("Expected key code name, found '{0:X}'", name));
         }
 
         /// <summary>
@@ -318,7 +318,7 @@ namespace DMenu
             {
                 var tmp = GetKeyCodeInternal(sufix);
                 if (tmp >= 0) return tmp;
-                throw new Exception(Log.Format("Expected character after C-,A-,S- found '{0}' in expression '{0:X}'", sufix, expression));
+                throw new Exception(Dbg.LogFormat("Expected character after C-,A-,S- found '{0}' in expression '{0:X}'", sufix, expression));
             }
             else
             {

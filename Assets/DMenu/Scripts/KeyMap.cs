@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
 namespace DMenu
@@ -10,8 +11,6 @@ namespace DMenu
     /// </summary>
     public abstract class BindingValue
     {
-        public delegate void Binding();
-
         public virtual BindingValue Clone()
         {
             throw new System.Exception("Abstract class can't be cloned");
@@ -29,15 +28,11 @@ namespace DMenu
     /// </summary>
     public class MethodBinding : BindingValue
     {
-        public string name;
-        public string help;
-        Binding binding;
+        private NativeFunction function;
 
-        public MethodBinding(string name, Binding binding, string help = null)
+        public MethodBinding(NativeFunction function)
         {
-            this.name = name;
-            this.binding = binding;
-            this.help = help;
+            this.function = function;
         }
     }
 
@@ -97,28 +92,55 @@ namespace DMenu
     /// </summary>
     public class KeyMap : BindingValue
     {
+        public string title;
         public KeyMap parent;
         public List<KeyMapItem> items;
 
         /// <summary>
         /// Create emty keymap
         /// </summary>
-        public KeyMap()
+        /// <param name="title"></param>
+        public KeyMap(string title = null)
         {
+            this.title = title;
             items = new List<KeyMapItem>();
         }
 
-        public KeyMap([NotNull] KeyMap parentKeyMap)
+        /// <summary>
+        /// Create empty keymap based on parent keymap
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="title"></param>
+        public KeyMap([NotNull] KeyMap parent, string title = null)
         {
-            if (parentKeyMap == null) throw new ArgumentNullException("parentKeyMap");
-            parent = parentKeyMap;
+            if (parent == null) throw new ArgumentNullException("parent");
+            this.title = title;
+            this.parent = parent;
             items = new List<KeyMapItem>();
         }
 
-        public void CopyTo(KeyMap other)
+        public virtual void CopyTo(KeyMap other)
         {
+            other.title = title;
+            other.parent = parent;
             foreach (var item in items)
                 other.SetLocal(item.key, item.value);
+        }
+
+        /// <summary>
+        /// Get index of element which has given sequence
+        /// </summary>
+        /// <param name="evt"></param>
+        /// <returns></returns>
+        private int GetIndexOf(int evt)
+        {
+            for (var i = 0; i < items.Count; i++)
+            {
+                if (items[i].Compare(evt))
+                    return i;
+            }
+
+            return -1;
         }
 
         /// <summary>
@@ -126,7 +148,7 @@ namespace DMenu
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="value"></param>
-        public void SetLocal(int evt, BindingValue value)
+        public virtual void SetLocal(int evt, BindingValue value)
         {
             if (!Event.IsValid(evt))
                 throw new ArgumentOutOfRangeException("evt");
@@ -142,36 +164,22 @@ namespace DMenu
             }
         }
 
-        /// <summary>
-        /// Get index of element which has given sequence
-        /// </summary>
-        /// <param name="evt"></param>
-        /// <returns></returns>
-        private int GetIndexOf(int evt)
+        public virtual KeyMapItem GetLocal(int evt, bool acceptDefaults = false)
         {
-           for (var i = 0; i < items.Count; i++)
-           {
-               if (items[i].Compare(evt))
-                   return i;
-           }
-
-            return -1;
-        }
-
-        public KeyMapItem GetLocal(int key, bool acceptDefaults = false)
-        {
-            var index = GetIndexOf(key);
-            return index >= 0 ? items[index] : (parent!=null ? parent.GetLocal(key, acceptDefaults) : null);
+            if (!Event.IsValid(evt))
+                throw new ArgumentOutOfRangeException("evt");
+            var index = GetIndexOf(evt);
+            return index >= 0 ? items[index] : null;
         }
 
         #region Use full expression to define and lookup the definition
 
-        public KeyMapItem LokupKey(int[] sequence, bool acceptDefaults = false)
+        public virtual KeyMapItem LokupKey(int[] sequence, bool acceptDefaults = false)
         {
             return LokupKey(sequence, 0, acceptDefaults);
         }
 
-        public KeyMapItem LokupKey(int[] sequence, int starts, bool acceptDefaults = false)
+        public virtual KeyMapItem LokupKey(int[] sequence, int starts, bool acceptDefaults = false)
         {
             var curentMap = this;
             var lastIndex = sequence.Length - 1;
@@ -187,7 +195,7 @@ namespace DMenu
                 {
                     var map = tmp.value as KeyMap;
                     if (map == null)
-                        throw new Exception(Log.ExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'",
+                        throw new Exception(Dbg.LogExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'",
                             sequence[i], tmp, sequence.ToString()));
                     curentMap = map;
                 }
@@ -237,16 +245,152 @@ namespace DMenu
                         if (map != null)
                             curentMap = map;
                         else
-                            throw new Exception(Log.ExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
+                            throw new Exception(Dbg.LogExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
                     }
                 }
             }
-            throw new Exception(Log.ExceptionFormat("We can't be here"));
+            throw new Exception(Dbg.LogExceptionFormat("We can't be here"));
         }
 
         #endregion
     }
 
 
+    /// <summary>
+    /// If an element of a keymap is a char-table, it counts as holding bindings for all
+    /// character events with no modifier element n
+    /// is the binding for the character with code n.This is a compact way to record
+    /// lots of bindings.A keymap with such a char-table is called a full keymap. Other
+    /// keymaps are called sparse keymaps.
+    /// </summary>
+    public class FullKeymap : KeyMap
+    {
+
+        /// <summary>
+        /// Create emty keymap
+        /// </summary>
+        /// <param name="title"></param>
+        public FullKeymap(string title = null) : base(title)
+        {
+        }
+
+        /// <summary>
+        /// Create empty keymap based on parent keymap
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="title"></param>
+        public FullKeymap([NotNull] KeyMap parent, string title = null) : base(parent, title)
+        {
+        }
+
+        /// <summary>
+        /// Set key value pair. Replace existing.
+        /// </summary>
+        /// <param name="evt"></param>
+        /// <param name="value"></param>
+        public override void SetLocal(int evt, BindingValue value)
+        {
+            if (!Event.IsValid(evt))
+                throw new ArgumentOutOfRangeException("evt");
+            // do not support keys with modificators
+            if (evt >= Event.Alt)
+                throw new ArgumentOutOfRangeException("evt");
+
+            items[evt] = new KeyMapItem(evt, value);
+        }
+
+        public override KeyMapItem GetLocal(int evt, bool acceptDefaults = false)
+        {
+            if (!Event.IsValid(evt))
+                throw new ArgumentOutOfRangeException("evt");
+            // do not support keys with modificators
+            if (evt >= Event.Alt)
+                throw new ArgumentOutOfRangeException("evt");
+
+            return (evt < items.Count && items[evt]!=null) ? items[evt] : (parent != null ? parent.GetLocal(evt, acceptDefaults) : null);
+        }
+
+        #region Use full expression to define and lookup the definition
+
+        public override KeyMapItem LokupKey(int[] sequence, bool acceptDefaults = false)
+        {
+            return LokupKey(sequence, 0, acceptDefaults);
+        }
+
+        public override KeyMapItem LokupKey(int[] sequence, int starts, bool acceptDefaults = false)
+        {
+            var curentMap = this as KeyMap;
+            var lastIndex = sequence.Length - 1;
+            var tmp = null as KeyMapItem;
+
+            for (var i = starts; i < sequence.Length; i++)
+            {
+                tmp = curentMap.GetLocal(sequence[i]);
+                if (tmp == null)
+                    return curentMap.parent != null ? curentMap.parent.LokupKey(sequence, acceptDefaults) : null;
+
+                if (i != lastIndex)
+                {
+                    var map = tmp.value as KeyMap;
+                    if (map == null)
+                        throw new Exception(Dbg.LogExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'",
+                            sequence[i], tmp, sequence.ToString()));
+                    curentMap = map;
+                }
+            }
+            return tmp;
+        }
+
+        public override bool Define(int[] sequence, BindingValue value, bool acceptDefaults = false)
+        {
+            var curentMap = this as KeyMap;
+            var lastIndex = sequence.Length - 1;
+
+            for (var i = 0; i < sequence.Length; i++)
+            {
+                var key = sequence[i];
+                var tmp = curentMap.GetLocal(key);
+                if (tmp == null)
+                {
+                    // there is no this binding
+                    // N.B. Do not look at the parent one!
+                    if (i == lastIndex)
+                    {
+                        // the curentMap is the target map and it does not have definition 
+                        curentMap.SetLocal(key, value);
+                        return true;
+                    }
+                    else
+                    {
+                        // the curentMap is the map in the sequence and it does not have definition 
+                        var newMap = new KeyMap();
+                        curentMap.SetLocal(key, newMap);
+                        curentMap = newMap;
+                    }
+                }
+                else
+                {
+                    // we found binding in curentMap
+                    if (i == lastIndex)
+                    {
+                        // curentMap is target map, it has binding but we have to redefine it
+                        curentMap.SetLocal(key, value);
+                    }
+                    else
+                    {
+                        // the curentMap is the map in the sequence and it has definition 
+                        var map = tmp.value as KeyMap;
+                        if (map != null)
+                            curentMap = map;
+                        else
+                            throw new Exception(Dbg.LogExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
+                    }
+                }
+            }
+            throw new Exception(Dbg.LogExceptionFormat("We can't be here"));
+        }
+
+        #endregion
+    }
 
 }

@@ -5,7 +5,7 @@ public class UiObject : MonoBehaviour
     /// <summary>
     /// Reference to the manager
     /// </summary>
-    public UiMenu uiMenu;
+    private UiManager uiManager;
 
     /// <summary>
     /// Return this 2D object position
@@ -34,9 +34,25 @@ public class UiObject : MonoBehaviour
         get { return UiObject.GetPositionOnCanvas(transform); }
     }
 
-    public Vector2 Size
+    public Vector2 RectSize
     {
         get { return RectTransform.rect.size; }
+    }
+
+    /// <summary>
+    /// Reference to the manager
+    /// </summary>
+    public UiManager UiManager
+    {
+        get { return uiManager; }
+        set {
+            uiManager = value;
+            OnSetUiMenu();
+        }
+    }
+
+    protected virtual void OnSetUiMenu()
+    {
     }
 
     /// <summary>

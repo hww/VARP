@@ -2,7 +2,7 @@
 using UnityEngine.UI;
 
 
-public class UiMenuSeparator : UiObject
+public class UiMenuSeparator : UiMenuLine
 {
 
 }
