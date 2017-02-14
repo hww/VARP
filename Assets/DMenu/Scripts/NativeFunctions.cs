@@ -25,7 +25,7 @@ public class NativeFunction
     public object Call(params object[] paramList)
     {
         if (function == null)
-            throw new Exception(Dbg.LogExceptionFormat("The function '{0}' does not have method binded", name));
+            throw new Exception(string.Format("The function '{0}' does not have method binded", name));
         return function(paramList);
     }
 
@@ -35,7 +35,7 @@ public class NativeFunction
     {
         NativeFunction f;
         if (AllFunctions.TryGetValue(name, out f))
-            throw new Exception(Dbg.LogExceptionFormat("The function '{0}' is already defined", name));
+            throw new Exception(string.Format("The function '{0}' is already defined", name));
         return AllFunctions[name] = new NativeFunction(name, func, help);
     }
 
@@ -45,7 +45,7 @@ public class NativeFunction
         NativeFunction f;
         if (AllFunctions.TryGetValue(name, out f))
             return f;
-        throw new Exception(Dbg.LogExceptionFormat("The function '{0}' is not defined", name));
+        throw new Exception(string.Format("The function '{0}' is not defined", name));
     }
 
     public static object Call(string name, params object[] paramList)

@@ -1,11 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using DMenu;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.UI;
 
 public partial class UiTerminal : UiObject
 {
-    private class Entry
+    public class Entry
     {
         public string message;
         public Color color;
@@ -33,61 +36,156 @@ public partial class UiTerminal : UiObject
     public GameObject textPrefab;
     public InputField inputField;
     public ScrollRect scrollRect;
+    public Text promptText;
 
     private bool isVisible;
 
+    public class MessageList
+    {
+        private readonly List<Entry> listOfStrings;
+        private int lineIndex;
 
-    private List<Entry> listOfStrings;
+        public MessageList()
+        {
+            listOfStrings = new List<Entry>();
+        }
 
+        public Entry GetSelectedMessage()
+        {
+            if (lineIndex == 0) return null;
+            if (lineIndex > listOfStrings.Count)
+                lineIndex = listOfStrings.Count;
+            return listOfStrings[listOfStrings.Count - lineIndex];
+        }
+
+        public string GetSelectedMessageText()
+        {
+            Entry ent = GetSelectedMessage();
+            return ent == null ? string.Empty : ent.message;
+        }
+
+
+        public int LineIndex
+        {
+            get { return lineIndex; }
+            set
+            {
+                lineIndex = value;
+                if (lineIndex < 0)
+                    lineIndex = 0;
+                else if (lineIndex > listOfStrings.Count)
+                    lineIndex = listOfStrings.Count;
+            }
+        }
+
+        public void Add(Entry message)
+        {
+            listOfStrings.Add(message);
+            lineIndex = 0;
+        }
+
+        public void Clear()
+        {
+            foreach (var entry in listOfStrings)
+                if (entry.text != null) Destroy(entry.text.gameObject);
+
+            listOfStrings.Clear();
+            lineIndex = 0;
+        }
+
+
+    }
+
+    private MessageList messages;
+    private TheMode terminalMode;
+    private UiManager uiManager;
     private void Start()
     {
-        listOfStrings = new List<Entry>();
-        UiManager = FindObjectOfType<UiManager>();
+        uiManager = FindObjectOfType<UiManager>();
         // it is visible by default
+        messages = new MessageList();
         isVisible = true;
         textPrefab.SetActive(false);
         inputField.onEndEdit.AddListener(delegate { OnEndEdit(inputField); });
-        Log("11111");
-        LogError("22222");
-        LogWarning("33333");
-        Log("44444");
+        inputField.onValidateInput += delegate (string input, int charIndex, char addedChar) { return MyValidate(addedChar); };
+
+        var keyMap = new KeyMap();
+        keyMap.Define(Kbd.Parse("Tab"), new NativeFunction("autocomplete", Autocomplete ));
+        terminalMode = new TheMode("Terminal","Simple terminal", keyMap);
     }
 
+    private object Autocomplete(params object[] args)
+    {
+        return null;
+    }
+
+    private char MyValidate(char charToValidate)
+    {
+        //if (inputField.caretPosition<promptText.Length)
+        //    charToValidate = '\0';
+        if (charToValidate == '\t')
+        {
+            if (inputField.text.StartsWith("he"))
+                inputField.text = "help";
+        }
+        return charToValidate;
+    }
+
+    private bool setVerticalNormalizedPosition;
+    public float verticalNormalizedPosition = -0.01f;
 
     private void Update()
     {
+        if (setVerticalNormalizedPosition)
+        {
+            setVerticalNormalizedPosition = false;
+            scrollRect.verticalNormalizedPosition = verticalNormalizedPosition;
+
+        }
         if (Input.GetKeyDown(KeyCode.BackQuote))
             SetVisible(!GetVisible());
         else if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-            if (lineIndex < listOfStrings.Count) lineIndex++;
-            Prompt(GetMessageAt(lineIndex));
+            messages.LineIndex++;
+            Prompt(null, messages.GetSelectedMessageText());
         }
         else if (Input.GetKeyDown(KeyCode.DownArrow))
         {
-            if (lineIndex > 0) lineIndex--;
-            Prompt(GetMessageAt(lineIndex));
+            messages.LineIndex--;
+            Prompt(null, messages.GetSelectedMessageText());
         }
-    }
-
-    string GetMessageAt(int index)
-    {
-        if (index == 0) return string.Empty;
-        if (index > listOfStrings.Count) index = listOfStrings.Count;
-        return listOfStrings[listOfStrings.Count-index].message;
+        else if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            if (inputField.isFocused)
+            {
+                if (inputField.text.StartsWith("he"))
+                    inputField.text = "help";
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.Return))
+        {
+            Log(inputField.text);
+            Prompt();
+        }
     }
 
     void OnEndEdit(InputField input)
     {
-        Log(input.text);
-        Prompt(string.Empty);
+    //   if (input.text == string.Empty)
+    //       return;
+    //
+    //   Log(input.text);
+    //   Prompt();
     }
 
-    void Prompt(string message)
+    private string defaultPrompt = ">> ";
+
+    void Prompt(string prompt = null, string message = null)
     {
-        inputField.text = message;
-        if (isVisible)
-            inputField.Select();
+        promptText.text = prompt ?? defaultPrompt;
+        inputField.text = message; 
+        inputField.Select();
+        inputField.ActivateInputField();
     }
 }
 
@@ -115,28 +213,23 @@ public partial class UiTerminal
 
     private void Add(Entry message)
     {
-        listOfStrings.Add(message);
-        SetPrefferedScroll();
-        lineIndex = 0;
-        SetPrefferedScroll();
+        messages.Add(message);
+        Prompt();
+        setVerticalNormalizedPosition = true;
     }
 
     public void LogClear()
     {
-        foreach (var entry in listOfStrings)
-            if (entry.text != null) Destroy(entry.text.gameObject);
-
-        listOfStrings.Clear();
-        SetPrefferedScroll();
-        lineIndex = 0;
+        messages.Clear();
+        setVerticalNormalizedPosition = true;
     }
 
-    private int lineIndex;
+
     private void SetPrefferedScroll()
     {
         //if (scrollRect.verticalScrollbar.isActiveAndEnabled)
         {
-            scrollRect.verticalNormalizedPosition = 1f;
+            scrollRect.verticalNormalizedPosition = verticalNormalizedPosition;
             //Canvas.ForceUpdateCanvases();
         }
     }
@@ -154,8 +247,7 @@ public partial class UiTerminal
     {
         isVisible = state;
         terminalGui.SetActive(state);
-        if (state)
-            inputField.Select();
+        Prompt();
     }
 
     private bool GetVisible()

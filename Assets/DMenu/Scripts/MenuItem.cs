@@ -10,13 +10,8 @@ namespace DMenu
     /// <summary>
     /// The base class for all menu items
     /// </summary>
-    public class MenuItem : BindingValue
+    public class MenuItem 
     {
-        //public static MenuItem Create(string text, string shortcut = null, string name)
-        //{
-        //    return new MenuItemSimple(text, name);
-        //}
-
         public virtual string Text { get { return string.Empty; } }
         public virtual string Help { get { return string.Empty; } }
         public virtual string Shorcut { get { return string.Empty; } }
@@ -58,7 +53,7 @@ namespace DMenu
         public object Call(params object[] paramList)
         {
             if (function == null)
-                throw new Exception(Dbg.LogExceptionFormat("The function '{0}' does not have method binded", text));
+                throw new Exception(string.Format("The function '{0}' does not have method binded", text));
             return function.Call(paramList);
         }
     }

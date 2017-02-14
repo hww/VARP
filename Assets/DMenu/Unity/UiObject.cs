@@ -1,11 +1,16 @@
 ﻿using UnityEngine;
 
 public class UiObject : MonoBehaviour
-{
+{ 
     /// <summary>
-    /// Reference to the manager
+    /// Parent object in hierarchy
     /// </summary>
-    private UiManager uiManager;
+    protected UiMenuFactory factory;
+
+    /// <summary>
+    /// Parent object in hierarchy
+    /// </summary>
+    protected UiObject parent;
 
     /// <summary>
     /// Return this 2D object position
@@ -34,25 +39,44 @@ public class UiObject : MonoBehaviour
         get { return UiObject.GetPositionOnCanvas(transform); }
     }
 
+    /// <summary>
+    /// Just size of rectangle
+    /// </summary>
     public Vector2 RectSize
     {
         get { return RectTransform.rect.size; }
     }
 
     /// <summary>
-    /// Reference to the manager
+    /// When we open child element where to put it
     /// </summary>
-    public UiManager UiManager
+    public virtual Vector2 PreferedChildPosition { get { return PositionOnCanvas; } }
+
+    /// <summary>
+    /// Reference to the parent. For menu it can
+    /// be item which open this menu
+    /// </summary>
+    public virtual void SetParent(UiObject parent)
     {
-        get { return uiManager; }
-        set {
-            uiManager = value;
-            OnSetUiMenu();
-        }
+        this.parent = parent;
     }
 
-    protected virtual void OnSetUiMenu()
+    /// <summary>
+    /// Reference to the factory
+    /// </summary>
+    public virtual void SetAnchorMinMax(Vector2 min, Vector2 max)
     {
+        RectTransform.anchorMin = min;
+        RectTransform.anchorMin = max;
+    }
+
+
+    /// <summary>
+    /// Reference to the factory
+    /// </summary>
+    public virtual void SetFactory(UiMenuFactory factory)
+    {
+        this.factory = factory;
     }
 
     /// <summary>

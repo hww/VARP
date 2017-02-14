@@ -10,23 +10,33 @@ public class UiMenuSimpleLine : UiMenuLine, IPointerEnterHandler, IPointerExitHa
     public Text menuShortcut;
     public Toggle lineToggle;
 
-    protected override void OnSetUiMenu()
+    /// <summary>
+    /// Reference to the parent
+    /// </summary>
+    public override void SetParent(UiObject parent)
     {
-        if (UiManager == null) return;
+        this.parent = parent;
+    }
+
+    /// <summary>
+    /// Reference to the parent
+    /// </summary>
+    public override void SetFactory(UiMenuFactory factory)
+    {
+        this.factory = factory;
         if (menuButton != null)
-            menuButton.colors = UiManager.colors;
+            menuButton.colors = factory.colors;
         SetHoverStyle(false);
     }
 
     void SetHoverStyle(bool hover)
     {
-        if (UiManager == null) return;
-
+        var manager = UiManager.I;
         if (menuText != null)
-            menuText.color = hover ? UiManager.textHighlightedColor : UiManager.textNormalColor;
+            menuText.color = hover ? factory.textHighlightedColor : factory.textNormalColor;
 
         if (menuShortcut != null)
-            menuShortcut.color = hover ? UiManager.textHighlightedColor : UiManager.textNormalColor;
+            menuShortcut.color = hover ? factory.textHighlightedColor : factory.textNormalColor;
     }
 
 
@@ -37,7 +47,7 @@ public class UiMenuSimpleLine : UiMenuLine, IPointerEnterHandler, IPointerExitHa
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        SetHoverStyle(false);
+        SetHoverStyle(false); 
     }
 
 

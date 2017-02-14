@@ -6,40 +6,13 @@ using JetBrains.Annotations;
 namespace DMenu
 {
 
-    /// <summary>
-    /// The base class for any binding value
-    /// </summary>
-    public abstract class BindingValue
-    {
-        public virtual BindingValue Clone()
-        {
-            throw new System.Exception("Abstract class can't be cloned");
-        }
 
-        public virtual void Copy(BindingValue other)
-        {
-            throw new System.Exception("Abstract class can't be copyied");
-        }
 
-    }
-
-    /// <summary>
-    /// This is simple binding to any key.
-    /// </summary>
-    public class MethodBinding : BindingValue
-    {
-        private NativeFunction function;
-
-        public MethodBinding(NativeFunction function)
-        {
-            this.function = function;
-        }
-    }
 
     /// <summary>
     /// This is simple keysequence binding to any key.
     /// </summary>
-    public class SequenceBinding : BindingValue
+    public class SequenceBinding 
     {
         public string name;
         public string help;
@@ -62,9 +35,9 @@ namespace DMenu
         public static readonly KeyMapItem Empty = new KeyMapItem(0, null);
 
         public int key;          //< this is the fake key
-        public BindingValue value;  //< there can be any avaiable value
+        public object value;  //< there can be any avaiable value
 
-        public KeyMapItem(int key, BindingValue value)
+        public KeyMapItem(int key, object value)
         {
             this.key = key;
             this.value = value;
@@ -90,7 +63,7 @@ namespace DMenu
     /// <summary>
     /// This class have to alow to build the tree of the keymaps
     /// </summary>
-    public class KeyMap : BindingValue
+    public class KeyMap 
     {
         public string title;
         public KeyMap parent;
@@ -148,7 +121,7 @@ namespace DMenu
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="value"></param>
-        public virtual void SetLocal(int evt, BindingValue value)
+        public virtual void SetLocal(int evt, object value)
         {
             if (!Event.IsValid(evt))
                 throw new ArgumentOutOfRangeException("evt");
@@ -195,7 +168,7 @@ namespace DMenu
                 {
                     var map = tmp.value as KeyMap;
                     if (map == null)
-                        throw new Exception(Dbg.LogExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'",
+                        throw new Exception(string.Format("Expect KeyMap at '{0}' found: '{1}' in: '{2}'",
                             sequence[i], tmp, sequence.ToString()));
                     curentMap = map;
                 }
@@ -203,7 +176,7 @@ namespace DMenu
             return tmp;
         }
 
-        public virtual bool Define(int[] sequence, BindingValue value, bool acceptDefaults = false)
+        public virtual bool Define(int[] sequence, object value, bool acceptDefaults = false)
         {
             var curentMap = this;
             var lastIndex = sequence.Length - 1;
@@ -245,11 +218,11 @@ namespace DMenu
                         if (map != null)
                             curentMap = map;
                         else
-                            throw new Exception(Dbg.LogExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
+                            throw new Exception(string.Format("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
                     }
                 }
             }
-            throw new Exception(Dbg.LogExceptionFormat("We can't be here"));
+            throw new Exception(string.Format("We can't be here"));
         }
 
         #endregion
@@ -288,7 +261,7 @@ namespace DMenu
         /// </summary>
         /// <param name="evt"></param>
         /// <param name="value"></param>
-        public override void SetLocal(int evt, BindingValue value)
+        public override void SetLocal(int evt, object value)
         {
             if (!Event.IsValid(evt))
                 throw new ArgumentOutOfRangeException("evt");
@@ -333,7 +306,7 @@ namespace DMenu
                 {
                     var map = tmp.value as KeyMap;
                     if (map == null)
-                        throw new Exception(Dbg.LogExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'",
+                        throw new Exception(string.Format("Expect KeyMap at '{0}' found: '{1}' in: '{2}'",
                             sequence[i], tmp, sequence.ToString()));
                     curentMap = map;
                 }
@@ -341,7 +314,7 @@ namespace DMenu
             return tmp;
         }
 
-        public override bool Define(int[] sequence, BindingValue value, bool acceptDefaults = false)
+        public override bool Define(int[] sequence, object value, bool acceptDefaults = false)
         {
             var curentMap = this as KeyMap;
             var lastIndex = sequence.Length - 1;
@@ -383,11 +356,11 @@ namespace DMenu
                         if (map != null)
                             curentMap = map;
                         else
-                            throw new Exception(Dbg.LogExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
+                            throw new Exception(string.Format("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
                     }
                 }
             }
-            throw new Exception(Dbg.LogExceptionFormat("We can't be here"));
+            throw new Exception(string.Format("We can't be here"));
         }
 
         #endregion

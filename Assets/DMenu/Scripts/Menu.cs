@@ -30,13 +30,13 @@ namespace DMenu
         public virtual string Help { get { return help; } }
         public virtual string Keys { get { return keys; } }
 
-        public bool Define(string[] sequence, BindingValue value, bool acceptDefaults = false)
+        public bool Define(string[] sequence, object value, bool acceptDefaults = false)
         {
             var newsequence = Kbd.ParsePseudo(sequence);
             return Define(newsequence, value, acceptDefaults);
         }
 
-        public override bool Define(int[] sequence, BindingValue value, bool acceptDefaults = false)
+        public override bool Define(int[] sequence, object value, bool acceptDefaults = false)
         {
             var curentMap = this;
             var lastIndex = sequence.Length - 1;
@@ -79,11 +79,11 @@ namespace DMenu
                         if (map != null)
                             curentMap = map;
                         else
-                            throw new Exception(Dbg.LogExceptionFormat("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
+                            throw new Exception(string.Format("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
                     }
                 }
             }
-            throw new Exception(Dbg.LogExceptionFormat("We can't be here"));
+            throw new Exception(string.Format("We can't be here"));
         }
 
     }
