@@ -26,7 +26,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -39,27 +38,27 @@ namespace VARP.DataStructures
     // This LinkedListNode for a doubly-Linked circular list.
     // =============================================================================
 
-    [System.Serializable]
+    [Serializable]
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public sealed class LinkedListNode<T> 
     {
-        [System.NonSerialized]
+        [NonSerialized]
         internal LinkedList<T> list;
-        [System.NonSerialized]
+        [NonSerialized]
         internal LinkedListNode<T> next;
-        [System.NonSerialized]
+        [NonSerialized]
         internal LinkedListNode<T> prev;
         internal T item;
 
         public LinkedListNode(T value)
         {
-            this.item = value;
+            item = value;
         }
 
         internal LinkedListNode(LinkedList<T> list, T value)
         {
             this.list = list;
-            this.item = value;
+            item = value;
         }
 
         public LinkedList<T> List
@@ -127,7 +126,7 @@ namespace VARP.DataStructures
 
    // [DebuggerDisplay("{DebuggerDisplay,nq}")]
     [DebuggerTypeProxy(typeof(System_CollectionDebugView<>))]
-    [System.Serializable]
+    [Serializable]
     public class LinkedList<T> : IEnumerable<T>
     {
 
@@ -150,7 +149,7 @@ namespace VARP.DataStructures
             if (collection == null)
                 throw new ArgumentNullException("collection");
 
-            foreach (T item in collection)
+            foreach (var item in collection)
                 AddLast(item);
         }
 
@@ -175,7 +174,7 @@ namespace VARP.DataStructures
         public LinkedListNode<T> AddAfter(LinkedListNode<T> node, T value)
         {
             ValidateNode(node);
-            LinkedListNode<T> result = new LinkedListNode<T>(node.list, value);
+            var result = new LinkedListNode<T>(node.list, value);
             InternalInsertNodeBefore(node.next, result);
             return result;
         }
@@ -191,7 +190,7 @@ namespace VARP.DataStructures
         public LinkedListNode<T> AddBefore(LinkedListNode<T> node, T value)
         {
             ValidateNode(node);
-            LinkedListNode<T> result = new LinkedListNode<T>(node.list, value);
+            var result = new LinkedListNode<T>(node.list, value);
             InternalInsertNodeBefore(node, result);
             if (node == head)
                 head = result;
@@ -210,7 +209,7 @@ namespace VARP.DataStructures
 
         public LinkedListNode<T> AddFirst(T value)
         {
-            LinkedListNode<T> result = new LinkedListNode<T>(this, value);
+            var result = new LinkedListNode<T>(this, value);
             if (head == null)
             {
                 InternalInsertNodeToEmptyList(result);
@@ -241,7 +240,7 @@ namespace VARP.DataStructures
 
         public LinkedListNode<T> AddLast(T value)
         {
-            LinkedListNode<T> result = new LinkedListNode<T>(this, value);
+            var result = new LinkedListNode<T>(this, value);
             if (head == null)
             {
                 InternalInsertNodeToEmptyList(result);
@@ -270,10 +269,10 @@ namespace VARP.DataStructures
 
         public void Clear()
         {
-            LinkedListNode<T> current = head;
+            var current = head;
             while (current != null)
             {
-                LinkedListNode<T> temp = current;
+                var temp = current;
                 current = current.Next;   // use Next the instead of "next", otherwise it will loop forever
                 temp.Invalidate();
             }
@@ -298,7 +297,7 @@ namespace VARP.DataStructures
             if (array.Length - index < Count)
                 throw new ArgumentException("Insufficient space");
 
-            LinkedListNode<T> node = head;
+            var node = head;
             if (node != null)
             {
                 do
@@ -311,8 +310,8 @@ namespace VARP.DataStructures
 
         public LinkedListNode<T> Find(T value)
         {
-            LinkedListNode<T> node = head;
-            EqualityComparer<T> c = EqualityComparer<T>.Default;
+            var node = head;
+            var c = EqualityComparer<T>.Default;
             if (node != null)
             {
                 if (value != null)
@@ -341,9 +340,9 @@ namespace VARP.DataStructures
         {
             if (head == null) return null;
 
-            LinkedListNode<T> last = head.prev;
-            LinkedListNode<T> node = last;
-            EqualityComparer<T> c = EqualityComparer<T>.Default;
+            var last = head.prev;
+            var node = last;
+            var c = EqualityComparer<T>.Default;
             if (node != null)
             {
                 if (value != null)
@@ -375,7 +374,7 @@ namespace VARP.DataStructures
 
         public bool Remove(T value)
         {
-            LinkedListNode<T> node = Find(value);
+            var node = Find(value);
             if (node != null)
             {
                 InternalRemoveNode(node);
@@ -418,7 +417,7 @@ namespace VARP.DataStructures
             if (array.Length - index < Count)
                 throw new ArgumentException("Insufficient space");
 
-            T[] tArray = array as T[];
+            var tArray = array as T[];
             if (tArray != null)
             {
                 CopyTo(tArray, index);
@@ -431,15 +430,15 @@ namespace VARP.DataStructures
                 // For example, if the element type of the Array is derived from T,
                 // we can't figure out if we can successfully copy the element beforehand.
                 //
-                Type targetType = array.GetType().GetElementType();
-                Type sourceType = typeof(T);
+                var targetType = array.GetType().GetElementType();
+                var sourceType = typeof(T);
                 if (!(targetType.IsAssignableFrom(sourceType) || sourceType.IsAssignableFrom(targetType)))
                     throw new ArgumentException("Invalid array type");
 
-                object[] objects = array as object[];
+                var objects = array as object[];
                 if (objects == null)
                     throw new ArgumentException("Invalid array type");
-                LinkedListNode<T> node = head;
+                var node = head;
                 try
                 {
                     if (node != null)
@@ -526,7 +525,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<LinkedListNode<T>> NodesFromLast()
         {
-            LinkedListNode<T> node = Last;
+            var node = Last;
             while (node != null)
             {
                 yield return node as LinkedListNode<T>;
@@ -536,7 +535,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<LinkedListNode<T>> NodesFromFirst()
         {
-            LinkedListNode<T> node = First;
+            var node = First;
             while (node != null)
             {
                 yield return node as LinkedListNode<T>;
@@ -550,7 +549,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<T> GetEnumerator()
         {
-            LinkedListNode<T> node = First;
+            var node = First;
             while (node != null)
             {
                 yield return node.Value;
@@ -569,14 +568,14 @@ namespace VARP.DataStructures
 
         public T[] ToArray()
         {
-            T[] array = new T[Count];
+            var array = new T[Count];
             CopyTo(array,0);
             return array;
         }
 
         public List<T> ToList()
         {
-            List<T> list = new List<T>(Count);
+            var list = new List<T>(Count);
             foreach(var v in this)
                 list.Add(v);
             return list;
@@ -589,7 +588,7 @@ namespace VARP.DataStructures
         {
             Debug.Assert(index >= 0);
             Debug.Assert(index < count);
-            LinkedListNode<T> current = First;
+            var current = First;
             while (index>0)
             {
                 current = current.Next;
@@ -613,7 +612,7 @@ namespace VARP.DataStructures
             Debug.Assert(other != null);
             while (other.Count > 0)
             {
-                LinkedListNode<T> first = other.First;
+                var first = other.First;
                 other.Remove(first);
                 AddLast(first);
             }
@@ -621,10 +620,10 @@ namespace VARP.DataStructures
 
         public LinkedList<T> Duplicate()
         {
-            LinkedList<T> result = new LinkedList<T>();
+            var result = new LinkedList<T>();
             foreach (var v in this)
             {
-                LinkedListNode<T> n = new LinkedListNode<T>(v);
+                var n = new LinkedListNode<T>(v);
                 result.AddLast(n);
             }
             return result;
@@ -639,12 +638,12 @@ namespace VARP.DataStructures
         public LinkedList<T> Duplicate(int index, int size)
         {
             Debug.Assert(index >= 0);
-            LinkedList<T> result = new LinkedList<T>();
+            var result = new LinkedList<T>();
             if (index >= Count) return result;
-            LinkedListNode<T> current = GetNodeAtIndex(index);
+            var current = GetNodeAtIndex(index);
             while (current != null && (size < 0 || size > 0))
             {
-                LinkedListNode<T> n = new LinkedListNode<T>(current.Value);
+                var n = new LinkedListNode<T>(current.Value);
                 result.AddLast(n);
                 size--;
                 current = current.Next;
@@ -664,12 +663,12 @@ namespace VARP.DataStructures
             Debug.Assert(index < Count);
             Debug.Assert(index+size < Count);
 
-            LinkedList<T> result = new LinkedList<T>();
-            LinkedListNode<T> current = GetNodeAtIndex(index);
+            var result = new LinkedList<T>();
+            var current = GetNodeAtIndex(index);
 
             while (current != null && (size < 0 || size > 0))
             {
-                LinkedListNode<T> n = new LinkedListNode<T>(current.Value);
+                var n = new LinkedListNode<T>(current.Value);
                 result.AddFirst(n);
                 size--;
                 current = current.Next;
@@ -682,8 +681,8 @@ namespace VARP.DataStructures
             if (count < 2) return;
 
             LinkedListNode<T> temp = null;
-            LinkedListNode<T> last = First; // this will be last
-            LinkedListNode<T> start = First; // this is iterator
+            var last = First; // this will be last
+            var start = First; // this is iterator
             head = Last;
             while (start != null)
             {
@@ -698,10 +697,10 @@ namespace VARP.DataStructures
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append("(");
 
-            LinkedListNode<T> curent = First;
+            var curent = First;
             while (curent != null)
             {
                 sb.Append(ValueString.ToString(curent.Value));
@@ -746,7 +745,7 @@ namespace VARP.DataStructures
         {
             get
             {
-                T[] items = new T[collection.Count];
+                var items = new T[collection.Count];
                 collection.CopyTo(items, 0);
                 return items;
             }

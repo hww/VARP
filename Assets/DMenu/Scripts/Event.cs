@@ -3,29 +3,11 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using UnityEngine;
 
-namespace DMenu
+namespace VARP
 {
 
     public static partial class Event
     {
-
-        public static readonly int Meta = 1 << 27;
-        public static readonly int Control = 1 << 26;
-        public static readonly int Shift = 1 << 25;
-        public static readonly int Hyper = 1 << 24;
-        public static readonly int Super = 1 << 23;
-        public static readonly int Alt = 1 << 22;
-
-        /// <summary>
-        /// Use for masking the modifyer bits
-        /// </summary>
-        public static readonly int AllModifyers = Control | Shift | Alt | Hyper | Super | Meta;
-
-        /// <summary>
-        /// Used internaly for iteration over modyfier. It is replacement for System.Enum.Values(typeof(Modifyers)).
-        /// </summary>
-        public static readonly int[] AllModifyersList = new int[] {Control, Alt, Shift};
-
         /// <summary>
         /// Check if the given keycode is with the given modifyer mask
         /// </summary>
@@ -44,7 +26,7 @@ namespace DMenu
         /// <returns></returns>
         public static bool IsValid(int evt)
         {
-            return evt>= 0 && evt < (2 << 28);
+            return evt>= 0 && evt < KeyModifyers.MaxCode;
         }
 
         /// <summary>
@@ -54,12 +36,12 @@ namespace DMenu
         /// <param name="modifyers"></param>
         public static int MakeEvent(int keyCode, int modifyers)
         {
-            var code = keyCode & ~AllModifyers;
+            var code = keyCode & ~KeyModifyers.AllModifyers;
             if (code > 32 && code < 255)
             {
                 // ASCII
 
-                if ((modifyers & AllModifyers) == Control)
+                if ((modifyers & KeyModifyers.AllModifyers) == KeyModifyers.Control)
                     return code & 0x1F;
                 else
                     return code | modifyers;
@@ -76,7 +58,7 @@ namespace DMenu
         /// <returns></returns>
         public static int GetModifyers(int evt)
         {
-            return evt & AllModifyers;
+            return evt & KeyModifyers.AllModifyers;
         }
 
         /// <summary>
@@ -86,19 +68,60 @@ namespace DMenu
         /// <returns></returns>
         public static int GetKeyCode(int evt)
         {
-            return evt & ~AllModifyers;
+            return evt & ~KeyModifyers.AllModifyers;
         }
 
 
 
     }
 
+    public static class KeyModifyers
+    {
+        public static readonly int MaxCode = 1 << 29;
+        public static readonly int Pseudo = 1 << 28;
+        public static readonly int Meta = 1 << 27;
+        public static readonly int Control = 1 << 26;
+        public static readonly int Shift = 1 << 25;
+        public static readonly int Hyper = 1 << 24;
+        public static readonly int Super = 1 << 23;
+        public static readonly int Alt = 1 << 22;
+
+        /// <summary>
+        /// Use for masking the modifyer bits
+        /// </summary>
+        public static readonly int AllModifyers = Control | Shift | Alt | Hyper | Super | Meta;
+
+        /// <summary>
+        /// Used internaly for iteration over modyfier. It is replacement for System.Enum.Values(typeof(Modifyers)).
+        /// </summary>
+        public static readonly int[] AllModifyersList = new int[] { Control, Alt, Shift };
+    }
+
+
     public static partial class Event
     {
-        public static readonly int Pseudo = 1 << 28;    // start of pseudocodes
-        private static int pseudoCodeIndex = 0;         // pseudocodes generator
-        static Dictionary<string, int> nameToKeyCodeTable;
-        static Dictionary<int, string> keyCodeToNameTable;
+        #region PseudoCode Generator
+
+        // this pseudocode is reserved word "default" used for 
+        // default binding in keymaps
+        public static int DefaultPseudoCode { get; private set; }
+        // pseudocodes generator
+        private static int pseudoCodeIndex = 0;
+        // generate new pseudocode
+        public static int GetPseudocodeOfName(string name)
+        {
+            int code;
+            if (NameToKeyCodeTable.TryGetValue(name, out code))
+                return code;
+            code = pseudoCodeIndex++ | KeyModifyers.Pseudo;
+            SetName(code, name);
+            return code;
+        }
+
+        #endregion
+
+        private static Dictionary<string, int> nameToKeyCodeTable;
+        private static Dictionary<int, string> keyCodeToNameTable;
 
         public static Dictionary<string, int> NameToKeyCodeTable
         {
@@ -131,34 +154,35 @@ namespace DMenu
             for (var i = (int)'a'; i < (int)('z'); i++)
                 SetName(i, ((char)i).ToString());
 
-            SetName(Control, "C-");
-            SetName(Alt, "A-");
-            SetName(Shift, "S-");
-            SetName(Meta, "M-");
-            SetName(Super, "s-");
-            SetName(Hyper, "H-");
+
+            SetName(KeyModifyers.Shift, "S-");
+            SetName(KeyModifyers.Control, "C-");
+            SetName(KeyModifyers.Alt, "A-");
+
+
+            SetName((int)KeyCode.CapsLock, "\\_-");
+            SetName((int)KeyCode.Numlock, "\\N-");
 
             SetName((int)KeyCode.LeftControl, "\\C-");
             SetName((int)KeyCode.LeftAlt, "\\A-");
             SetName((int)KeyCode.LeftShift, "\\S-");
             SetName((int)KeyCode.LeftWindows, "\\W-");
+            SetName((int)KeyCode.LeftCommand, "\\c-");
+
 
             SetName((int)KeyCode.RightControl, "\\C-");
             SetName((int)KeyCode.RightAlt, "\\A-");
             SetName((int)KeyCode.RightShift, "\\S-");
             SetName((int)KeyCode.RightWindows, "\\W-");
+            SetName((int)KeyCode.RightCommand, "\\c-");
+
+            // pseudocode for default binding.
+            DefaultPseudoCode = GetPseudocodeOfName("default");
+            SetName(KeyModifyers.Pseudo, "P-");
+            SetName(KeyModifyers.Pseudo, "\\P-");
         }
 
 
-        public static int GetPseudocodeName(string name)
-        {
-            int code;
-            if (NameToKeyCodeTable.TryGetValue(name, out code))
-                return code;
-            code = pseudoCodeIndex++ | Pseudo;
-            SetName(code, name);
-            return code;
-        }
 
         /// <summary>
         /// Declarate new key code name
@@ -167,24 +191,24 @@ namespace DMenu
         /// <param name="name"></param>
         public static void SetName(int keyCode, string name)
         {
-            var modifyers = keyCode & AllModifyers;
+            var modifyers = keyCode & KeyModifyers.AllModifyers;
             var keyCodeOnly = keyCode - modifyers;
             // The key code can be modifyer or the key
             // but it can't be bought
-            Debug.Assert(modifyers == 0 || keyCodeOnly == 0, keyCode);
+            UnityEngine.Debug.Assert(modifyers == 0 || keyCodeOnly == 0, keyCode);
             NameToKeyCodeTable[name] = keyCode;
             KeyCodeToNameTable[keyCode] = name;
         }
 
         public static string GetName(int keyCode)
         {
-            var keyModifyers = keyCode & AllModifyers;
+            var keyModifyers = keyCode & KeyModifyers.AllModifyers;
             var keyCodeOnly = keyCode - keyModifyers;
 
             var modifyerName = string.Empty;
             if (keyModifyers != 0)
             {
-                foreach (var m in AllModifyersList)
+                foreach (var m in KeyModifyers.AllModifyersList)
                 {
                     if (IsModifyer(keyModifyers, m))
                     {
@@ -272,27 +296,27 @@ namespace DMenu
                         switch (c1)
                         {
                             case 'C':
-                                modifyers |= Control;
+                                modifyers |= KeyModifyers.Control;
                                 break;
 
                             case 'S':
-                                modifyers |= Shift;
+                                modifyers |= KeyModifyers.Shift;
                                 break;
 
                             case 'A':
-                                modifyers |= Alt;
+                                modifyers |= KeyModifyers.Alt;
                                 break;
 
                             case 'M':
-                                modifyers |= Meta;
+                                modifyers |= KeyModifyers.Meta;
                                 break;
 
                             case 's':
-                                modifyers |= Super;
+                                modifyers |= KeyModifyers.Super;
                                 break;
 
                             case 'H':
-                                modifyers |= Hyper;
+                                modifyers |= KeyModifyers.Hyper;
                                 break;
 
                             default:

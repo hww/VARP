@@ -46,7 +46,7 @@ namespace VARP.Scheme.Data
         private Symbol(string name)
         {
             this.name = name;
-            this.keyword = name[0] == ':';
+            keyword = name[0] == ':';
         }
 
         /// <summary>
@@ -65,25 +65,25 @@ namespace VARP.Scheme.Data
         {
             get
             {
-                return this == Symbol.QUOTE ||
-                        this == Symbol.QUASIQUOTE ||
-                        this == Symbol.UNQUOTE ||
-                        this == Symbol.UNQUOTESPLICE;
+                return this == QUOTE ||
+                        this == QUASIQUOTE ||
+                        this == UNQUOTE ||
+                        this == UNQUOTESPLICE;
             }
         }
 
         public string ToSpecialFormString()
         {
-            if (this == Symbol.QUOTE)
+            if (this == QUOTE)
                 return "'";
 
-            if (this == Symbol.QUASIQUOTE)
+            if (this == QUASIQUOTE)
                 return "`";
 
-            if (this == Symbol.UNQUOTE)
+            if (this == UNQUOTE)
                 return ",";
 
-            if (this == Symbol.UNQUOTESPLICE)
+            if (this == UNQUOTESPLICE)
                 return ",@";
             return Name;
         }
@@ -112,46 +112,46 @@ namespace VARP.Scheme.Data
         #region Commonly used symbols
 
         public static string SYSTEM = "system";
-        public static Symbol QUOTE = Symbol.Intern("quote");                        // '
-        public static Symbol UNQUOTE = Symbol.Intern("unquote");                    // ,
-        public static Symbol QUASIQUOTE = Symbol.Intern("quasiquote");              // `
-        public static Symbol UNQUOTESPLICE = Symbol.Intern("unquote-splicing");     // ,@
-        public static Symbol DOT = Symbol.Intern(".");
-        public static Symbol LAMBDA = Symbol.Intern("lambda");
-        public static Symbol AREF = Symbol.Intern("aref");
-        public static Symbol ARRAY = Symbol.Intern("array");
-        public static Symbol CALL = Symbol.Intern("call");
-        public static Symbol CALLINST = Symbol.Intern("call-instance");
-        public static Symbol DEBUG = Symbol.Intern("debug");
-        public static Symbol EVAL = Symbol.Intern("eval");
-        public static Symbol FUNC = Symbol.Intern("function");
-        public static Symbol MACEXP1 = Symbol.Intern("macroexpand-1");
-        public static Symbol MD_ARRAY = Symbol.Intern("md-array");
-        public static Symbol NEW = Symbol.Intern("new");
-        public static Symbol NTH = Symbol.Intern("nth");
-        public static Symbol NULL = Symbol.Intern("nil");
-        public static Symbol BEGIN = Symbol.Intern("begin");
-        public static Symbol RETURN = Symbol.Intern("return");
-        public static Symbol SELF = Symbol.Intern("self");
-        public static Symbol SETQ = Symbol.Intern("=");
-        public static Symbol SET = Symbol.Intern("set!");
-        public static Symbol IF = Symbol.Intern("if");
-        public static Symbol ELSE = Symbol.Intern("else");
-        public static Symbol TRACE = Symbol.Intern("trace");
-        public static Symbol BODY = Symbol.Intern("&body");
-        public static Symbol KEY = Symbol.Intern("&key");
-        public static Symbol OPTIONAL = Symbol.Intern("&optional");
-        public static Symbol REST = Symbol.Intern("&rest");
-        public static Symbol ENVIRONMENT = Symbol.Intern("*environment*");
-        public static Symbol ERROR = Symbol.Intern("*error*");
-        public static Symbol INPUT = Symbol.Intern("*input*");
-        public static Symbol LAST_EXCPT = Symbol.Intern("*last-exception*");
-        public static Symbol MAX_RECUR_DEPTH = Symbol.Intern("*max-recursion-depth*");
-        public static Symbol OUTPUT = Symbol.Intern("*output*");
-        public static Symbol READTABLE = Symbol.Intern("*readtable*");
-        public static Symbol SETF_DISP = Symbol.Intern("*setf-dispatch*");
+        public static Symbol QUOTE = Intern("quote");                        // '
+        public static Symbol UNQUOTE = Intern("unquote");                    // ,
+        public static Symbol QUASIQUOTE = Intern("quasiquote");              // `
+        public static Symbol UNQUOTESPLICE = Intern("unquote-splicing");     // ,@
+        public static Symbol DOT = Intern(".");
+        public static Symbol LAMBDA = Intern("lambda");
+        public static Symbol AREF = Intern("aref");
+        public static Symbol ARRAY = Intern("array");
+        public static Symbol CALL = Intern("call");
+        public static Symbol CALLINST = Intern("call-instance");
+        public static Symbol DEBUG = Intern("debug");
+        public static Symbol EVAL = Intern("eval");
+        public static Symbol FUNC = Intern("function");
+        public static Symbol MACEXP1 = Intern("macroexpand-1");
+        public static Symbol MD_ARRAY = Intern("md-array");
+        public static Symbol NEW = Intern("new");
+        public static Symbol NTH = Intern("nth");
+        public static Symbol NULL = Intern("nil");
+        public static Symbol BEGIN = Intern("begin");
+        public static Symbol RETURN = Intern("return");
+        public static Symbol SELF = Intern("self");
+        public static Symbol SETQ = Intern("=");
+        public static Symbol SET = Intern("set!");
+        public static Symbol IF = Intern("if");
+        public static Symbol ELSE = Intern("else");
+        public static Symbol TRACE = Intern("trace");
+        public static Symbol BODY = Intern("&body");
+        public static Symbol KEY = Intern("&key");
+        public static Symbol OPTIONAL = Intern("&optional");
+        public static Symbol REST = Intern("&rest");
+        public static Symbol ENVIRONMENT = Intern("*environment*");
+        public static Symbol ERROR = Intern("*error*");
+        public static Symbol INPUT = Intern("*input*");
+        public static Symbol LAST_EXCPT = Intern("*last-exception*");
+        public static Symbol MAX_RECUR_DEPTH = Intern("*max-recursion-depth*");
+        public static Symbol OUTPUT = Intern("*output*");
+        public static Symbol READTABLE = Intern("*readtable*");
+        public static Symbol SETF_DISP = Intern("*setf-dispatch*");
 
-        public static Symbol COND = Symbol.Intern("cond");                          // do not required by spec, added for performance
+        public static Symbol COND = Intern("cond");                          // do not required by spec, added for performance
         #endregion
     }
 }

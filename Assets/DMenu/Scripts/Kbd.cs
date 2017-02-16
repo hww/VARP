@@ -6,7 +6,7 @@ using System.Text;
 using JetBrains.Annotations;
 using UnityEngine;
 
-namespace DMenu
+namespace VARP
 {
 
     /// <summary>
@@ -24,7 +24,7 @@ namespace DMenu
         /// <returns></returns>
         public static string ConvertToString(int[] sequence, string separator = null)
         {
-            Debug.Assert(sequence != null);
+            UnityEngine.Debug.Assert(sequence != null);
             return ConvertToString(sequence, 0, sequence.Length, separator);
         }
 
@@ -38,9 +38,9 @@ namespace DMenu
         /// <returns></returns>
         public static string ConvertToString(int[] sequence, int starts, int quantity, string separator = null)
         {
-            Debug.Assert(sequence != null);
-            Debug.Assert(starts < sequence.Length);
-            Debug.Assert(starts + quantity - 1 < sequence.Length);
+            UnityEngine.Debug.Assert(sequence != null);
+            UnityEngine.Debug.Assert(starts < sequence.Length);
+            UnityEngine.Debug.Assert(starts + quantity - 1 < sequence.Length);
 
             if (sequence.Length == 0)
                 return string.Empty;
@@ -79,7 +79,7 @@ namespace DMenu
         /// <returns></returns>
         public static string[] ConvertToStringList(int[] sequence)
         {
-            Debug.Assert(sequence != null);
+            UnityEngine.Debug.Assert(sequence != null);
 
             var result = new string[sequence.Length];
             if (sequence.Length == 0)
@@ -109,7 +109,7 @@ namespace DMenu
                 if (string.IsNullOrEmpty(s))
                     continue;
 
-                int evt = Event.ParseExpression(s);
+                var evt = Event.ParseExpression(s);
 
                 if (evt >= 0)
                 {
@@ -135,7 +135,7 @@ namespace DMenu
             var idx = 0;
             var result = new int[sequence.Length];
             foreach (var s in sequence)
-                result[idx++] = Event.GetPseudocodeName(s);
+                result[idx++] = Event.GetPseudocodeOfName(s);
             return result;
         }
     }

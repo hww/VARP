@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using DMenu;
+using VARP;
 using JetBrains.Annotations;
 
 /// <summary>
@@ -29,7 +29,7 @@ public class NativeFunction
         return function(paramList);
     }
 
-    private static readonly Dictionary<string, NativeFunction> AllFunctions = new Dictionary<string,NativeFunction>();
+    public static readonly Dictionary<string, NativeFunction> AllFunctions = new Dictionary<string,NativeFunction>();
 
     public static NativeFunction Define(string name, Function func, string help = null)
     {
@@ -54,5 +54,14 @@ public class NativeFunction
         return f.Call(paramList);
     }
 
+
+    public string[] GetNames()
+    {
+        var idx = 0;
+        var result = new string[AllFunctions.Count];
+        foreach (var nativeFunction in AllFunctions)
+            result[idx++] = nativeFunction.Key;
+        return result;
+    }
 
 }

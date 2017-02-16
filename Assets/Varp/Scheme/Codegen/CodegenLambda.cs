@@ -39,8 +39,8 @@ namespace VARP.Scheme.Codegen
 
     public partial class CodeGenerator
     {
-        const int initialLiteralsSize = 10;
-        const int initialCodeSize = 10;
+        private const int initialLiteralsSize = 10;
+        private const int initialCodeSize = 10;
 
         private List<Value> Literals;
         private List<Template.UpValInfo> UpValues;
@@ -55,7 +55,7 @@ namespace VARP.Scheme.Codegen
 
         public Template GetTemplate()
         {
-            Template template = new Template();
+            var template = new Template();
 
             template.Values = Values.ToArray();
             template.UpValues = UpValues.ToArray();
@@ -99,7 +99,7 @@ namespace VARP.Scheme.Codegen
         /// </summary>
         /// <param name="gen"></param>
         /// <param name="args"></param>
-        public CodeGenerator(Stx.AstBinding[] args)
+        public CodeGenerator(AstBinding[] args)
         { 
             Code = new List<Instruction>(initialCodeSize);
             Literals = new List<Value>(initialLiteralsSize);
@@ -119,7 +119,7 @@ namespace VARP.Scheme.Codegen
 
                 if (v is ArgumentBinding)
                 {
-                    ArgumentBinding arg = v as ArgumentBinding;
+                    var arg = v as ArgumentBinding;
                     switch (arg.ArgType)
                     {
                         case ArgumentBinding.Type.Required:
@@ -137,15 +137,15 @@ namespace VARP.Scheme.Codegen
                                 OptArgsNumber++;
                                 // optional arguments are all the time pairs
                                 // of identifier and initializer
-                                Symbol identifier = arg.Identifier;
-                                int literal = -1;
+                                var identifier = arg.Identifier;
+                                var literal = -1;
                                 if (arg.Initializer != null)
                                 {
                                     if (arg.Initializer is AstLiteral)
                                         literal = DefineLiteral(new Value(arg.Initializer.GetDatum()));
                                     else
                                     {
-                                        Template code = GenerateCode(arg.Initializer);
+                                        var code = GenerateCode(arg.Initializer);
                                         literal = DefineLiteral(new Value(code));
                                     }
                                 }
@@ -168,15 +168,15 @@ namespace VARP.Scheme.Codegen
                                 KeyArgsNumber++;
                                 // optional arguments are all the time pairs
                                 // of identifier and initializer
-                                Symbol identifier = arg.Identifier;
-                                int literal = -1;
+                                var identifier = arg.Identifier;
+                                var literal = -1;
                                 if (arg.Initializer != null)
                                 {
                                     if (arg.Initializer is AstLiteral)
                                         literal = DefineLiteral(new Value(arg.Initializer.GetDatum()));
                                     else
                                     {
-                                        Template code = GenerateCode(arg.Initializer);
+                                        var code = GenerateCode(arg.Initializer);
                                         literal = DefineLiteral(new Value(code));
                                     }
                                 }
@@ -202,7 +202,7 @@ namespace VARP.Scheme.Codegen
                 else if (v is UpBinding)
                 {
                     if (UpValueIdx < 0) UpValueIdx = v.VarIdx;
-                    UpBinding arg = v as UpBinding;
+                    var arg = v as UpBinding;
                     // setup optional variable item
                     UpValues.Add(new Template.UpValInfo()
                     {
@@ -229,7 +229,7 @@ namespace VARP.Scheme.Codegen
             set
             {
                 sp = value;
-                SpMax = (short)System.Math.Max(value, SpMax);
+                SpMax = (short)Math.Max(value, SpMax);
             }
         }
         public short Pop()
@@ -253,7 +253,7 @@ namespace VARP.Scheme.Codegen
         /// <returns></returns>
         public byte DefineUpValue(Symbol id, byte envIdx, byte varIdx)
         {
-            byte localid = DefineLocal(id);
+            var localid = DefineLocal(id);
             UpValues.Add(new Template.UpValInfo()
             {
                 Name = id,
@@ -271,11 +271,11 @@ namespace VARP.Scheme.Codegen
         /// <returns></returns>
         public byte DefineLocal(Symbol name)
         {
-            byte idx = ReferenceLocal(name);
+            var idx = ReferenceLocal(name);
             if (idx != 0xFF) return idx;
             // variable is not exists so we have to construct it
             Debug.Assert(Values.Count < 0xFF);
-            Template.ArgumentInfo info = new Template.ArgumentInfo();
+            var info = new Template.ArgumentInfo();
             info.Name = name;
             info.VarIdx = (byte)Values.Count;
             Values.Add(info);
@@ -304,7 +304,7 @@ namespace VARP.Scheme.Codegen
         /// <returns></returns>
         public int DefineLiteral(Value val)
         {
-            int idx = ReferenceLiteral(val);
+            var idx = ReferenceLiteral(val);
             if (idx >= 0) return (ushort)idx;
             // literal is not found, define another one
             Literals.Add(val);

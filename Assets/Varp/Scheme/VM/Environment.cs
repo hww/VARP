@@ -54,7 +54,7 @@ namespace VARP.Scheme.VM
         {
             this.parent = parent;
             this.name = name;
-            this.Bindings = new Dictionary<Symbol, Binding>(size);
+            Bindings = new Dictionary<Symbol, Binding>(size);
         }
 
         public bool IsTop { get { return parent == null; } }
@@ -115,7 +115,7 @@ namespace VARP.Scheme.VM
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             // Lets call the generic version here
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         #endregion
@@ -126,7 +126,7 @@ namespace VARP.Scheme.VM
 
         #endregion
         public override string Inspect() {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             foreach (var v in Bindings)
                 sb.AppendLine( Inspector.Inspect(v.Value));
             return sb.ToString();

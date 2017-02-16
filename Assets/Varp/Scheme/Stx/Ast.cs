@@ -61,7 +61,7 @@ namespace VARP.Scheme.Stx
 
         public AST(Syntax syntax)
         {
-            this.Expression = syntax;
+            Expression = syntax;
         }
 
         /// <summary>
@@ -94,15 +94,15 @@ namespace VARP.Scheme.Stx
         }
         public static Value GetDatum(LinkedList<Value> list)
         {
-            LinkedList<Value> result = new LinkedList<Value>();
+            var result = new LinkedList<Value>();
             if (list == null) return Value.Nill;
-            foreach (Value curent in list)
+            foreach (var curent in list)
                 result.AddLast(GetDatum(curent));
             return new Value(result);
         }
         public static Value GetDatum(List<Value> list)
         {
-            List<Value> result = new List<Value>(list.Count);
+            var result = new List<Value>(list.Count);
             foreach (var curent in list)
                 result.Add(curent.AsAST().GetDatum());
             return new Value(result);
@@ -192,9 +192,9 @@ namespace VARP.Scheme.Stx
             if (envIdx > 255) SchemeError.Error("ast-reference", "environment index should be less that 256", syntax);
             if (varIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
 
-            this.ArgIdx = (byte)argIdx;
-            this.RefEnvIdx = (short)envIdx;
-            this.RefVarIdx = (short)varIdx;
+            ArgIdx = (byte)argIdx;
+            RefEnvIdx = (short)envIdx;
+            RefVarIdx = (short)varIdx;
         }
         public bool IsGlobal { get { return RefVarIdx < 0; } }
         public bool IsUpValue { get { return RefEnvIdx > 0; } }
@@ -219,12 +219,12 @@ namespace VARP.Scheme.Stx
             if (refEnvIdx > 255) SchemeError.Error("ast-reference", "environment index should be less that 256", syntax);
             if (refVarIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
 
-            this.VarIdx = (byte)varIdx;
-            this.RefEnvIdx = (short)refEnvIdx;
-            this.RefVarIdx = (short)refVarIdx;
+            VarIdx = (byte)varIdx;
+            RefEnvIdx = (short)refEnvIdx;
+            RefVarIdx = (short)refVarIdx;
 
-            this.Variable = variable;
-            this.Value = value;
+            Variable = variable;
+            Value = value;
         }
         public bool IsGlobal { get { return RefVarIdx < 0; } }
         public bool IsUpValue { get { return RefEnvIdx > 0; } }
@@ -245,10 +245,10 @@ namespace VARP.Scheme.Stx
 
         public AstConditionIf(Syntax syntax, Syntax keyword, AST cond, AST then, AST els) : base(syntax)
         {
-            this.Keyword = keyword;
-            this.condExpression = cond;
-            this.thenExperssion = then;
-            this.elseExpression = els;
+            Keyword = keyword;
+            condExpression = cond;
+            thenExperssion = then;
+            elseExpression = els;
         }
 
         #region ValueType Methods
@@ -265,9 +265,9 @@ namespace VARP.Scheme.Stx
 
         public AstCondition(Syntax syntax, Syntax keyword, LinkedList<Value> conditions, LinkedList<Value> elseCase) : base(syntax)
         {
-            this.Keyword = keyword;
-            this.Conditions = conditions;
-            this.ElseCase = elseCase;
+            Keyword = keyword;
+            Conditions = conditions;
+            ElseCase = elseCase;
         }
 
         #region ValueType Methods
@@ -285,8 +285,8 @@ namespace VARP.Scheme.Stx
         public LinkedList<Value> Arguments;
         public AstPrimitive(Syntax syntax, Syntax identifier, LinkedList<Value> arguments) : base(syntax)
         {
-            this.Identifier = identifier;
-            this.Arguments = arguments;
+            Identifier = identifier;
+            Arguments = arguments;
         }
 
         #region ValueType Methods
@@ -300,7 +300,7 @@ namespace VARP.Scheme.Stx
         public LinkedList<Value> list;
         public AstApplication(Syntax syntax, LinkedList<Value> expression) : base(syntax)
         {
-            this.list = expression;
+            list = expression;
         }
 
         #region ValueType Methods
@@ -319,12 +319,12 @@ namespace VARP.Scheme.Stx
         public LinkedList<Value> BodyExpression;     // (lambda (...) <...>)
         public AstLambda(Syntax syntax, Syntax keyword, AstEnvironment environment, LinkedList<Value> expression) : base(syntax)
         {
-            this.ArgList = environment.ToArray();
-            this.BodyExpression = expression;
+            ArgList = environment.ToArray();
+            BodyExpression = expression;
             if (keyword.GetDatum() == Symbol.LAMBDA)
-                this.Keyword = keyword;
+                Keyword = keyword;
             else
-                this.Keyword = new Syntax(Symbol.LAMBDA, keyword.Location);
+                Keyword = new Syntax(Symbol.LAMBDA, keyword.Location);
         }
 
         #region ValueType Methods
@@ -342,8 +342,8 @@ namespace VARP.Scheme.Stx
         public LinkedList<Value> BodyExpression;
         public AstSequence(Syntax syntax, Syntax keyword, LinkedList<Value> expression) : base(syntax)
         {
-            this.Keyword = keyword;
-            this.BodyExpression = expression;
+            Keyword = keyword;
+            BodyExpression = expression;
         }
 
         #region ValueType Methods

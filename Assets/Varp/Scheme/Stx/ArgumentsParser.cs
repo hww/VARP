@@ -44,22 +44,22 @@ namespace VARP.Scheme.Stx
         /// <summary>
         /// Build argument pair from identifier and initializer only (lambda (:optional (x 1) (y 2) (z 3)) ...)
         /// </summary>
-        static void ParseArg(string name, Syntax stx, LinkedList<Value> list, AstEnvironment env, out Syntax id, out AST ast)
+        private static void ParseArg(string name, Syntax stx, LinkedList<Value> list, AstEnvironment env, out Syntax id, out AST ast)
         {
             Debug.Assert(stx != null);
             Debug.Assert(list != null);
             Debug.Assert(env != null);
-            int argc = list.Count;
+            var argc = list.Count;
             if (argc != 2) throw SchemeError.ArityError("let", "lambda: bad &key or &optional argument", 2, argc, list, stx);
 
-            Syntax a = list[0].AsSyntax();
-            Syntax b = list[1].AsSyntax();
+            var a = list[0].AsSyntax();
+            var b = list[1].AsSyntax();
 
             if (!a.IsIdentifier)
                 SchemeError.ArgumentError(name, "symbol?", a);
 
             // compile initializer in the parent scope
-            AST exast = AstBuilder.Expand(b, env.Parent);
+            var exast = AstBuilder.Expand(b, env.Parent);
             id = a; ast = exast;
         }
 
@@ -67,7 +67,7 @@ namespace VARP.Scheme.Stx
         /// <summary>
         /// Build argument pair from identifier only (lambda (:optional x y z) ...)
         /// </summary>
-        static void ParseArg(string name, Syntax stx, Syntax identifier, AstEnvironment env, out Syntax var)
+        private static void ParseArg(string name, Syntax stx, Syntax identifier, AstEnvironment env, out Syntax var)
         {
             Debug.Assert(stx != null);
             Debug.Assert(identifier != null);
@@ -77,16 +77,16 @@ namespace VARP.Scheme.Stx
             var = identifier;
         }
 
-        static AstBinding ParseRequired(string name, Syntax stx, Syntax definition, AstEnvironment env, ArgumentBinding.Type type)
+        private static AstBinding ParseRequired(string name, Syntax stx, Syntax definition, AstEnvironment env, ArgumentBinding.Type type)
         {
             Syntax var = null;
             ParseArg(name, stx, definition, env, out var);
-            ArgumentBinding binding = new ArgumentBinding(env, var, type, null);
+            var binding = new ArgumentBinding(env, var, type, null);
             env.Define(binding);
             return binding;
         }
 
-        static AstBinding ParseOptional(string name, Syntax stx, Syntax definition, AstEnvironment env, ArgumentBinding.Type type)
+        private static AstBinding ParseOptional(string name, Syntax stx, Syntax definition, AstEnvironment env, ArgumentBinding.Type type)
         {
             Syntax var = null;
             AST val = null;
@@ -96,14 +96,14 @@ namespace VARP.Scheme.Stx
                 ParseArg(name, stx, definition.AsLinkedList<Value>(), env, out var, out val);
             else
                 throw SchemeError.ArgumentError("lambda", "list?", definition);
-            ArgumentBinding binding = new ArgumentBinding(env, var, type, val);
+            var binding = new ArgumentBinding(env, var, type, val);
             env.Define(binding);
             return binding;
         }
 
-        static AstBinding ParseBody(string name, Syntax stx, Syntax definition, AstEnvironment env)
+        private static AstBinding ParseBody(string name, Syntax stx, Syntax definition, AstEnvironment env)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
         #endregion
 
@@ -111,14 +111,14 @@ namespace VARP.Scheme.Stx
 
         public static AstEnvironment ParseLet(Syntax expression, LinkedList<Value> arguments, AstEnvironment environment)
         {
-            AstEnvironment newenv = new AstEnvironment(environment);
+            var newenv = new AstEnvironment(environment);
 
             if (arguments == null)
                 return newenv;
 
             foreach (var arg in arguments)
             {
-                Syntax argstx = arg.AsSyntax();
+                var argstx = arg.AsSyntax();
                 if (argstx.IsExpression)
                     ParseOptional("let", argstx, argstx, newenv, ArgumentBinding.Type.Required);
                 else
@@ -129,9 +129,7 @@ namespace VARP.Scheme.Stx
         }
 
 
-
-
-        delegate void AddDelegate(ref LinkedList<Value> first, ref LinkedList<Value> last, ValueClass obj);
+        private delegate void AddDelegate(ref LinkedList<Value> first, ref LinkedList<Value> last, ValueClass obj);
 
         /// <summary>
         /// The result structure has lists of arguments where
@@ -143,12 +141,12 @@ namespace VARP.Scheme.Stx
         /// <param name="args">destination arguments structure</param>
         public static AstEnvironment ParseLambda(Syntax expression, LinkedList<Value> arguments, AstEnvironment environment)
         {
-            AstEnvironment newenv = new AstEnvironment(environment);
+            var newenv = new AstEnvironment(environment);
 
             if (arguments == null)
                 return newenv;
 
-            ArgumentBinding.Type arg_type = ArgumentBinding.Type.Required;
+            var arg_type = ArgumentBinding.Type.Required;
 
             /// ----------------------------------------------------------------------
             /// Waiting for the DSSSL keywords, when found change mode and return true
@@ -157,7 +155,7 @@ namespace VARP.Scheme.Stx
             {
                 if (!stx.IsSymbol) return false;
 
-                Symbol symbol = stx.GetDatum().AsSymbol();
+                var symbol = stx.GetDatum().AsSymbol();
 
                 if (symbol == Symbol.OPTIONAL)
                     arg_type = ArgumentBinding.Type.Optionals;
@@ -174,7 +172,7 @@ namespace VARP.Scheme.Stx
 
             foreach (var arg in arguments)
             {
-                Syntax argstx = arg.AsSyntax();
+                var argstx = arg.AsSyntax();
 
                 if (!SymbolToArgumentType(argstx))
                 {

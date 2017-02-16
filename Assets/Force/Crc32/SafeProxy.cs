@@ -19,10 +19,10 @@ namespace Force.Crc32
         {
             for (uint i = 0; i < 256; i++)
             {
-                uint res = i;
-                for (int t = 0; t < 16; t++)
+                var res = i;
+                for (var t = 0; t < 16; t++)
                 {
-                    for (int k = 0; k < 8; k++) res = (res & 1) == 1 ? Poly ^ (res >> 1) : (res >> 1);
+                    for (var k = 0; k < 8; k++) res = (res & 1) == 1 ? Poly ^ (res >> 1) : (res >> 1);
                     _table[(t * 256) + i] = res;
                 }
             }
@@ -30,9 +30,9 @@ namespace Force.Crc32
 
         public uint Append(uint crc, byte[] input, int offset, int length)
         {
-            uint crcLocal = uint.MaxValue ^ crc;
+            var crcLocal = uint.MaxValue ^ crc;
 
-            uint[] table = _table;
+            var table = _table;
             while (length >= 16)
             {
                 crcLocal = table[(15 * 256) + ((crcLocal ^ input[offset]) & 0xff)]

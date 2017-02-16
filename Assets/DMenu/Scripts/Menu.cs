@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
-namespace DMenu
+namespace VARP
 {
     /// <summary>
     /// The menu object behave same as key map
@@ -36,7 +36,7 @@ namespace DMenu
             return Define(newsequence, value, acceptDefaults);
         }
 
-        public override bool Define(int[] sequence, object value, bool acceptDefaults = false)
+        public bool Define(int[] sequence, object value, bool acceptDefaults = false)
         {
             var curentMap = this;
             var lastIndex = sequence.Length - 1;

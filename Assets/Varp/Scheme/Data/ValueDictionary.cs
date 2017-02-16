@@ -35,7 +35,7 @@ namespace VARP.Scheme.Data
     {
         public static Dictionary<object, Value> FromValuePairArray(ValuePair[] array)
         {
-            Dictionary<object, Value> list = new Dictionary<object, Value>();
+            var list = new Dictionary<object, Value>();
             foreach (var v in array)
                 list[v.Item1] = v.Item2;
             return list;
@@ -44,24 +44,24 @@ namespace VARP.Scheme.Data
         public static Dictionary<object, Value> FromArguments(params Value[] args)
         {
             Debug.Assert((args.Length & 1) == 0);
-            ValuePair[] list = new ValuePair[args.Length / 2];
-            for (int i = 0; i < args.Length; i += 2)
+            var list = new ValuePair[args.Length / 2];
+            for (var i = 0; i < args.Length; i += 2)
                 list[i / 2] = new ValuePair(args[i], args[i + 1]);
             return FromValuePairArray(list);
         }
         public static Dictionary<object, Value> FromArguments(params object[] args)
         {
             Debug.Assert((args.Length & 1) == 0);
-            ValuePair[] list = new ValuePair[args.Length / 2];
-            for (int i = 0; i < args.Length; i += 2)
+            var list = new ValuePair[args.Length / 2];
+            for (var i = 0; i < args.Length; i += 2)
                 list[i / 2] = new ValuePair(args[i], args[i + 1]);
             return FromValuePairArray(list);
         }
 
         public static string ToString(Dictionary<object, Value> table)
         {
-            StringBuilder sb = new StringBuilder();
-            bool appendSpace = false;
+            var sb = new StringBuilder();
+            var appendSpace = false;
             sb.Append("#hash(");
             foreach (var v in table)
             {

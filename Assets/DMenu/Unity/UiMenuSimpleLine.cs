@@ -29,7 +29,7 @@ public class UiMenuSimpleLine : UiMenuLine, IPointerEnterHandler, IPointerExitHa
         SetHoverStyle(false);
     }
 
-    void SetHoverStyle(bool hover)
+    private void SetHoverStyle(bool hover)
     {
         var manager = UiManager.I;
         if (menuText != null)

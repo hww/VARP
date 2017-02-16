@@ -96,8 +96,8 @@ namespace VARP.DataStructures
         {
             Debug.Assert(replace != null);
 
-            SDoubleLinkBase<DataType> replacePrev = replace.Previous;
-            SDoubleLinkBase<DataType> replaceNext = replace.Next;
+            var replacePrev = replace.Previous;
+            var replaceNext = replace.Next;
 
             Previous = replacePrev;
             Next = replaceNext;
@@ -126,7 +126,7 @@ namespace VARP.DataStructures
         {
             if (other == null) return -1;
             if (other != this) return -1;
-            return this.CompareTo(other);
+            return CompareTo(other);
         }
         #endregion
 
@@ -134,7 +134,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<SDoubleLinkBase<DataType>> GetEnumerator()
         {
-            SDoubleLinkBase<DataType> node = this;
+            var node = this;
             while (node != null && !node.IsEnd)
             {
                 yield return node;
@@ -144,7 +144,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<SDoubleLinkBase<DataType>> GetEnumeratorReversed()
         {
-            SDoubleLinkBase<DataType> node = this;
+            var node = this;
             while (node != null && !node.IsEnd)
             {
                 yield return node;
@@ -159,7 +159,7 @@ namespace VARP.DataStructures
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             // Lets call the generic version here
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         #endregion
@@ -194,7 +194,7 @@ namespace VARP.DataStructures
 
     public class SDoubleLinkedList<DataType> : IEnumerable<SDoubleLink<DataType>> where DataType : struct 
     {
-        SDoubleLinkRoot<DataType> Root = new SDoubleLinkRoot<DataType>();
+        private SDoubleLinkRoot<DataType> Root = new SDoubleLinkRoot<DataType>();
         public SDoubleLinkBase<DataType> First { get { return Root.Next; } set { Root.Next = value; } }
         public SDoubleLinkBase<DataType> Last { get { return Root.Previous; } set { Root.Previous = value; } }
 
@@ -259,7 +259,7 @@ namespace VARP.DataStructures
         {
             if (IsEmpty) return null;
             var node = First;
-            for (int i = 0; i < index; i++)
+            for (var i = 0; i < index; i++)
             {
                 if (node.IsEnd)
                     return null;
@@ -289,7 +289,7 @@ namespace VARP.DataStructures
         // Convert list to the List<T>
         public List<DataType> ToList()
         {
-            List<DataType> list = new List<DataType>();
+            var list = new List<DataType>();
             var node = First;
             while (!node.IsEnd)
             {
@@ -306,7 +306,7 @@ namespace VARP.DataStructures
         // Join elements to the string
         public string Join(string delimeter)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             var node = First;
             if (!node.IsEnd)
             {
@@ -324,7 +324,7 @@ namespace VARP.DataStructures
         // Convert this list to string
         public new string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             var node = First;
             sb.Append("(");
             while (!node.IsEnd)
@@ -341,8 +341,8 @@ namespace VARP.DataStructures
         /// <returns></returns>
         public virtual string ToReadable()
         {
-            string listAsString = string.Empty;
-            int i = 0;
+            var listAsString = string.Empty;
+            var i = 0;
             var node = First;
 
             while (!node.IsEnd)
@@ -359,7 +359,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<SDoubleLink<DataType>> GetEnumerator()
         {
-            SDoubleLinkBase<DataType> node = First;
+            var node = First;
             while (node != null && !node.IsEnd)
             {
                 yield return node as SDoubleLink<DataType>;
@@ -369,7 +369,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<SDoubleLink<DataType>> GetEnumeratorReversed()
         {
-            SDoubleLinkBase<DataType> node = Last;
+            var node = Last;
             while (node != null && !node.IsEnd)
             {
                 yield return node as SDoubleLink<DataType>;
@@ -384,7 +384,7 @@ namespace VARP.DataStructures
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             // Lets call the generic version here
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         #endregion

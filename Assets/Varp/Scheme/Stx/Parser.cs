@@ -48,10 +48,10 @@ namespace VARP.Scheme.Stx
         /// <remarks>It is an error to pass scheme to this method with 'extraneous' tokens, such as trailing closing brackets</remarks>
         public static Syntax Parse(string scheme, string filepath)
         {
-            Tokenizer reader = new Tokenizer(new System.IO.StringReader(scheme), filepath);
+            var reader = new Tokenizer(new System.IO.StringReader(scheme), filepath);
 
-            Syntax res = Parser.Parse(reader);
-            Token token = reader.ReadToken();
+            var res = Parse(reader);
+            var token = reader.ReadToken();
             if (token != null) throw SchemeError.SyntaxError("parser", "found extra tokens after the end of a scheme expression", token);
 
             return res;
@@ -65,7 +65,7 @@ namespace VARP.Scheme.Stx
         /// </remarks>
         public static Syntax Parse(Tokenizer reader)
         {
-            Token firstToken = reader.ReadToken();
+            var firstToken = reader.ReadToken();
             if (firstToken == null) return null;
             return ParseToken(firstToken, reader);
         }
@@ -136,10 +136,10 @@ namespace VARP.Scheme.Stx
                 case TokenType.QuasiQuote: quote = Symbol.QUASIQUOTE; break;
                 case TokenType.UnquoteSplicing: quote = Symbol.UNQUOTESPLICE; break;
             }
-            Syntax quote_stx = new Syntax(quote, thisToken);
-            Token nextToken = moreTokens.ReadToken();
-            Syntax quoted = ParseToken(nextToken, moreTokens);
-            LinkedList<Syntax> list = new LinkedList<Syntax>();
+            var quote_stx = new Syntax(quote, thisToken);
+            var nextToken = moreTokens.ReadToken();
+            var quoted = ParseToken(nextToken, moreTokens);
+            var list = new LinkedList<Syntax>();
             list.AddLast(quote_stx);
             list.AddLast(quoted);
             return new Syntax(list, thisToken);
@@ -153,10 +153,10 @@ namespace VARP.Scheme.Stx
         private static Syntax ParseList(Token thisToken, Tokenizer moreTokens)
         {
             // Is a list/vector
-            List<Syntax> listContents = new List<Syntax>();
+            var listContents = new List<Syntax>();
             Token dotToken = null;
 
-            Token nextToken = moreTokens.ReadToken();
+            var nextToken = moreTokens.ReadToken();
             while (nextToken != null && nextToken.Type != TokenType.CloseBracket)
             {
                 // Parse this token
@@ -210,10 +210,10 @@ namespace VARP.Scheme.Stx
 
         private static Syntax ParseVector(Token thisToken, Tokenizer moreTokens)
         {
-            List<object> listContents = new List<object>();
+            var listContents = new List<object>();
             Token dotToken = null;
 
-            Token nextToken = moreTokens.ReadToken();
+            var nextToken = moreTokens.ReadToken();
             while (nextToken != null && nextToken.Type != TokenType.CloseBracket)
             {
                 // Parse this token
@@ -242,7 +242,7 @@ namespace VARP.Scheme.Stx
         /// <returns>The number of closing parenthesizes that are required to complete the expression (-1 if there are too many)</returns>
         public static int RemainingBrackets(Tokenizer reader)
         {
-            int bracketCount = 0;
+            var bracketCount = 0;
             Token thisToken;
 
             try

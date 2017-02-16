@@ -31,13 +31,13 @@ using Debug = System.Diagnostics.Debug;
 
 namespace VARP.Scheme.Libs
 {
-    partial class Helpers
+    internal partial class Helpers
     {
         internal static int CeilLog2(int x)
         {
             Debug.Assert(x > 0);
 
-            int ret = 0;
+            var ret = 0;
             x--;
 
             while (x >= 256)
@@ -68,7 +68,7 @@ namespace VARP.Scheme.Libs
 
         internal static int FbToInt(int x)
         {
-            int e = (x >> 3) & 0x1f;
+            var e = (x >> 3) & 0x1f;
             return e == 0 ? x : ((x & 7) + 8) << (e - 1);
         }
 
@@ -108,10 +108,10 @@ namespace VARP.Scheme.Libs
             var whole = (long)Math.Truncate(n);
             var fract = n - whole;
 
-            int len = 0;
+            var len = 0;
             do
             {
-                int d = (int)(whole % 10);
+                var d = (int)(whole % 10);
                 whole /= 10;
 
                 buf[index + len++] = (byte)('0' + d);
@@ -125,12 +125,12 @@ namespace VARP.Scheme.Libs
 
             buf[index + len++] = (byte)'.';
 
-            int p = 0;
+            var p = 0;
 
             do
             {
                 fract *= 10;
-                int d = (int)Math.Truncate(fract);
+                var d = (int)Math.Truncate(fract);
                 fract -= d;
 
                 buf[index + len++] = (byte)('0' + d);
@@ -191,18 +191,18 @@ namespace VARP.Scheme.Libs
 
         private static int SetBufStr(byte[] buf, int index, string s)
         {
-            for (int i = 0; i < s.Length; i++)
+            for (var i = 0; i < s.Length; i++)
                 buf[i] = (byte)s[i];
             return s.Length;
         }
 
         internal static bool StrToNum(byte[] str, int index, int count, out double num)
         {
-            int endIndex = index + count;
+            var endIndex = index + count;
 
             SkipSpace(str, ref index, endIndex);
 
-            int sign = ReadSign(str, ref index, endIndex);
+            var sign = ReadSign(str, ref index, endIndex);
             if (sign == 0)
             {
                 num = 0;
@@ -246,11 +246,11 @@ namespace VARP.Scheme.Libs
 
         internal static bool StrToInt(byte[] str, int index, int count, out double num, int radix = 10)
         {
-            int endIndex = index + count;
+            var endIndex = index + count;
 
             SkipSpace(str, ref index, endIndex);
 
-            int sign = ReadSign(str, ref index, endIndex);
+            var sign = ReadSign(str, ref index, endIndex);
             if (sign == 0)
             {
                 num = 0;
@@ -284,7 +284,7 @@ namespace VARP.Scheme.Libs
             if (wholePart < 0)
                 return null;
 
-            int decLen = 0;
+            var decLen = 0;
             double decPart = -1;
 
             if (allowDecimal && index < endIndex && str[index] == '.')
@@ -324,11 +324,11 @@ namespace VARP.Scheme.Libs
                 expPart *= expSign;
             }
 
-            double num = wholePart;
+            var num = wholePart;
 
             if (decLen > 0)
             {
-                for (int c = decLen; c-- != 0;)
+                for (var c = decLen; c-- != 0;)
                     num *= radix;
                 num += decPart;
 
@@ -342,7 +342,7 @@ namespace VARP.Scheme.Libs
             if (expPart != 0)
             {
                 var expBase = radix != 16 ? radix : 2;
-                double exp = Math.Pow(expBase, Math.Abs(expPart));
+                var exp = Math.Pow(expBase, Math.Abs(expPart));
 
                 if (expPart > 0)
                     num *= exp;
@@ -382,7 +382,7 @@ namespace VARP.Scheme.Libs
 
             for (length = 0; index < endIndex; index++, length++)
             {
-                int digit = ParseDigit(str[index], radix);
+                var digit = ParseDigit(str[index], radix);
                 if (digit == -1)
                     break;
 

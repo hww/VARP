@@ -44,7 +44,7 @@ namespace VARP.Timing
     /// </example>
     public struct OncePerFrame
     {
-        int frameCount;
+        private int frameCount;
         public OncePerFrame(int inFrameCount = -1)
         {
             frameCount = inFrameCount;

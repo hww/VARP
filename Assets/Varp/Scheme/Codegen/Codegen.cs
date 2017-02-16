@@ -44,13 +44,13 @@ namespace VARP.Scheme.Codegen
         {
             // create empty lambda function.
             // there are no any arguments
-            CodeGenerator lambda = new CodeGenerator();
+            var lambda = new CodeGenerator();
 
             // now generate the code
             int result = lambda.Generate(ast);
 
             // now lets create template from dummy lambda
-            Template templ = lambda.GetTemplate();
+            var templ = lambda.GetTemplate();
 
             return templ;
         }
@@ -111,9 +111,9 @@ namespace VARP.Scheme.Codegen
         /// <returns></returns>
         private short GenerateLiteral(AstLiteral ast)
         {
-            Value value = ast.GetDatum();
-            object refval = value.RefVal;
-            short sp = Push();
+            var value = ast.GetDatum();
+            var refval = value.RefVal;
+            var sp = Push();
             if (refval is BoolClass)
             {
                 Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, sp, value.AsBool() ? (short)1 : (short)0));
@@ -132,14 +132,14 @@ namespace VARP.Scheme.Codegen
                 }
                 else
                 {
-                    int kid = DefineLiteral(value);
+                    var kid = DefineLiteral(value);
                     Code.Add(Instruction.MakeABX(OpCode.LOADK, sp, kid));
                 }
                 return sp;
             }
             else
             {
-                int kid = DefineLiteral(value);
+                var kid = DefineLiteral(value);
                 Code.Add(Instruction.MakeABX(OpCode.LOADK, sp, kid));
                 return sp;
             }
@@ -150,27 +150,27 @@ namespace VARP.Scheme.Codegen
             if (ast.IsGlobal)
             {
                 // R(A) := G[K(Bx)]
-                short dst = SP++;
-                int litId = DefineLiteral(new Value(ast.Identifier));
+                var dst = SP++;
+                var litId = DefineLiteral(new Value(ast.Identifier));
                 AddABX(OpCode.GETGLOBAL, dst, litId);
                 return dst;
             }
             else
             {
-                byte envIdx = (byte)ast.RefEnvIdx;
-                byte varIdx = (byte)ast.RefVarIdx;
+                var envIdx = (byte)ast.RefEnvIdx;
+                var varIdx = (byte)ast.RefVarIdx;
                 if (envIdx > 0)
                 {
                     // UpValue case
                     // R(A) := U[B]
-                    short dst = SP++;
+                    var dst = SP++;
                     AddAB(OpCode.GETUPVAL, dst, 0);
                     return dst;
                 }
                 else
                 {
                     // Local case
-                    byte dst = ReferenceLocal(ast.Identifier);
+                    var dst = ReferenceLocal(ast.Identifier);
                     return dst;
                 }
             }
@@ -178,20 +178,20 @@ namespace VARP.Scheme.Codegen
 
         private short GenerateSet(AstSet ast)
         {
-            AST value = ast.Value;
+            var value = ast.Value;
             int target = Generate(value);
 
             if (ast.IsGlobal)
             {
                 // G[K(Bx)] := R(A)
-                Value varid = new Value(ast.Identifier);
-                int litId = DefineLiteral(varid);
+                var varid = new Value(ast.Identifier);
+                var litId = DefineLiteral(varid);
                 AddABX(OpCode.SETGLOBAL, (short)target, litId);
             }
             else
             {
-                int envIdx = ast.RefEnvIdx;
-                int varIdx = ast.RefVarIdx;
+                var envIdx = ast.RefEnvIdx;
+                var varIdx = ast.RefVarIdx;
                 if (envIdx > 0)
                 {
                     // UpValue case
@@ -211,7 +211,7 @@ namespace VARP.Scheme.Codegen
 
             // create empty lambda function.
             // there are no any arguments
-            CodeGenerator lambda = new CodeGenerator(ast.ArgList);
+            var lambda = new CodeGenerator(ast.ArgList);
 
             /// R(A) := closure(KPROTO[Bx], R(A), ... , R(A + n))
             short temp = -1;
@@ -227,27 +227,27 @@ namespace VARP.Scheme.Codegen
             lambda.GenerateReturn(temp);
 
             // now lets create template from dummy lambda
-            Template template = lambda.GetTemplate();
+            var template = lambda.GetTemplate();
             // -----------------------------------------
             // now generate code for current function
             // -----------------------------------------
             temp = Push();
-            int closureId = DefineLiteral(new Value(template));
+            var closureId = DefineLiteral(new Value(template));
             AddABX(OpCode.CLOSURE, temp, closureId);
             return temp;
         }
 
         private short GenerateConditionIf(AstConditionIf ast)
         {
-            byte temp = (byte)SP;
+            var temp = (byte)SP;
             Generate(ast.condExpression);
 
             // if ((bool)R(A) != (bool)C) then {skip next instruction}
             AddABC(OpCode.TEST, temp, 0, 0);
-            int jmp_address = AddOpcode(Instruction.Nop);
+            var jmp_address = AddOpcode(Instruction.Nop);
 
             Generate(ast.thenExperssion);
-            int else_address = PC;
+            var else_address = PC;
             Generate(ast.elseExpression);
 
             Code[jmp_address] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(jmp_address, else_address));
@@ -256,14 +256,14 @@ namespace VARP.Scheme.Codegen
 
         private short GenerateCondition(AstCondition ast)
         {
-            byte temp = (byte)SP;
+            var temp = (byte)SP;
 
             if (ast.Conditions != null)
             {
                 foreach (var v in ast.Conditions)
                 {
-                    LinkedList<Value> cond = v.AsLinkedList<Value>();
-                    Value c = cond[0];
+                    var cond = v.AsLinkedList<Value>();
+                    var c = cond[0];
                     if (cond.count == 1)
                     {
                         Generate(cond[0].AsAST());
@@ -274,11 +274,11 @@ namespace VARP.Scheme.Codegen
 
                         // if ((bool)R(A) != (bool)C) then {skip next instruction}
                         Code.Add(Instruction.MakeABC(OpCode.TEST, temp, 0, 0));
-                        int jmp_address = PC; Code.Add(Instruction.Nop);
+                        var jmp_address = PC; Code.Add(Instruction.Nop);
 
                         Generate(cond[1].AsAST());
 
-                        int else_address = PC;
+                        var else_address = PC;
                         Code[jmp_address] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(jmp_address, else_address));
                     }
                 }
@@ -295,10 +295,10 @@ namespace VARP.Scheme.Codegen
         private short GenerateApplication(AstApplication ast)
         {
             // R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
-            short temp = (short)(SP + 1);
+            var temp = (short)(SP + 1);
             foreach (var val in ast.list)
             {
-                short res = Generate(val.AsAST());
+                var res = Generate(val.AsAST());
                 if (res < SpMin)
                 {
                     /// Case if it is addressed directly to the variable
@@ -313,8 +313,8 @@ namespace VARP.Scheme.Codegen
 
         private short GenerateSequence(AstSequence ast)
         {
-            short temp = SP;
-            LinkedList<Value> list = ast.BodyExpression;
+            var temp = SP;
+            var list = ast.BodyExpression;
             foreach (var val in list)
                 temp = Generate(val.AsAST());
             return temp;

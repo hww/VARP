@@ -39,23 +39,23 @@ namespace VARP.Scheme.Stx.Primitives
         // (lambda () ...)
         public static AST Expand(Syntax stx, AstEnvironment env)
         {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();
-            int argc = GetArgsCount(list);
+            var list = stx.AsLinkedList<Value>();
+            var argc = GetArgsCount(list);
             AssertArgsMinimum("lambda", "arity mismatch", 1, argc, list, stx);
 
             var x = list[0];
             var xs = x.ToString();
             xs = x.DebuggerDisplay;
-            Syntax kwdr = list[0].AsSyntax();
-            Syntax args = list[1].AsSyntax();
+            var kwdr = list[0].AsSyntax();
+            var args = list[1].AsSyntax();
 
-            AstEnvironment localEnv = ArgumentsParser.ParseLambda(stx, args.AsLinkedList<Value>(), env);
+            var localEnv = ArgumentsParser.ParseLambda(stx, args.AsLinkedList<Value>(), env);
 
-            LinkedList<Value> body = new LinkedList<Value>();
+            var body = new LinkedList<Value>();
 
             if (argc > 1)
             {
-                LinkedListNode<Value> curent = list.GetNodeAtIndex(2);
+                var curent = list.GetNodeAtIndex(2);
                 while (curent != null)
                 {
                     body.AddLast(AstBuilder.Expand(curent.Value.AsSyntax(), localEnv).ToValue());

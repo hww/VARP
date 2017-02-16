@@ -31,17 +31,13 @@ using System.Collections.Generic;
 using VARP.Scheme.Data;
 
 public class SymbolTest : MonoBehaviour {
-
-
-
-
-    void Start () {
-        int quantity = 1000000;
+    private void Start () {
+        var quantity = 1000000;
 
         UnityEngine.Debug.Log("INTERN STRING");
-        string s = string.Empty;
+        var s = string.Empty;
         TestBegin();
-        for (int i = 0; i < quantity; i++)
+        for (var i = 0; i < quantity; i++)
         {
             s = string.Intern(i.ToString());
         }
@@ -50,7 +46,7 @@ public class SymbolTest : MonoBehaviour {
 
         Symbol sym = null;
         TestBegin();
-        for (int i = 0; i < quantity; i++)
+        for (var i = 0; i < quantity; i++)
         {
             sym = Symbol.Intern(i.ToString());
         }
@@ -58,7 +54,7 @@ public class SymbolTest : MonoBehaviour {
 
         SymbolA syma = null;
         TestBegin();
-        for (int i = 0; i < quantity; i++)
+        for (var i = 0; i < quantity; i++)
         {
             syma = SymbolA.Intern(i.ToString());
         }
@@ -66,7 +62,7 @@ public class SymbolTest : MonoBehaviour {
 
         SymbolB symb = null;
         TestBegin();
-        for (int i = 0; i < quantity; i++)
+        for (var i = 0; i < quantity; i++)
         {
             symb = SymbolB.Intern(i.ToString());
         }
@@ -74,7 +70,7 @@ public class SymbolTest : MonoBehaviour {
 
         SymbolC symc = null;
         TestBegin();
-        for (int i = 0; i < quantity; i++)
+        for (var i = 0; i < quantity; i++)
         {
             symc = SymbolC.Intern(i.ToString());
         }
@@ -84,61 +80,61 @@ public class SymbolTest : MonoBehaviour {
         UnityEngine.Debug.Log("COMPARISONG TEST");
 
         TestBegin();
-        string s1 = string.Intern("QWERTYUIOP{{{{SDFGHJKL");
-        for (int i = 0; i < quantity; i++)
+        var s1 = string.Intern("QWERTYUIOP{{{{SDFGHJKL");
+        for (var i = 0; i < quantity; i++)
         {
-            bool b = s == s1;
+            var b = s == s1;
         }
         UnityEngine.Debug.LogFormat("[String.Intern comparison] duration: {0}", TestEnd());
 
         TestBegin();
-        Symbol sym1 = Symbol.Intern("QWERTYUIOP{{{{SDFGHJKL");
-        for (int i = 0; i < quantity; i++)
+        var sym1 = Symbol.Intern("QWERTYUIOP{{{{SDFGHJKL");
+        for (var i = 0; i < quantity; i++)
         {
-            bool b = sym == sym1;
+            var b = sym == sym1;
         }
         UnityEngine.Debug.LogFormat("[Symbol.FromName comparison] duration: {0}", TestEnd());
 
         TestBegin();
-        SymbolA syma1 = SymbolA.Intern("QWERTYUIOP{{{{SDFGHJKL");
-        for (int i = 0; i < quantity; i++)
+        var syma1 = SymbolA.Intern("QWERTYUIOP{{{{SDFGHJKL");
+        for (var i = 0; i < quantity; i++)
         {
-            bool b = syma == syma1;
+            var b = syma == syma1;
         }
         UnityEngine.Debug.LogFormat("[SymbolA.FromName comparison] duration: {0}", TestEnd());
 
 
         TestBegin();
-        SymbolB symb1 = SymbolB.Intern("QWERTYUIOP{{{{SDFGHJKL");
-        for (int i = 0; i < quantity; i++)
+        var symb1 = SymbolB.Intern("QWERTYUIOP{{{{SDFGHJKL");
+        for (var i = 0; i < quantity; i++)
         {
-            bool b = symb.hash == symb1.hash;
+            var b = symb.hash == symb1.hash;
         }
         UnityEngine.Debug.LogFormat("[SymbolB.FromName comparison] duration: {0}", TestEnd());
 
 
         TestBegin();
-        SymbolC symc1 = SymbolC.Intern("QWERTYUIOP{{{{SDFGHJKL");
-        for (int i = 0; i < quantity; i++)
+        var symc1 = SymbolC.Intern("QWERTYUIOP{{{{SDFGHJKL");
+        for (var i = 0; i < quantity; i++)
         {
-            bool b = symc.id == symc1.id;
+            var b = symc.id == symc1.id;
         }
         UnityEngine.Debug.LogFormat("[SymbolC.FromName comparison] duration: {0}", TestEnd());
     }
 
-    Stopwatch sw;
-       
-    void TestBegin()
+    private Stopwatch sw;
+
+    private void TestBegin()
     {
         sw = new Stopwatch();
         sw.Start();
     }
 
-    long TestEnd()
+    private long TestEnd()
     {
         sw.Stop();
 
-        long microseconds = sw.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
+        var microseconds = sw.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
         //long nanoseconds = sw.ElapsedTicks / (Stopwatch.Frequency / (1000L * 1000L * 1000L));
         return microseconds;
     }
@@ -182,7 +178,7 @@ public class SymbolB : object
     public static SymbolB Intern(string name)
     {
         SymbolB value;
-        int hash = name.GetHashCode();
+        var hash = name.GetHashCode();
         if (internedSymbols.TryGetValue(hash, out value))
         {
             return value;
@@ -211,7 +207,7 @@ public class SymbolC : object
     public static SymbolC Intern(string name)
     {
         SymbolC value;
-        int hash = name.GetHashCode();
+        var hash = name.GetHashCode();
         if (internedSymbols.TryGetValue(hash, out value))
         {
             return value;

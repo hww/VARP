@@ -27,13 +27,12 @@
 
 namespace VARP.Timing
 {
-    class TimeSpan
+    internal class TimeSpan
     {
-        public static float hours(float time) { return time * 3600f; }
-        public static float minutes(float time) { return time * 60f; }
-        public static float seconds(float time) { return time; }
-        public static float ms(float time) { return time * 1000f; }
-        public static float milliseconds(float time) { return time * 1000f; }
+        public static float Hours(float time) { return time * 3600f; }
+        public static float Minutes(float time) { return time * 60f; }
+        public static float Seconds(float time) { return time; }
+        public static float Milliseconds(float time) { return time * 1000f; }
 
     }
 }

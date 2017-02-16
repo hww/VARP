@@ -82,7 +82,7 @@ namespace VARP.Scheme.VM
     [System.Serializable]
     public  struct Instruction
     {
-        public static Instruction Nop = Instruction.MakeA(OpCode.NOP,0);
+        public static Instruction Nop = MakeA(OpCode.NOP,0);
 
         public uint PackedValue;
 
@@ -172,7 +172,7 @@ namespace VARP.Scheme.VM
         /// <param name="a"></param>
         public static Instruction MakeA(OpCode code, short a)
         {
-            Instruction inst = new Instruction();
+            var inst = new Instruction();
             inst.OpCode = code;
             inst.A = a;
             return inst;
@@ -185,7 +185,7 @@ namespace VARP.Scheme.VM
         /// <param name="a"></param>
         public static Instruction MakeAB(OpCode code, short a, short b)
         {
-            Instruction inst = new Instruction();
+            var inst = new Instruction();
             inst.OpCode = code;
             inst.A = a;
             inst.B = b;
@@ -199,7 +199,7 @@ namespace VARP.Scheme.VM
         /// <param name="a"></param>
         public static Instruction MakeABC(OpCode code, short a, short b, short c)
         {
-            Instruction inst = new Instruction();
+            var inst = new Instruction();
             inst.OpCode = code;
             inst.A = a;
             inst.B = b;
@@ -213,7 +213,7 @@ namespace VARP.Scheme.VM
         /// <param name="a"></param>
         public static Instruction MakeABX(OpCode code, short a, int bx)
         {
-            Instruction inst = new Instruction();
+            var inst = new Instruction();
             inst.OpCode = code;
             inst.A = a;
             inst.Bx = bx;
@@ -227,7 +227,7 @@ namespace VARP.Scheme.VM
         /// <param name="a"></param>
         public static Instruction MakeASBX(OpCode code, short a, int sbx)
         {
-            Instruction inst = new Instruction();
+            var inst = new Instruction();
             inst.OpCode = code;
             inst.A = a;
             inst.SBx = sbx;

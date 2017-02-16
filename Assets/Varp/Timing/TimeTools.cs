@@ -27,7 +27,7 @@
 
 namespace VARP.Timing
 {
-    class TimeTools
+    internal class TimeTools
     {
     }
 }

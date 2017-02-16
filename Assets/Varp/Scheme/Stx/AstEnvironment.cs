@@ -150,8 +150,8 @@ namespace VARP.Scheme.Stx
         public AstBinding DefinePrimitive(string name, PrimitiveBinding.CompilerPrimitive primitive)
         {
             Debug.Assert(IsGlobal); // can be defined only in global 
-            Symbol sym = Symbol.Intern(name);
-            Syntax syntax = new Syntax(sym);
+            var sym = Symbol.Intern(name);
+            var syntax = new Syntax(sym);
             AstBinding binding = new PrimitiveBinding(this, syntax, primitive);
             Define(binding);
             return binding;
@@ -176,8 +176,8 @@ namespace VARP.Scheme.Stx
         /// <returns>0 for root (global or system) environment</returns>
         public int GetEnvironmentIndex()
         {
-            int index = 0;
-            AstEnvironment env = Parent;
+            var index = 0;
+            var env = Parent;
             while (env != null) {
                 env = env.Parent; index++;
             }
@@ -191,7 +191,7 @@ namespace VARP.Scheme.Stx
         /// <returns>environment</returns>
         public AstEnvironment GetEnvironmentAtIndex(int index)
         {
-            AstEnvironment env = this;
+            var env = this;
             while (index>0 && env.Parent != null)
                 env = env.Parent;
             return env;
@@ -214,7 +214,7 @@ namespace VARP.Scheme.Stx
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             // Lets call the generic version here
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         #endregion

@@ -37,44 +37,44 @@ namespace VARP.Timing
     /// </summary>
     public class FScaledTime : FTickerObjectBase
     {
-        bool enabled_;
-        float deltaTime_;
-        float timeScale_;
-        float time_;
+        private bool enabled;
+        private float deltaTime;
+        private float timeScale;
+        private float time;
 
         // Constructors.
         public FScaledTime(FTicker inTicker = null) : base(0, inTicker)
         {
-            enabled_ = true;
-            timeScale = 1f;
+            enabled = true;
+            TimeScale = 1f;
         }
         public FScaledTime(bool inEnabled, FTicker inTicker = null) : base(0, inTicker)
         {
-            enabled_ = inEnabled;
-            timeScale = 1f;
+            enabled = inEnabled;
+            TimeScale = 1f;
         }
         public FScaledTime(float inTimeScale, FTicker inTicker = null) : base(0, inTicker)
         {
-            enabled_ = true;
-            timeScale = inTimeScale;
+            enabled = true;
+            TimeScale = inTimeScale;
         }
         public FScaledTime(bool inEnabled, float inTimeScale, FTicker inTicker = null) : base(0, inTicker)
         {
-            enabled_ = inEnabled;
-            timeScale = inTimeScale;
+            enabled = inEnabled;
+            TimeScale = inTimeScale;
         }
 
         // Methods.
-        public float detaTime { get { return deltaTime_; } }
-        public float time { get { return time_; } }
-        public float timeScale { get { return timeScale_; } set { timeScale_ = value; } }
-        public bool enabled { get { return enabled_; } set { enabled_ = value; } }
+        public float DetaTime { get { return deltaTime; } }
+        public float Time { get { return time; } }
+        public float TimeScale { get { return timeScale; } set { timeScale = value; } }
+        public bool Enabled { get { return enabled; } set { enabled = value; } }
 
         // Private stuff
-        protected override bool Tick(float DeltaTime)
+        protected override bool Tick(float deltaTime)
         {
-            deltaTime_ = enabled ? Time.deltaTime * timeScale_ : 0;
-            time_ += deltaTime_;
+            this.deltaTime = Enabled ? UnityEngine.Time.deltaTime * timeScale : 0;
+            time += this.deltaTime;
             return true;
         }
     }

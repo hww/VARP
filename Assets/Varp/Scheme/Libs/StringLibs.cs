@@ -39,7 +39,7 @@ namespace VARP.Scheme.Libs
         {
             try
             {
-                int val = int.Parse(value, NumberStyles.AllowLeadingSign);
+                var val = int.Parse(value, NumberStyles.AllowLeadingSign);
                 return val;
             }
             catch (System.Exception ex)
@@ -53,7 +53,7 @@ namespace VARP.Scheme.Libs
             try
             {
                 Debug.Assert(value.Length > 2, "Error in hex literal");
-                int hval = int.Parse(value.Substring(2), NumberStyles.AllowHexSpecifier);
+                var hval = int.Parse(value.Substring(2), NumberStyles.AllowHexSpecifier);
                 return hval;
             }
             catch (System.Exception ex)

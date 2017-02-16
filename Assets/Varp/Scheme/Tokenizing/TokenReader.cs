@@ -42,24 +42,24 @@ namespace VARP.Scheme.Tokenizing
         /// <param name="textStream">The stream to read tokens from</param>
         public TokenReader(TextReader textStream, string filePath)
         {
-            this.stream = textStream;
+            stream = textStream;
             this.filePath = filePath;
 
-            this.charNumber = 0;
-            this.lineNumber = 1;
-            this.colNumber = 0;
+            charNumber = 0;
+            lineNumber = 1;
+            colNumber = 0;
         }
 
-        TextReader stream;
+        private TextReader stream;
 
         #region Tracking where we are in the stream
 
-        const int contextLen = 8;
+        private const int contextLen = 8;
 
-        int charNumber;
-        int lineNumber;
-        int colNumber;
-        string filePath;
+        private int charNumber;
+        private int lineNumber;
+        private int colNumber;
+        private string filePath;
 
         /// <summary>
         /// Peeks at the next character from the stream
@@ -74,7 +74,7 @@ namespace VARP.Scheme.Tokenizing
         /// </summary>
         public int Read()
         {
-            int chr = stream.Read();
+            var chr = stream.Read();
 
             if (chr != -1)
             {

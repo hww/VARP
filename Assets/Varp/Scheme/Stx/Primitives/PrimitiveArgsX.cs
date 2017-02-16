@@ -36,10 +36,10 @@ namespace VARP.Scheme.Stx.Primitives
         // (display 1 2 3 4 ...)
         public static AST Expand(Syntax stx, AstEnvironment env)
         {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();
-            int argc = GetArgsCount(list);
-            Syntax set_kwd = list[0].AsSyntax();
-            LinkedList<Value> arguments = AstBuilder.ExpandListElements(list, 1, env);
+            var list = stx.AsLinkedList<Value>();
+            var argc = GetArgsCount(list);
+            var set_kwd = list[0].AsSyntax();
+            var arguments = AstBuilder.ExpandListElements(list, 1, env);
             return new AstPrimitive(stx, set_kwd, arguments);
         }
     }

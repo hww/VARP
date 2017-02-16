@@ -36,7 +36,7 @@ namespace VARP.Timing
     {
         #region Singletone
 
-        static FTicker coreTicker;
+        private static FTicker coreTicker;
         public static FTicker GetCoreTicker()
         {
             if (coreTicker == null) coreTicker = new FTicker();
@@ -52,34 +52,34 @@ namespace VARP.Timing
         // Single delegate item
         public class FElement
         {
-            public LinkedListNode<FElement> Link;
+            public LinkedListNode<FElement> link;
             // Time that this delegate must not fire before
-            public double FireTime;
+            public double fireTime;
             // Delay that this delegate was scheduled with. Kept here so that if the delegate returns true, we will reschedule it.
-            public float DelayTime;
+            public float delayTime;
             // Delegate to call
-            FTickerDelegate TheDelegate;
+            private FTickerDelegate theDelegate;
 
             // This is the ctor that the code will generally use. 
             public FElement(double inFireTime, float inDelayTime, FTickerDelegate inDelegate, object inDelegateHandle = null)
             {
-                DelayTime = inDelayTime;
-                FireTime = inDelayTime;
-                TheDelegate = inDelegate;
+                delayTime = inDelayTime;
+                fireTime = inDelayTime;
+                theDelegate = inDelegate;
             }
 
             // Invoke the delegate if possible 
             public bool Tick(float deltaTime)
             {
-                if (TheDelegate == null) return false;
-                if (TheDelegate(deltaTime)) return true;
-                TheDelegate = null; // terminate
+                if (theDelegate == null) return false;
+                if (theDelegate(deltaTime)) return true;
+                theDelegate = null; // terminate
                 return false;
             }
 
             public bool Equals(FTickerDelegate inDelegate)
             {
-                return TheDelegate == inDelegate;
+                return theDelegate == inDelegate;
             }
 
             public bool EqualsHandle(int inHandle)
@@ -89,17 +89,17 @@ namespace VARP.Timing
 
             public void Terminate()
             {
-                TheDelegate = null;
+                theDelegate = null;
             }
 
-            public bool IsTerminated { get { return TheDelegate == null; } }
+            public bool IsTerminated { get { return theDelegate == null; } }
         };
         // @inDelegae the function will be fired
         // @inDelay delay before fire
         // @handle can be used later to find this delegate
         public int AddTicker(FTickerDelegate inDelegate, float inDelay)
         {
-            FElement e = new FElement(currentTime + inDelay, inDelay, inDelegate);
+            var e = new FElement(currentTime + inDelay, inDelay, inDelegate);
             elements.AddFirst(e);
             return e.GetHashCode();
         }
@@ -140,9 +140,9 @@ namespace VARP.Timing
                     currentElement = element.Value;
                     // Tick
                     if (currentElement.Tick(deltaTime))
-                        currentElement.FireTime = currentTime + currentElement.DelayTime;
+                        currentElement.fireTime = currentTime + currentElement.delayTime;
                     else
-                        currentElement.Link.Remove();
+                        currentElement.link.Remove();
                     element = next;
                 }
                 // Benchmarking end
@@ -153,14 +153,14 @@ namespace VARP.Timing
 
         // --------------------------------------------------------------------
 
-        private object lockObject;          //< Lock object
-        private OncePerFrame oncePerFrame;  //< Last frame count (prevent call twice in frame)
-        private double currentTime;         //< Current time of the ticker
-        private bool isInTick;              //< State to track whether CurrentElement is valid. 
-        private FElement currentElement;    //< Current element being ticked (only valid during tick).
-        private long totalTimeMicroseconds; //< Time of single invoke. Used for benchmarking
+        private object lockObject;              //< Lock object
+        private OncePerFrame oncePerFrame;      //< Last frame count (prevent call twice in frame)
+        private double currentTime;             //< Current time of the ticker
+        private bool isInTick;                  //< State to track whether CurrentElement is valid. 
+        private FElement currentElement;        //< Current element being ticked (only valid during tick).
+        private long totalTimeMicroseconds;     //< Time of single invoke. Used for benchmarking
         // List of delegates
-        private LinkedList<FElement> elements = new LinkedList<FElement>();
+        private readonly LinkedList<FElement> elements = new LinkedList<FElement>();
     }
 
     // The base class for objects which have to be called time to time.
@@ -172,15 +172,15 @@ namespace VARP.Timing
         // @param Ticker the ticker to register with. Defaults to FTicker::GetCoreTicker().
         public FTickerObjectBase(float InDelay = 0.0f, FTicker inTicker = null)
         {
-            Ticker = (inTicker == null) ? FTicker.GetCoreTicker() : inTicker;
-            TickHandle = Ticker.AddTicker(Tick, InDelay);
+            ticker = inTicker ?? FTicker.GetCoreTicker();
+            tickHandle = ticker.AddTicker(Tick, InDelay);
         }
 
         /** Virtual destructor. */
         ~FTickerObjectBase()
         {
-            if (Ticker != null) Ticker.RemoveTicker(TickHandle);
-            Ticker = null;
+            if (ticker != null) ticker.RemoveTicker(tickHandle);
+            ticker = null;
         }
 
         // Pure virtual that must be overloaded by the inheriting class.
@@ -191,8 +191,8 @@ namespace VARP.Timing
 
 
         // Ticker to register with 
-        private FTicker Ticker;
+        private FTicker ticker;
         // Delegate for callbacks to Tick
-        private int TickHandle;
+        private readonly int tickHandle;
     };
 }

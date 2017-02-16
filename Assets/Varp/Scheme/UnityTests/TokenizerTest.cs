@@ -34,8 +34,7 @@ using VARP.Scheme.REPL;
 
 [ExecuteInEditMode]
 public class TokenizerTest : MonoBehaviour {
-
-    Tokenizer lexer;
+    private Tokenizer lexer;
 
     [TextArea(20,100)]
     public string testString;
@@ -44,12 +43,12 @@ public class TokenizerTest : MonoBehaviour {
     [TextArea(10, 100)]
     public string resultString;
 
-    void Start()
+    private void Start()
     {
         OnValidate();
     }
 
-    void OnValidate()
+    private void OnValidate()
     {
         System.Text.StringBuilder sb;
         // ------------------------------------------------------------------
@@ -57,7 +56,7 @@ public class TokenizerTest : MonoBehaviour {
         // ------------------------------------------------------------------
         sb = new System.Text.StringBuilder();
         lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
-        Token token = lexer.ReadToken();
+        var token = lexer.ReadToken();
         while (token != null)
         {
             sb.Append(Inspector.Inspect(token) + " ");

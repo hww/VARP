@@ -36,17 +36,17 @@ namespace VARP.Scheme.Stx.Primitives
         // (set! x (+ 1 2))
         public static AST Expand(Syntax stx, AstEnvironment env)
         {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();
-            int argc = GetArgsCount(list);
+            var list = stx.AsLinkedList<Value>();
+            var argc = GetArgsCount(list);
             AssertArgsEqual("set!", "arity mismatch", 2, argc, list, stx);
 
-            Syntax set_kwd = list[0].AsSyntax();
-            Syntax var_stx = list[1].AsSyntax();
-            Syntax val_stx = list[2].AsSyntax();
+            var set_kwd = list[0].AsSyntax();
+            var var_stx = list[1].AsSyntax();
+            var val_stx = list[2].AsSyntax();
 
-            Symbol var_id = var_stx.AsIdentifier();
-            AstBinding binding = env.Lookup(var_id); // TODO! Maybe error when it is not defined
-            AST value = AstBuilder.Expand(val_stx, env);
+            var var_id = var_stx.AsIdentifier();
+            var binding = env.Lookup(var_id); // TODO! Maybe error when it is not defined
+            var value = AstBuilder.Expand(val_stx, env);
             if (binding == null)
             {
                 /// Global variable
@@ -59,7 +59,7 @@ namespace VARP.Scheme.Stx.Primitives
             if (binding.IsUpvalue)
             {
                 /// Up-value variable
-                UpBinding ubind = binding as UpBinding;
+                var ubind = binding as UpBinding;
                 return new AstSet(stx, var_stx, value, binding.VarIdx, ubind.RefEnvIdx, ubind.RefVarIdx);
             }
             else

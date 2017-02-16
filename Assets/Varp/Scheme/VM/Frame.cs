@@ -43,17 +43,17 @@ namespace VARP.Scheme.VM
         {
             this.parent = parent;
             this.template = template;
-            this.Values = new Value[template.FrameSize];
-            this.environment = parent == null ? Environment.Top : parent.environment;
-            this.SP = template.SP;
+            Values = new Value[template.FrameSize];
+            environment = parent == null ? Environment.Top : parent.environment;
+            SP = template.SP;
         }
         public Frame(Frame parent, Template template, Environment environment)
         {
             this.parent = parent;
             this.template = template;
-            this.Values = new Value[template.FrameSize];
+            Values = new Value[template.FrameSize];
             this.environment = environment;
-            this.SP = template.SP;
+            SP = template.SP;
         }
 
         /// <summary>

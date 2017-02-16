@@ -69,7 +69,7 @@ namespace VARP.Scheme.Exception
             return string.Empty;
         }
 
-        static string GetLocationStringIntern(Location x)
+        private static string GetLocationStringIntern(Location x)
         {
             return x == null ? string.Empty : string.Format("{0}({1},{2}): ", x.File, x.LineNumber, x.ColNumber);
         }
@@ -94,7 +94,7 @@ namespace VARP.Scheme.Exception
         /// <param name="fields">inspected objects</param>
         public static string ErrorMessage(string message, params object[] fields)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             foreach (var v in fields)
             {
                 sb.Append(" ");
@@ -131,15 +131,15 @@ namespace VARP.Scheme.Exception
 
         public static string ArgumentErrorMessage(string name, string expected, object val)
         {
-            string vstr = Inspect(val);
+            var vstr = Inspect(val);
             return string.Format("{0}: contract violation\n   expected: {1}\n   given: {2}", name, expected, vstr);
         }
 
         public static string ArgumentErrorMessage(string name, string expected, int badPos, params object[] vals)
         {
-            StringBuilder sb = new StringBuilder();
-            string loc = string.Empty;
-            string badStr = string.Empty;
+            var sb = new StringBuilder();
+            var loc = string.Empty;
+            var badStr = string.Empty;
             for (var i = 0; i < vals.Length; i++)
             {
                 if (i == badPos)
@@ -151,14 +151,14 @@ namespace VARP.Scheme.Exception
                 sb.Append("  ");
                 sb.AppendLine(Inspect(vals[i]));
             }
-            string argStr = sb.ToString();
+            var argStr = sb.ToString();
 
             return string.Format("{0}{1}: contract violation\n   expected: {2}\n   given: {3}\n  argument position: {4}\n  other arguments...:\n{5}", loc, name, expected, badPos, badStr, argStr);
         }
 
         public static string ArgumentErrorMessage(string name, string expected, int badPos, LinkedList<Value> vals)
         {
-            Value[] array = new Value[vals.Count];
+            var array = new Value[vals.Count];
             vals.CopyTo(array, 0);
             return ArgumentErrorMessage(name, expected, badPos, array);
         }
@@ -184,16 +184,16 @@ namespace VARP.Scheme.Exception
 
         public static string ResultErrorMessage(string name, string expected, object val)
         {
-            string locs = GetLocationString(val);
-            string vstr = Inspect(val);
+            var locs = GetLocationString(val);
+            var vstr = Inspect(val);
             return string.Format("{0}{1}: contract violation\n   expected: {2}\n   given: {3}", locs, name, expected, vstr);
         }
 
         public static string ResultErrorMessage(string name, string expected, int badPos, params object[] vals)
         {
-            StringBuilder sb = new StringBuilder();
-            string loc = string.Empty;
-            string badStr = string.Empty;
+            var sb = new StringBuilder();
+            var loc = string.Empty;
+            var badStr = string.Empty;
             for (var i = 0; i < vals.Length; i++)
             {
                 if (i == badPos)
@@ -205,7 +205,7 @@ namespace VARP.Scheme.Exception
                 sb.Append("  ");
                 sb.AppendLine(Inspect(vals[i]));
             }
-            string argStr = sb.ToString();
+            var argStr = sb.ToString();
             return string.Format("{0}{1}: contract violation\n   expected: {2}\n   given: {3}\n  result position: {4}\n  other result position...:\n{5}", loc, name, expected, badPos, badStr, argStr);
         }
 
@@ -231,12 +231,12 @@ namespace VARP.Scheme.Exception
                                         int lowerBound,           // minimum index
                                         int upperBound)           // maximum index
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append(name);
             sb.Append(": ");
             sb.Append(indexPrefix);
 
-            string msg = string.Empty;
+            var msg = string.Empty;
             if (index < lowerBound)
                 sb.Append(" index is out of range\n");
             else if (index > upperBound)
@@ -280,7 +280,7 @@ namespace VARP.Scheme.Exception
             /// <returns></returns>
         public static string ArityErrorMessage(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append(GetLocationString(expression));
             sb.Append("arity mismatch;\n");
             sb.Append("  the expected number of arguments does not match the given number\n");
@@ -312,16 +312,16 @@ namespace VARP.Scheme.Exception
         /// <returns></returns>
         public static string SyntaxErrorMessage(string name, string message, object expression, object subexpression = null)
         {
-            string expressionStr = Inspect(expression);
+            var expressionStr = Inspect(expression);
             if (subexpression == null)
             {
-                string loc = GetLocationString(expression);
+                var loc = GetLocationString(expression);
                 return string.Format("{0}: {1}: {2} in: {3}", loc, name, message, expressionStr);
             }
             else
             {
-                string loc = GetLocationString(subexpression);
-                string subexpressionStr = Inspect(expression);
+                var loc = GetLocationString(subexpression);
+                var subexpressionStr = Inspect(expression);
                 return string.Format("{0}: {1}: {2} in: {3}\n error syntax: {4}", loc, name, message, expressionStr);
             }
         }
@@ -342,7 +342,7 @@ namespace VARP.Scheme.Exception
         /// Inspect object for error message
         /// </summary>
         /// <param name="o"></param>
-        static string Inspect(object o)
+        private static string Inspect(object o)
         {
             if (o == null)
                 return "()";

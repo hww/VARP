@@ -48,7 +48,7 @@ namespace VARP.Scheme.Stx
         // Expand string @expression to abstract syntax tree, in given @env environment
         public static AST Expand(string expression, string filepath, AstEnvironment env)
         {
-            Syntax syntax = Parser.Parse(expression, filepath);
+            var syntax = Parser.Parse(expression, filepath);
             return Expand(syntax, env);
         }
 
@@ -88,12 +88,12 @@ namespace VARP.Scheme.Stx
         {
             if (!syntax.IsIdentifier) throw SchemeError.SyntaxError("ast-builder-expand-identifier", "expected identifier", syntax);
 
-            Symbol varname = syntax.GetDatum().AsSymbol();
+            var varname = syntax.GetDatum().AsSymbol();
 
             if (varname == Symbol.NULL)
                 return new AstLiteral(syntax);
 
-            AstBinding binding = env.Lookup(varname);
+            var binding = env.Lookup(varname);
             /// If variable is not found designate it as global variable
             if (binding == null)
                 return new AstReference(syntax, 0, -1, -1);
@@ -102,7 +102,7 @@ namespace VARP.Scheme.Stx
                 binding = env.Define(new UpBinding(env, binding.Id, binding));
             if (binding.IsUpvalue)
             {
-                UpBinding ubind = binding as UpBinding;
+                var ubind = binding as UpBinding;
                 return new AstReference(syntax, ubind.VarIdx, ubind.EnvOffset, ubind.RefVarIdx);
             }
             /// It is ordinary local variable reference
@@ -112,12 +112,12 @@ namespace VARP.Scheme.Stx
         // aka: (...)
         public static AST ExpandExpression(Syntax syntax, AstEnvironment env)
         {
-            LinkedList<Value> list = syntax.AsValueLinkedList();
+            var list = syntax.AsValueLinkedList();
             if (list == null) return new AstApplication(syntax, null);
-            Syntax ident = list[0].AsSyntax();
+            var ident = list[0].AsSyntax();
             if (ident.IsIdentifier)
             {
-                AstBinding binding = env.Lookup(ident.AsIdentifier());
+                var binding = env.Lookup(ident.AsIdentifier());
                 if (binding != null)
                 {
                     if (binding.IsPrimitive)
@@ -134,7 +134,7 @@ namespace VARP.Scheme.Stx
         {
             if (list == null) return null;
 
-            LinkedList<Value> result = new LinkedList<Value>();
+            var result = new LinkedList<Value>();
 
             foreach (var v in list)
             {

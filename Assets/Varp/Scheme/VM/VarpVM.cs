@@ -43,21 +43,21 @@ namespace VARP.Scheme.VM
         {
             return RunClosure(new Frame(null, template, environment), template);
         }
-        
-        delegate ValueType RkDelegate(int i);
+
+        private delegate ValueType RkDelegate(int i);
 
         private Value RunClosure(Frame frame, Template template, params ValueType[] args)
         {
-            Environment environment = frame.environment;
-            Value[] literals = template.Literals;
-            Value[] values = frame.Values;
-            int sp = frame.SP;
+            var environment = frame.environment;
+            var literals = template.Literals;
+            var values = frame.Values;
+            var sp = frame.SP;
 #if PROFILER
             _profiler.EnterFunction(null, TEMPLATE);
 #endif
             try
             {
-                for (int pc = frame.PC; pc < template.Code.Length; frame.PC = ++pc)
+                for (var pc = frame.PC; pc < template.Code.Length; frame.PC = ++pc)
                 {
                     var op = template.Code[pc];
                     switch (op.OpCode)
@@ -82,8 +82,8 @@ namespace VARP.Scheme.VM
 
                         case OpCode.LOADNIL:
                             {
-                                int a = op.A;
-                                int b = op.B;
+                                var a = op.A;
+                                var b = op.B;
                                 while(b-- != 0)
                                 { values[a++].SetNil(); } 
                             }
@@ -92,9 +92,9 @@ namespace VARP.Scheme.VM
                         case OpCode.GETUPVAL:
                             {
                                 // R(A) := U[B]
-                                Value uv = values[op.B];
-                                int varNum = (int)uv.NumVal;
-                                Frame uframe = uv.RefVal as Frame;
+                                var uv = values[op.B];
+                                var varNum = (int)uv.NumVal;
+                                var uframe = uv.RefVal as Frame;
                                 if (uframe == null) throw SchemeError.Error("vm", "can't read up value");
                                 values[op.A] = uframe.Values[varNum];
                             }
@@ -102,7 +102,7 @@ namespace VARP.Scheme.VM
 
                         case OpCode.GETGLOBAL:
                             {
-                                int c = op.C;
+                                var c = op.C;
                                 var key = (c & Instruction.BitK) != 0 ?
                                     literals[c & ~Instruction.BitK] :
                                     values[c];
@@ -121,12 +121,12 @@ namespace VARP.Scheme.VM
 
                         case OpCode.SETGLOBAL:
                             {
-                                int b = op.B;
+                                var b = op.B;
                                 var key = (b & Instruction.BitK) != 0 ?
                                     literals[b & ~Instruction.BitK] :
                                     values[b];
 
-                                int c = op.C;
+                                var c = op.C;
                                 var value = (c & Instruction.BitK) != 0 ?
                                     literals[c & ~Instruction.BitK] :
                                     values[c];
@@ -145,9 +145,9 @@ namespace VARP.Scheme.VM
                         case OpCode.SETUPVAL:
                             {
                                 // U[B] := R(A)
-                                Value uv = values[op.B];
-                                int varNum = (int)uv.NumVal;
-                                Frame uframe = uv.RefVal as Frame;
+                                var uv = values[op.B];
+                                var varNum = (int)uv.NumVal;
+                                var uframe = uv.RefVal as Frame;
                                 if (uframe == null) throw SchemeError.Error("vm", "can't write up value");
                                 uframe.Values[varNum] = values[op.A];
                             }
@@ -171,8 +171,8 @@ namespace VARP.Scheme.VM
 
                         case OpCode.NEWTABLE:
                             {
-                                int nArr = FbToInt(op.B);   // array size
-                                int nNod = FbToInt(op.C);   // hash size
+                                var nArr = FbToInt(op.B);   // array size
+                                var nNod = FbToInt(op.C);   // hash size
                                 values[op.A].Set(new Table(nNod));
                             }
                             break;
@@ -183,7 +183,7 @@ namespace VARP.Scheme.VM
                                 var table = values[op.B];
                                 values[op.A + 1] = table;
 
-                                int c = op.C;
+                                var c = op.C;
                                 var key = (c & Instruction.BitK) != 0 ?
                                     literals[c & ~Instruction.BitK] :
                                     values[c];
@@ -269,8 +269,8 @@ namespace VARP.Scheme.VM
 
                         case OpCode.CONCAT:
                             {
-                                int end = op.C + 1;
-                                StringBuilder sb = new StringBuilder();
+                                var end = op.C + 1;
+                                var sb = new StringBuilder();
                                 for (var n = op.B; n < end; n++)
                                     sb.Append(values[n].ToString());
                                 values[op.A].Set(sb.ToString());
@@ -290,12 +290,12 @@ namespace VARP.Scheme.VM
                         case OpCode.GT:
                         case OpCode.GE:
                             {
-                                int b = op.B;
+                                var b = op.B;
                                 var bv = (b & Instruction.BitK) != 0 ?
                                     literals[b & ~Instruction.BitK] :
                                     values[b];
 
-                                int c = op.C;
+                                var c = op.C;
                                 var cv = (c & Instruction.BitK) != 0 ?
                                     literals[c & ~Instruction.BitK] :
                                     values[c];
@@ -395,8 +395,8 @@ namespace VARP.Scheme.VM
                                 var closure = func.As<Frame>();
                                 var closureTemp = closure.template;
 
-                                int numArgs = op.B;
-                                int numRetVals = op.C;
+                                var numArgs = op.B;
+                                var numRetVals = op.C;
 
                                 //pc++; /// return to the next instruction
 
@@ -408,11 +408,11 @@ namespace VARP.Scheme.VM
                                     /// -------------------------------
                                     /// required and optional arguments
                                     /// -------------------------------
-                                    int reqnum = closureTemp.ReqArgsNumber;
-                                    int optnum = closureTemp.OptArgsNumber;
-                                    int keynum = closureTemp.KeyArgsNumber;
-                                    int src = op.A + 1;
-                                    int dst = 0;
+                                    var reqnum = closureTemp.ReqArgsNumber;
+                                    var optnum = closureTemp.OptArgsNumber;
+                                    var keynum = closureTemp.KeyArgsNumber;
+                                    var src = op.A + 1;
+                                    var dst = 0;
 
                                     while (reqnum > 0 && dst < numArgs)
                                     { closure.Values[dst++] = values[src++]; reqnum--; }
@@ -431,10 +431,10 @@ namespace VARP.Scheme.VM
                                         var lidx = optv.LitIdx;
                                         if (lidx >= 0)
                                         {
-                                            Value initval = closureTemp.Literals[lidx];
+                                            var initval = closureTemp.Literals[lidx];
                                             if (initval.Is<Template>())
                                             {
-                                                Template ovtinit = closureTemp.Literals[lidx].As<Template>();
+                                                var ovtinit = closureTemp.Literals[lidx].As<Template>();
                                                 closure.Values[dst++] = RunClosure(frame, ovtinit);
                                             }
                                             else
@@ -465,7 +465,7 @@ namespace VARP.Scheme.VM
                                 {
                                     foreach (var v in closure.template.UpValues)
                                     {
-                                        Frame curFrame = closure;             // get current frame
+                                        var curFrame = closure;             // get current frame
                                         int curFrameIndex = v.RefEnvIdx;      // get referenced frame index
                                         while (curFrameIndex > 0)
                                         {
@@ -487,7 +487,7 @@ namespace VARP.Scheme.VM
 
                         case OpCode.RETURN:
                             // return R(A)
-                            Value res = values[op.A];
+                            var res = values[op.A];
                             frame = frame.parent;
                             return res;
                             break;
@@ -510,8 +510,8 @@ namespace VARP.Scheme.VM
                         case OpCode.CLOSURE:
                             {
                                 /// R(A) := closure(KPROTO[Bx], R(A), ... , R(A + n))
-                                Template ntempl = literals[op.Bx].As<Template>();
-                                Frame nfram = new Frame(frame, ntempl); 
+                                var ntempl = literals[op.Bx].As<Template>();
+                                var nfram = new Frame(frame, ntempl); 
                                 values[op.A].RefVal = nfram;
                             }
                             break;
@@ -692,7 +692,7 @@ namespace VARP.Scheme.VM
 
         internal static int FbToInt(int x)
         {
-            int e = (x >> 3) & 0x1f;
+            var e = (x >> 3) & 0x1f;
             return e == 0 ? x : ((x & 7) + 8) << (e - 1);
         }
 

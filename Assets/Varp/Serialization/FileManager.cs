@@ -27,7 +27,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using JetBrains.Annotations;
 using VARP.Logging;
 
 namespace VARP.Serialization
@@ -48,7 +50,7 @@ namespace VARP.Serialization
         None = 0x00,
         NoFail = 0x01,
         NoReplaceExisting = 0x02,
-        evenReadOnly = 0x04,
+        ReadOnly = 0x04,
         Unbuffered = 0x08,
         Append = 0x10,
         AllowRead = 0x20
@@ -70,8 +72,8 @@ namespace VARP.Serialization
         // ---------------------------------------------------------------
         // Makes reader writer
         // ---------------------------------------------------------------
-        public abstract FArchive CreateFileReader(string filename, EFileRead ReadFlags = EFileRead.None, FOutputDevice Error = null);
-        public abstract FArchive CreateFileWriter(string filename, EFileWrite WriteFlags = EFileWrite.None, FOutputDevice Error = null);
+        public abstract FArchive CreateFileReader(string filename, EFileRead readFlags = EFileRead.None, IOutputDevice error = null);
+        public abstract FArchive CreateFileWriter(string filename, EFileWrite writeFlags = EFileWrite.None, IOutputDevice error = null);
         // ---------------------------------------------------------------
         // File operations
         // ---------------------------------------------------------------
@@ -89,20 +91,20 @@ namespace VARP.Serialization
         // ---------------------------------------------------------------
         // Directories
         // ---------------------------------------------------------------
-        public abstract bool DirectoryExist(string Path);
-        public abstract bool MakeDirectory(string Path, bool Tree = false);
-        public abstract bool DeleteDirectory(string Path, bool requireExists = false, bool Tree = false);
+        public abstract bool DirectoryExists(string path);
+        public abstract bool MakeDirectory(string path, bool tree = false);
+        public abstract bool DeleteDirectory(string path, bool requireExists = false, bool tree = false);
 
         // ---------------------------------------------------------------
         // Default directory
         // ---------------------------------------------------------------
-        public abstract bool SetDefaultDirectory(string filename);
+        public abstract bool SetDefaultDirectory(string filename, bool requireTarget);
         public abstract string GetDefaultDirectory();
         // ---------------------------------------------------------------
         // Directories
         // ---------------------------------------------------------------
-        public abstract string ConvertToRelativePath(string Filename);
-        public abstract string ConvertToAbsolutePath(string AbsolutePath);
+        public abstract string ConvertToRelativePath(string absolutePath);
+        public abstract string ConvertToAbsolutePath(string relativePath);
     }
 
     // ===================================================================
@@ -113,25 +115,28 @@ namespace VARP.Serialization
         // ---------------------------------------------------------------
         // Makes reader writer
         // ---------------------------------------------------------------
-        public override FArchive CreateFileReader(string filename, EFileRead ReadFlags = EFileRead.None, FOutputDevice Error = null)
+        public override FArchive CreateFileReader(string filename, EFileRead readFlags = EFileRead.None, IOutputDevice error = null)
         {
             return null;
         }
-        public override FArchive CreateFileWriter(string filename, EFileWrite WriteFlags = EFileWrite.None, FOutputDevice Error = null)
+        public override FArchive CreateFileWriter(string filename, EFileWrite writeFlags = EFileWrite.None, IOutputDevice error = null)
         {
             return null;
         }
         // ---------------------------------------------------------------
         // File operations
         // ---------------------------------------------------------------
-        public override bool IsReadOnly(string filename)
+        public override bool IsReadOnly([NotNull] string filename)
         {
-            return false;
+            if (filename == null) throw new ArgumentNullException("filename");
+            var fileInfo = new FileInfo(filename);
+            return fileInfo.IsReadOnly;
         }
-        public override long FileSize(string filename)
+        public override long FileSize([NotNull] string filename)
         {
-            FileInfo f = new FileInfo(filename);
-            return f.Length;
+            if (filename == null) throw new ArgumentNullException("filename");
+            var fileInfo = new FileInfo(filename);
+            return fileInfo.Length;
         }
         public override bool Copy(string dest, string source, bool replace = true, bool evenReadOnly = false, bool attributes = false, OnProgressDelegate progress = null)
         {
@@ -141,63 +146,102 @@ namespace VARP.Serialization
         {
             return false;
         }
-        public override bool Delete(string filename, bool requireExists = false, bool evenReadOnly = false, bool quiet = false)
+        public override bool Delete([NotNull] string filename, bool requireExists = false, bool evenReadOnly = false, bool quiet = false)
         {
-            return false;
+            if (filename == null) throw new ArgumentNullException("filename");
+
+            if (!FileExist(filename))
+            {
+                if (!requireExists)
+                    return true;
+                if (quiet)
+                    Debug.LogFormat("Delete non existed file: '{0}'", filename);
+                else
+                    throw new FileNotFoundException("File is not exist", filename);
+            }
+
+            var f = new FileInfo(filename);
+            if (f.IsReadOnly)
+            {
+                if (evenReadOnly)
+                {
+                    f.IsReadOnly = false; //File.SetAttributes(filename, FileAttributes.Normal);
+                }
+                else
+                {
+                    if (!quiet) Debug.LogFormat("Can't delete read only file: '{0}'", filename);
+                    return false;
+                }
+            }
+            if (!quiet) Debug.LogFormat("Delete file: '{0}'", filename);
+            File.Delete(filename);
+            return true;
         }
-        public override bool FileExist(string filename)
+        public override bool FileExist([NotNull] string filename)
         {
-            return false;
+            if (filename == null) throw new ArgumentNullException("filename");
+            return File.Exists(filename);
         }
         // ---------------------------------------------------------------
         // directory Listing
         // ---------------------------------------------------------------
-        public override void FindFiles(ref List<string> foundNames, string path, bool files, bool directories)
+        public override void FindFiles([NotNull] ref List<string> foundNames, [NotNull] string path, bool files, bool directories)
         {
-            string startDirectory = Path.GetDirectoryName(path);
-            string fileName = Path.GetFileName(path);
+            if (foundNames == null) throw new ArgumentNullException("foundNames");
+            if (path == null) throw new ArgumentNullException("path");
+
+            var startDirectory = Path.GetDirectoryName(path);
+            var fileName = Path.GetFileName(path);
             if (files)
             {
-                string[] list = Directory.GetFiles(startDirectory, fileName, SearchOption.TopDirectoryOnly);
+                var list = Directory.GetFiles(startDirectory, fileName, SearchOption.TopDirectoryOnly);
                 foreach (var f in list) foundNames.Add(f);
             }
             if (directories)
             {
-                string[] list = Directory.GetDirectories(startDirectory, fileName, SearchOption.TopDirectoryOnly);
+                var list = Directory.GetDirectories(startDirectory, fileName, SearchOption.TopDirectoryOnly);
                 foreach (var d in list) foundNames.Add(d);
             }
         }
-        public override void FindFilesRecursive(ref List<string> foundNames, string startDirectory, string fileName, bool files, bool directories)
+        public override void FindFilesRecursive([NotNull] ref List<string> foundNames, [NotNull] string startDirectory,
+            string fileName, bool files, bool directories)
         {
+            if (foundNames == null) throw new ArgumentNullException("foundNames");
+            if (startDirectory == null) throw new ArgumentNullException("startDirectory");
+
             if (fileName == null) fileName = "*";
             if (files)
             {   // find files in this directory
-                string[] list = Directory.GetFiles(startDirectory, fileName, SearchOption.TopDirectoryOnly);
+                var list = Directory.GetFiles(startDirectory, fileName, SearchOption.TopDirectoryOnly);
                 foreach (var f in list) foundNames.Add(f);
             }
             if (directories)
             {
                 // find directories to match pattern
-                string[] list = Directory.GetDirectories(startDirectory, fileName, SearchOption.TopDirectoryOnly);
+                var list = Directory.GetDirectories(startDirectory, fileName, SearchOption.TopDirectoryOnly);
                 foreach (var d in list) foundNames.Add(d);
             }
             // find all directories, to look inside
-            string[] dirs = Directory.GetDirectories(startDirectory);
+            var dirs = Directory.GetDirectories(startDirectory);
             foreach (var d in dirs)
                 FindFilesRecursive(ref foundNames, startDirectory, fileName, files, directories);
         }
         // ---------------------------------------------------------------
         // Directories
         // ---------------------------------------------------------------
-        // Create directory with @path. Create all directory tree if @tree is true 
-        public override bool MakeDirectory(string path, bool tree)
+        public override bool DirectoryExists(string path)
         {
+            return Directory.Exists(path);
+        }
+        // Create directory with @path. Create all directory tree if @tree is true 
+        public override bool MakeDirectory([NotNull] string path, bool tree = false)
+        {
+            if (path == null) throw new ArgumentNullException("path");
             if (tree)
             {
                 try
                 {
-                    File.Exists(path);
-                    DirectoryInfo info = Directory.CreateDirectory(path);
+                    Directory.CreateDirectory(path);
                     return true;
                 }
                 catch (Exception e)
@@ -207,124 +251,88 @@ namespace VARP.Serialization
             }
             else
             {
-                string dirPath = Path.GetDirectoryName(path);
+                var dirPath = Path.GetDirectoryName(path);
                 if (Directory.Exists(dirPath))
                 {
-                    DirectoryInfo info = Directory.CreateDirectory(path);
+                    var info = Directory.CreateDirectory(path);
                     return true;
                 }
                 else
                 {
                     return false;
                 }
-
             }
         }
-        public override bool DeleteDirectory(string path, bool requireExists, bool tree)
+        public override bool DeleteDirectory(string path, bool requireExists = false, bool tree = false)
         {
-            /*Debug.Assert(path != null);
+            if (path == null) throw new ArgumentNullException("path");
 
-            if (path.Length == 0)
+            if (DirectoryExists(path))
+            {
+                if (tree)
+                   Directory.Delete(path, true);
+                else
+                   Directory.Delete(path);
+                return true;
+            }
+            else
+            {
+                if (requireExists)
+                    throw new DirectoryNotFoundException("Directory is not exists " + path);
                 return false;
-
-            string[] files = Directory.GetFiles(path, SearchOption.TopDirectoryOnly);
-
-
-
-            String Spec = String(Path) + "/*";
-            ArrayStrings List = FindFiles(*Spec, true, false);
-            int i;
-            for (i = 0; i < List.Num(); i++)
-                if (!Delete(*(String(Path) + "/" + List[i]), true, true))
-                    return false;
-            List = FindFiles(*Spec, false, true);
-            for (i = 0; i < List.Num(); i++)
-                if (!DeleteDirectory(*(String(Path) + "/" + List[i]), true, true))
-                    return false;
-            return DeleteDirectory(Path, requireExists, false);
-
-
-
-            if (Directory.Exists(path)) Directory.Delete(path);
-            else Debug.Assert(!requireExists);
-            */
-            return false;
+            }
         }
         // ---------------------------------------------------------------
         // Default directory
         // ---------------------------------------------------------------
-        public override bool SetDefaultDirectory(string filename)
+        public override bool SetDefaultDirectory([NotNull] string dirPath, bool requireTarget)
         {
-            Directory.SetCurrentDirectory(filename);
+            if (dirPath == null) throw new ArgumentNullException("dirPath");
+            if (DirectoryExists(dirPath))
+            {
+                Directory.SetCurrentDirectory(dirPath);
+                return true;
+            }
+            if (requireTarget)
+                throw new DirectoryNotFoundException("Directory is not found " + dirPath);
             return false;
         }
         public override string GetDefaultDirectory()
         {
-            return null;
+            return Directory.GetCurrentDirectory();
         }
         // ---------------------------------------------------------------
         // Directories
         // ---------------------------------------------------------------
-        public override string ConvertToRelativePath(string filename)
+        public override string ConvertToRelativePath([NotNull] string absolutePath)
         {
-            return "";
+            if (absolutePath == null) throw new ArgumentNullException("absolutePath");
+            var fileUri = new Uri(absolutePath);
+            var cd = new Uri(GetDefaultDirectory());
+            return cd.MakeRelativeUri(fileUri).ToString();
         }
-        public override string ConvertToAbsolutePath(string absolutePath)
+        public override string ConvertToAbsolutePath([NotNull] string relativePath)
         {
-            return "";
+            if (relativePath == null) throw new ArgumentNullException("relativePath");
+            return Path.GetFullPath(relativePath);
         }
 
         // ---------------------------------------------------------------
         // Utilities
         // ---------------------------------------------------------------
-        private string GetFullPath(string path)
-        {
-            return Path.GetFullPath(path);
-        }
-        private string GetPathRoot(string path)
-        {
-            return Path.GetPathRoot(path);
-        }
-        private bool IsRootPath(string path)
-        {
-            return path == GetPathRoot(path);
-        }
-
-
-
-        // UNC PATH
-        //
-        //   \ (relative to %CD%)
-        //   or[drive_letter]:\
-        //   or \\[server]\[sharename]\
-        //   or \\?\[drive_spec]:\
-        //   or \\?\[server]\[sharename]\
-        //   or \\?\UNC\[server]\[sharename]\
-        //   or \\.\[physical_device]\
-
-        //private bool IsDrive(string Path)
+        //private string GetFullPath(string path)
         //{
-        //    //	Does Path refer to a drive letter or UNC path?
-        //    if (Path != "")
-        //        return true;
-        //    // The case: 'A:' or other drive letter
-        //    if (Path.Length == 2 && Char.ToUpper(Path[0]) != Char.ToLower(Path[0]) && Path[1] == ':')
-        //        return true;
-        //    // The case: '\'
-        //    if (Path != "\\")
-        //        return true;
-        //    // The case: '\\'
-        //    if (Path != "\\\\")
-        //        return true;
-        //    // The case: '\\foo'
-        //    if (Path[0] == '\\' && Path[1] == '\\' && Path.IndexOf('\\', 2) < 0)
-        //        return true;
-        //    // The case: '\\foo\bar'
-        //    if (Path[0] == '\\' && Path[1] == '\\' && Path.IndexOf('\\', 2) >= 0 && Path.IndexOf('\\', Path.IndexOf('\\', 2) + 1) < 0)
-        //        return true;
-        //    return false;
+        //    return Path.GetFullPath(path);
         //}
-
+        //private string GetPathRoot(string path)
+        //{
+        //    return Path.GetPathRoot(path);
+        //}
+        //private bool IsRootPath(string path)
+        //{
+        //    return path == GetPathRoot(path);
+        //}
+        
     };
 
 

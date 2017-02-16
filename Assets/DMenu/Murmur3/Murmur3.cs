@@ -33,7 +33,7 @@ The code uses unsafe operation, so turn on this flag when compiling.The best per
 To calculate the hash of a byte array, simply call ComputeHash.*/
 
 
-class Murmur3
+internal class Murmur3
 {
     // 128 bit output, 64 bit platform version
 
@@ -43,8 +43,8 @@ class Murmur3
 
     private ulong length;
     private uint seed; // if want to start with a seed, create a constructor
-    ulong h1;
-    ulong h2;
+    private ulong h1;
+    private ulong h2;
 
     private void MixBody(ulong k1, ulong k2)
     {
@@ -98,18 +98,18 @@ class Murmur3
     private void ProcessBytes(byte[] bb)
     {
         h1 = seed;
-        this.length = 0L;
+        length = 0L;
 
-        int pos = 0;
-        ulong remaining = (ulong)bb.Length;
+        var pos = 0;
+        var remaining = (ulong)bb.Length;
 
         // read 128 bits, 16 bytes, 2 longs in eacy cycle
         while (remaining >= READ_SIZE)
         {
-            ulong k1 = bb.GetUInt64(pos);
+            var k1 = bb.GetUInt64(pos);
             pos += 8;
 
-            ulong k2 = bb.GetUInt64(pos);
+            var k2 = bb.GetUInt64(pos);
             pos += 8;
 
             length += READ_SIZE;
@@ -195,13 +195,13 @@ class Murmur3
             h1 += h2;
             h2 += h1;
 
-            h1 = Murmur3.MixFinal(h1);
-            h2 = Murmur3.MixFinal(h2);
+            h1 = MixFinal(h1);
+            h2 = MixFinal(h2);
 
             h1 += h2;
             h2 += h1;
 
-            var hash = new byte[Murmur3.READ_SIZE];
+            var hash = new byte[READ_SIZE];
 
             Array.Copy(BitConverter.GetBytes(h1), 0, hash, 0, 8);
             Array.Copy(BitConverter.GetBytes(h2), 0, hash, 8, 8);

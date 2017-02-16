@@ -75,7 +75,7 @@ namespace VARP.Scheme.REPL
                 }
             }
             // form the output string.
-            string format1 = format.Remove(0, 1); // remove '?'
+            var format1 = format.Remove(0, 1); // remove '?'
             return string.Format(format1, Inspector.Inspect(arg));
         }
     }

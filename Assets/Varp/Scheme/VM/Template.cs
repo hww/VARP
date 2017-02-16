@@ -65,24 +65,24 @@ namespace VARP.Scheme.VM
 
         public Template()
         {
-            this.ReqArgsNumber = 0;
-            this.OptArgsNumber = 0;
-            this.KeyArgsNumber = 0;
-            this.UpValsNumber = 0;
-            this.RestValueIdx = -1;
-            this.SP = -1;
+            ReqArgsNumber = 0;
+            OptArgsNumber = 0;
+            KeyArgsNumber = 0;
+            UpValsNumber = 0;
+            RestValueIdx = -1;
+            SP = -1;
         }
 
         public Template(Value[] literals, Instruction[] code)
         {
-            this.Literals = literals;
-            this.Code = code;
-            this.ReqArgsNumber = 0;
-            this.OptArgsNumber = 0;
-            this.KeyArgsNumber = 0;
-            this.UpValsNumber = 0;
-            this.RestValueIdx = -1;
-            this.SP = -1;
+            Literals = literals;
+            Code = code;
+            ReqArgsNumber = 0;
+            OptArgsNumber = 0;
+            KeyArgsNumber = 0;
+            UpValsNumber = 0;
+            RestValueIdx = -1;
+            SP = -1;
         }
 
 
@@ -93,9 +93,9 @@ namespace VARP.Scheme.VM
 
         public string Inspect(int ident)
         {
-            string sident = new string(' ', ident * 4);
+            var sident = new string(' ', ident * 4);
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append(sident);
             sb.AppendFormat("Template: args: {0} frame: {1}\n", Values.Length, FrameSize);
             /////////////////
@@ -149,7 +149,7 @@ namespace VARP.Scheme.VM
             ///////////
             sb.Append(sident);
             sb.Append("|  temp:");
-            for (int i = SP; i < FrameSize; i++)
+            for (var i = SP; i < FrameSize; i++)
                 sb.AppendFormat(" T{0}", i);
             sb.AppendLine();
             ////////////
@@ -157,7 +157,7 @@ namespace VARP.Scheme.VM
             ////////////
             sb.Append(sident);
             sb.AppendLine("|  code:");
-            int pc = 0;
+            var pc = 0;
             foreach (var v in Code)
             {
                 sb.Append(sident);
@@ -171,8 +171,8 @@ namespace VARP.Scheme.VM
                 sb.Append(sident);
                 sb.Append("|  literals:");
                 sb.AppendLine();
-                string lident = new string(' ', (ident + 1) * 4);
-                int lidx = 0;
+                var lident = new string(' ', (ident + 1) * 4);
+                var lidx = 0;
                 foreach (var v in Literals)
                 {
                     sb.Append(lident);

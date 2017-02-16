@@ -50,9 +50,9 @@ namespace VARP.Scheme.Stx
             Debug.Assert(environment != null);
             Debug.Assert(variable != null);
             if (environment.Index > 255) SchemeError.Error("binding", "too many environments", variable);
-            this.EnvIdx = (byte)environment.Index;
-            this.Id = variable;
-            this.VarIdx = 0;
+            EnvIdx = (byte)environment.Index;
+            Id = variable;
+            VarIdx = 0;
         }
 
 
@@ -81,7 +81,7 @@ namespace VARP.Scheme.Stx
         public PrimitiveBinding(AstEnvironment environment, Syntax identifier, CompilerPrimitive primitive) : base (environment, identifier)
         {
             Debug.Assert(primitive != null);
-            this.Primitive = primitive;
+            Primitive = primitive;
         }
 
         public override bool IsPrimitive { get { return true; } }
@@ -101,14 +101,14 @@ namespace VARP.Scheme.Stx
 
             if (other is UpBinding)
             {
-                UpBinding ub = other as UpBinding;
-                this.RefEnvIdx = ub.RefEnvIdx;
-                this.RefVarIdx = ub.RefVarIdx;
+                var ub = other as UpBinding;
+                RefEnvIdx = ub.RefEnvIdx;
+                RefVarIdx = ub.RefVarIdx;
             }
             else
             {
-                this.RefEnvIdx = other.EnvIdx;
-                this.RefVarIdx = other.VarIdx;
+                RefEnvIdx = other.EnvIdx;
+                RefVarIdx = other.VarIdx;
             }
         }
 
@@ -141,8 +141,8 @@ namespace VARP.Scheme.Stx
         public ArgumentBinding(AstEnvironment environment, Syntax identifier, Type type, AST initializer) : base(environment, identifier)
         {
             Debug.Assert(initializer != null);
-            this.Initializer = initializer;
-            this.ArgType = type;
+            Initializer = initializer;
+            ArgType = type;
         }
 
         #region ValueType Methods

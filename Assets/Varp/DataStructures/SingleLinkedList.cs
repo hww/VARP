@@ -25,34 +25,31 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using UnityEngine;
 using System.Collections;
 using VARP.Interfaces;
 using System.Collections.Generic;
-using System.Text;
-using VARP.Interfaces;
 
 namespace VARP.DataStructures
 {
-    class SingleNodeBase<NodeType> : IEnumerable<SingleNodeBase<NodeType>> where NodeType : class
+    internal class SingleNodeBase<TNodeType> : IEnumerable<SingleNodeBase<TNodeType>> where TNodeType : class
     {
-        public SingleNodeBase<NodeType> Next;
+        public SingleNodeBase<TNodeType> next;
 
-        public SingleNodeBase(SingleNodeBase<NodeType> next)
+        public SingleNodeBase(SingleNodeBase<TNodeType> next)
         {
-            Next = next;
+            this.next = next;
         }
-        public NodeType Super {  get { return this as NodeType; } }
+        public TNodeType Super {  get { return this as TNodeType; } }
 
         #region IEnumerable<T> Members
 
-        public IEnumerator<SingleNodeBase<NodeType>> GetEnumerator()
+        public IEnumerator<SingleNodeBase<TNodeType>> GetEnumerator()
         {
-            SingleNodeBase<NodeType> node = this;
+            var node = this;
             while (node != null)
             {
                 yield return node;
-                node = node.Next;
+                node = node.next;
             }
         }
 
@@ -60,10 +57,10 @@ namespace VARP.DataStructures
 
         #region IEnumerable Members
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
             // Lets call the generic version here
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         #endregion
@@ -71,27 +68,27 @@ namespace VARP.DataStructures
 
 
     // Simple single-linked list template for Structure.
-    class SListNode<T> : SingleNodeBase<SListNode<T>>, IListNode<T> where T : struct
+    internal class SListNode<T> : SingleNodeBase<SListNode<T>>, IListNode<T> where T : struct
     {
-        public T Element;
+        public T element;
 
         // Constructor.
-        SListNode(T InElement, SListNode<T> InNext) : base(InNext)
+        private SListNode(T inElement, SListNode<T> inNext) : base(inNext)
         {
-            Element = InElement;
+            element = inElement;
         }
 
         public T Data
         {
-            get { return Element; }
+            get { return element; }
         }
     }
 
     // Simple single-linked list template for class
-    class CIntrusiveListNode<T> : SingleNodeBase<CIntrusiveListNode<T>>, IListNode<T> where T : class
+    internal class CIntrusiveListNode<T> : SingleNodeBase<CIntrusiveListNode<T>>, IListNode<T> where T : class
     {
         // Constructor.
-        public CIntrusiveListNode(CIntrusiveListNode<T> InNext = null) : base(InNext)
+        public CIntrusiveListNode(CIntrusiveListNode<T> inNext = null) : base(inNext)
         {
         }
 
@@ -102,20 +99,20 @@ namespace VARP.DataStructures
     }
 
     // Simple single-linked list template for class
-    class CListNode<T> : SingleNodeBase<CListNode<T>>, IListNode<T>  where T : class
+    internal class CListNode<T> : SingleNodeBase<CListNode<T>>, IListNode<T>  where T : class
     {
-        public T Element;
+        public T element;
 
         // Constructor.
 
-        public CListNode(T InElement, CListNode<T> InNext = null) : base(InNext)
+        public CListNode(T inElement, CListNode<T> inNext = null) : base(inNext)
         {
-            Element = InElement;
+            element = inElement;
         }
 
         public T Data
         {
-            get { return Element; }
+            get { return element; }
         }
 
     }

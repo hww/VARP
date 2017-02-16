@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 using VARP.Scheme.VM;
 
-namespace DMenu
+namespace VARP
 {
     /// <summary>
     /// The base class for all menu items
@@ -143,7 +143,7 @@ namespace DMenu
         /// <param name="separatorType"></param>
         public MenuSeparator(Type separatorType) 
         {
-            this.type = separatorType;
+            type = separatorType;
         }
     }
 

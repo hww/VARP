@@ -56,10 +56,10 @@ namespace VARP.Scheme.Tokenizing
         /// </usage>
         public Tokenizer(TextReader input, string filePath)
         {
-            this.builder = new BetterStringBuilder(1024);
-            this.reader = new TokenReader(input, filePath);
-            this.Character = -1;
-            this.builder.Clear();
+            builder = new BetterStringBuilder(1024);
+            reader = new TokenReader(input, filePath);
+            Character = -1;
+            builder.Clear();
 
             // Get next character
             NextChar();
@@ -72,7 +72,7 @@ namespace VARP.Scheme.Tokenizing
         /// <returns></returns>
         public void TokenizeToList(List<Token> tokenList)
         {
-            Token token = GetNextToken();
+            var token = GetNextToken();
             while (token != null)
             {
                 tokenList.Add(token);
@@ -80,7 +80,7 @@ namespace VARP.Scheme.Tokenizing
             }
         }
 
-        char cCharacter;
+        private char cCharacter;
         private void NextChar() { Character = reader.Read(); cCharacter = (char)Character; }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace VARP.Scheme.Tokenizing
 
                         // only a number literal if the starting char is numerical, or if the starting char is a - or +
                         // AND the next char is part of a number.
-                        int nextc = reader.Peek();
+                        var nextc = reader.Peek();
                         if (IsNumerical(nextc) || nextc == '.')
                             return NumberLiteral();
                         else
@@ -155,9 +155,9 @@ namespace VARP.Scheme.Tokenizing
         {
             builder.Clear();
             NextChar();
-            TokenType type = TokenType.String;
+            var type = TokenType.String;
 
-            bool matchingQuotes = false;
+            var matchingQuotes = false;
             while (Character >= 0)
             {
                 // if we get an escape, increment the position some more and map the escaped character to what it should be
@@ -193,7 +193,7 @@ namespace VARP.Scheme.Tokenizing
         // retrieve a symbol token and advance our position
         private Token Symbol()
         {
-            TokenType type = TokenType.Symbol;
+            var type = TokenType.Symbol;
             builder.Clear();
             // as long as we don't hit whitespace or something that a symbol shouldn't have, assume it's a symbol
             while (Character >= 0 && !IsWhitespace(Character) && IsSymbolPart(Character))
@@ -242,7 +242,7 @@ namespace VARP.Scheme.Tokenizing
         // retrieve a number literal token (int or decimal) and advance our position
         private Token NumberLiteral()
         {
-            TokenType type = TokenType.Integer;
+            var type = TokenType.Integer;
             builder.Clear();
 
             while (Character >= 0 && IsNumericalPart(Character))
@@ -266,8 +266,8 @@ namespace VARP.Scheme.Tokenizing
         private Token VectorOrBooleanOrChar()
         {
             builder.Clear();
-            List<char> boolLiterals = new List<char> { 'F', 'f', 't', 'T' };
-            int nextc = reader.Peek();
+            var boolLiterals = new List<char> { 'F', 'f', 't', 'T' };
+            var nextc = reader.Peek();
             if (boolLiterals.Contains((char)nextc))
             {
                 // boolean literal!

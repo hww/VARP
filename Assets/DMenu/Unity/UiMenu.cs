@@ -12,7 +12,7 @@ public class UiMenu : UiObject
 
 
     // ReSharper disable once UnusedMember.Local
-    void Awake()
+    private void Awake()
     {
         image = GetComponent<Image>();
         menuLines = new List<UiMenuLine>();
@@ -38,7 +38,7 @@ public class UiMenu : UiObject
     public override void SetFactory(UiMenuFactory factory)
     {
         this.factory = factory;
-        this.image.color = factory.panelColor;
+        image.color = factory.panelColor;
     }
 
     public void Add(UiMenuLine line)
@@ -67,7 +67,7 @@ public class UiMenu : UiObject
     }
 
     // ReSharper disable once UnusedMember.Local
-    void OnDestroy()
+    private void OnDestroy()
     {
         if (submenu != null)
             Destroy(submenu.gameObject);

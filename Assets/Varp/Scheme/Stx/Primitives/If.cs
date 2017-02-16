@@ -35,18 +35,18 @@ namespace VARP.Scheme.Stx.Primitives
         // (if () ...)
         public static AST Expand(Syntax stx, AstEnvironment env)
         {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();
-            int argc = GetArgsCount(list);
+            var list = stx.AsLinkedList<Value>();
+            var argc = GetArgsCount(list);
             AssertArgsMinimum("if", "arity mismatch", 2, argc, list, stx);
 
-            Syntax keyword = list[0].AsSyntax();
-            Syntax cond = list[1].AsSyntax();
-            Syntax then = list[2].AsSyntax();
-            Syntax elsc = argc < 3 ? null : list[3].AsSyntax();
+            var keyword = list[0].AsSyntax();
+            var cond = list[1].AsSyntax();
+            var then = list[2].AsSyntax();
+            var elsc = argc < 3 ? null : list[3].AsSyntax();
 
-            AST cond_ast = AstBuilder.Expand(cond, env);
-            AST then_ast = AstBuilder.Expand(then, env);
-            AST else_ast = AstBuilder.Expand(elsc, env);
+            var cond_ast = AstBuilder.Expand(cond, env);
+            var then_ast = AstBuilder.Expand(then, env);
+            var else_ast = AstBuilder.Expand(elsc, env);
 
             return new AstConditionIf(stx, keyword, cond_ast, then_ast, else_ast);
         }

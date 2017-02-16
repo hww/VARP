@@ -39,28 +39,28 @@ namespace VARP.Serialization
         // -------------------------------------------------------
 
         // Status variables.
-        protected int ArVer;
-        protected bool ArIsLoading;
-        protected bool ArIsSaving;
-        protected bool ArIsPersistent;
-        protected bool ArIsError;
+        protected int arVer;
+        protected bool arIsLoading;
+        protected bool arIsSaving;
+        protected bool arIsPersistent;
+        protected bool arIsError;
 
-        public int Ver { get { return ArVer; } }
-        public bool IsLoading { get { return ArIsLoading; } }
-        public bool IsSaving { get { return ArIsSaving; } }
-        public bool IsPersistent { get { return ArIsPersistent; } }
-        public bool IsError { get { return ArIsError; } }
+        public int Ver { get { return arVer; } }
+        public bool IsLoading { get { return arIsLoading; } }
+        public bool IsSaving { get { return arIsSaving; } }
+        public bool IsPersistent { get { return arIsPersistent; } }
+        public bool IsError { get { return arIsError; } }
 
         // -------------------------------------------------------
         // Constructor.
         // -------------------------------------------------------
         public FArchive()
         {
-            ArVer = 0;
-            ArIsLoading = false;
-            ArIsSaving = false;
-            ArIsPersistent = false;
-            ArIsError = false;
+            arVer = 0;
+            arIsLoading = false;
+            arIsSaving = false;
+            arIsPersistent = false;
+            arIsError = false;
         }
 
         // -------------------------------------------------------
@@ -70,7 +70,7 @@ namespace VARP.Serialization
         public abstract long Position();
         public abstract long Lenght();
         public abstract bool AtEnd();
-        public abstract void Seek(long InPos);
+        public abstract void Seek(long inPos);
         public abstract void Flush();
         public abstract bool Close();
 

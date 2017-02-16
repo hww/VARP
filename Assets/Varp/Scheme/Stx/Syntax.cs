@@ -60,7 +60,7 @@ namespace VARP.Scheme.Stx
         public Syntax(Value expression, Token token)
         {
             this.expression = expression;
-            this.location = token == null ? null : token.location;
+            location = token == null ? null : token.location;
         }
         public Syntax(object expression, Location location)
         {
@@ -70,7 +70,7 @@ namespace VARP.Scheme.Stx
         public Syntax(object expression, Token token)
         {
             this.expression.Set(expression);
-            this.location = token == null ? null : token.location;
+            location = token == null ? null : token.location;
         }
 
         #region Cast Syntax To ... Methods
@@ -115,14 +115,14 @@ namespace VARP.Scheme.Stx
         /// </summary>
         /// <param name="expression"></param>
         /// <returns></returns>
-        static Value GetDatum(Value expression)
+        private static Value GetDatum(Value expression)
         {
             if (expression.IsSyntax)
                 expression = (expression.AsSyntax()).expression;
 
             if (expression.IsLinkedList<Value>())
             {
-                LinkedList<Value> result = new LinkedList<Value>();
+                var result = new LinkedList<Value>();
                 foreach (var val in expression.AsLinkedList<Value>())
                     result.AddLast(GetDatum(val));
                 return new Value(result);
@@ -130,8 +130,8 @@ namespace VARP.Scheme.Stx
 
             if (expression.IsLinkedList<Syntax>())
             {
-                LinkedList<Syntax> src = expression.AsLinkedList<Syntax>();
-                LinkedList<Value> dst = new LinkedList<Value>();
+                var src = expression.AsLinkedList<Syntax>();
+                var dst = new LinkedList<Value>();
                 foreach (var v in src)
                     dst.AddLast(GetDatum(v.ToValue()));
                 return new Value(dst);
@@ -139,8 +139,8 @@ namespace VARP.Scheme.Stx
 
             if (expression.IsList<Value>())
             {
-                List<Value> src = expression.AsList<Value>();
-                List<Value> dst = new List<Value>(src.Count);
+                var src = expression.AsList<Value>();
+                var dst = new List<Value>(src.Count);
                 foreach (var v in src)
                 {
                     if (v.IsSyntax)
@@ -154,7 +154,7 @@ namespace VARP.Scheme.Stx
 
             if (expression.IsValuePair)
             {
-                ValuePair pair = expression.AsValuePair();
+                var pair = expression.AsValuePair();
                 return new Value(new ValuePair(GetDatum(pair.Item1), GetDatum(pair.Item2)));
             }
 

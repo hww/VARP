@@ -73,14 +73,14 @@ namespace VARP.Scheme.REPL
             return InspectMonoObject(x, options);
         }
 
-        static string InspectInternal(Value x, InspectOptions options = InspectOptions.Default)
+        private static string InspectInternal(Value x, InspectOptions options = InspectOptions.Default)
         {
             if (x.IsNil || x.IsBool || x.IsNumber)
                 return x.ToString();
             return Inspect(x.RefVal, options);
         }
 
-        static string InspectInternal(ValueClass x, InspectOptions options = InspectOptions.Default)
+        private static string InspectInternal(ValueClass x, InspectOptions options = InspectOptions.Default)
         {
             if (x is Location)
                 return InspectInternal(x as Location, options);
@@ -94,46 +94,49 @@ namespace VARP.Scheme.REPL
                 return InspectInternal(x as AST, options);
             if (x is AstBinding)
                 return InspectInternal(x as AstBinding, options);
-            if (x is Stx.AstEnvironment)
-                return InspectInternal(x as Stx.AstEnvironment, options);
+            if (x is AstEnvironment)
+                return InspectInternal(x as AstEnvironment, options);
             // all another just convert to string
             return x.ToString();
         }
 
-        static string InspectInternal(Location x, InspectOptions options = InspectOptions.Default)
+        private static string InspectInternal(Location x, InspectOptions options = InspectOptions.Default)
         {
             return string.Format("#<location:{0}:{1} {2}>", x.LineNumber, x.ColNumber, x.File);
         }
-        static string InspectInternal(Token x, InspectOptions options = InspectOptions.Default)
+
+        private static string InspectInternal(Token x, InspectOptions options = InspectOptions.Default)
         {
-            Location loc = x.location;
+            var loc = x.location;
             if (loc == null)
                 return string.Format("#<token \"{0}\">", x.ToString());
             else
                 return string.Format("#<token:{0}:{1} \"{2}\">", loc.LineNumber, loc.ColNumber, x.ToString());
         }
-        static string InspectInternal(Syntax x, InspectOptions options = InspectOptions.Default)
+
+        private static string InspectInternal(Syntax x, InspectOptions options = InspectOptions.Default)
         {
-            Location loc = x.Location;
+            var loc = x.Location;
             if (loc == null)
                 return string.Format("#<syntax {0}>", x.ToString());
             else
                 return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.GetDatum(), options));
         }
-        static string InspectInternal(AstBinding bind, InspectOptions options = InspectOptions.Default)
+
+        private static string InspectInternal(AstBinding bind, InspectOptions options = InspectOptions.Default)
         {
-            string prefix = bind.IsPrimitive ? "#Prim" : string.Empty; 
+            var prefix = bind.IsPrimitive ? "#Prim" : string.Empty; 
                 if (bind.IsGlobal)
                     return string.Format("{0} {1}", prefix, bind.Identifier.Name);
                 else
                     return string.Format("[{0}] {1} {2}>", bind.VarIdx, prefix, bind.Identifier.Name);
         }
 
-        static string InspectInternal(Stx.AstEnvironment env, InspectOptions options = InspectOptions.Default)
+        private static string InspectInternal(AstEnvironment env, InspectOptions options = InspectOptions.Default)
         {
-            int tabs = env.GetEnvironmentIndex();
-            string tabstr = new string(' ', tabs * 4);
-            StringBuilder sb = new StringBuilder();
+            var tabs = env.GetEnvironmentIndex();
+            var tabstr = new string(' ', tabs * 4);
+            var sb = new StringBuilder();
             sb.AppendLine(tabstr + "Lexical Environment");
             foreach (var b in env)
             {
@@ -142,11 +145,12 @@ namespace VARP.Scheme.REPL
             return sb.ToString();
         }
 
-        static string InspectInternal(ValuePair x, InspectOptions options = InspectOptions.Default)
+        private static string InspectInternal(ValuePair x, InspectOptions options = InspectOptions.Default)
         {
             return string.Format("({0} . {1})", Inspect(x.Item1, options), Inspect(x.Item2));
         }
-        static string InspectInternal(AST x, InspectOptions options = InspectOptions.Default)
+
+        private static string InspectInternal(AST x, InspectOptions options = InspectOptions.Default)
         {
             return x.Inspect();
         }
@@ -154,7 +158,7 @@ namespace VARP.Scheme.REPL
 
         #region Inspect Mono Classes
 
-        static string InspectMonoObject(object x, InspectOptions options = InspectOptions.Default)
+        private static string InspectMonoObject(object x, InspectOptions options = InspectOptions.Default)
         {
             if (x is string)
                 return string.Format(CultureInfo.CurrentCulture, "\"{0}\"", x);
@@ -180,15 +184,16 @@ namespace VARP.Scheme.REPL
             return x.ToString().Trim();
 
         }
-        static string InspectArray(Array arr, InspectOptions options = InspectOptions.Default)
+
+        private static string InspectArray(Array arr, InspectOptions options = InspectOptions.Default)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             // For large arrays, don't try to print the elements
             if (arr.Length > MAX_ARRAY_PRINT_LEN)
             {
                 sb.Append("#<Array[");
-                for (int ix = 0; ix < arr.Rank; ++ix)
+                for (var ix = 0; ix < arr.Rank; ++ix)
                 {
                     if (ix > 0)
                         sb.Append(" x ");
@@ -197,22 +202,22 @@ namespace VARP.Scheme.REPL
                 sb.Append("] ");
             }
 
-            int[] ind = new int[arr.Rank];
-            int[] lb = new int[arr.Rank];
-            int[] ub = new int[arr.Rank];
+            var ind = new int[arr.Rank];
+            var lb = new int[arr.Rank];
+            var ub = new int[arr.Rank];
 
             if (arr.Length <= MAX_ARRAY_PRINT_LEN)
                 sb.Append(String.Format(CultureInfo.CurrentCulture,
                                         arr.Rank > 1 ? "#{0}a" : "#", arr.Rank));
 
-            for (int ix = 0; ix < arr.Rank; ++ix)
+            for (var ix = 0; ix < arr.Rank; ++ix)
             {
                 ind[ix] = lb[ix] = arr.GetLowerBound(ix);
                 ub[ix] = arr.GetUpperBound(ix);
                 sb.Append("(");
             }
 
-            int printedElts = 0;
+            var printedElts = 0;
             do
             {
                 try
@@ -231,7 +236,7 @@ namespace VARP.Scheme.REPL
             if (arr.Length > MAX_ARRAY_PRINT_LEN)
             {
                 sb.Append(" ... ");
-                for (int ix = 0; ix < arr.Rank; ++ix)
+                for (var ix = 0; ix < arr.Rank; ++ix)
                     sb.Append(')');
                 sb.Append(">");
             }
@@ -241,7 +246,7 @@ namespace VARP.Scheme.REPL
 
         internal static bool IncrementIndex(int ix, int[] ind, int[] lb, int[] ub, StringBuilder sb)
         {
-            bool retval = false;
+            var retval = false;
             if (ix >= 0)
             {
                 if (ind[ix] < ub[ix])
@@ -262,18 +267,19 @@ namespace VARP.Scheme.REPL
 
             return retval;
         }
-        static string InspectInternal(LinkedList<Value> list, InspectOptions options = InspectOptions.Default, bool encloseList = true)
+
+        private static string InspectInternal(LinkedList<Value> list, InspectOptions options = InspectOptions.Default, bool encloseList = true)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             if (encloseList)
                 sb.Append("(");
 
-            LinkedListNode<Value> curent = list.First;
-            int consLen = 0;
-            while (curent != null && ++consLen < Inspector.MAX_CONS_PRINT_LEN)
+            var curent = list.First;
+            var consLen = 0;
+            while (curent != null && ++consLen < MAX_CONS_PRINT_LEN)
             {
-                Symbol sym = curent.Value.AsSymbol();
+                var sym = curent.Value.AsSymbol();
                 if (sym != null && sym.IsSpecialForm)
                 {
                     if (options == InspectOptions.PrettyPrint)
@@ -282,7 +288,7 @@ namespace VARP.Scheme.REPL
                         sb.Append(sym.ToString());
                 }
                 else
-                    sb.Append(Inspector.Inspect(curent.Value, options));
+                    sb.Append(Inspect(curent.Value, options));
 
                 curent = curent.Next;
                 if (curent != null) sb.Append(" ");
@@ -296,10 +302,11 @@ namespace VARP.Scheme.REPL
 
             return sb.ToString();
         }
-        static string InspectInternal(List<Value> list, InspectOptions options = InspectOptions.Default)
+
+        private static string InspectInternal(List<Value> list, InspectOptions options = InspectOptions.Default)
         {
-            StringBuilder sb = new StringBuilder();
-            bool appendSpace = false;
+            var sb = new StringBuilder();
+            var appendSpace = false;
             sb.Append("#(");
             foreach (var v in list)
             {
@@ -311,10 +318,10 @@ namespace VARP.Scheme.REPL
             return sb.ToString();
         }
 
-        static string InspectInternal(Dictionary<object, Value> table, InspectOptions options = InspectOptions.Default)
+        private static string InspectInternal(Dictionary<object, Value> table, InspectOptions options = InspectOptions.Default)
         {
-            StringBuilder sb = new StringBuilder();
-            bool appendSpace = false;
+            var sb = new StringBuilder();
+            var appendSpace = false;
             sb.Append("#hash(");
             foreach (var v in table)
             {

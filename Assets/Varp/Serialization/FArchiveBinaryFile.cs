@@ -35,7 +35,7 @@ namespace VARP.Serialization
     public class FBinaryStreamReader : FArchive
     {
 
-        public FBinaryStreamReader(Stream inStream, FOutputDevice inError) : base()
+        public FBinaryStreamReader(Stream inStream, IOutputDevice inError) : base()
         {
             stream = inStream;
             error = inError;
@@ -80,11 +80,11 @@ namespace VARP.Serialization
 
         protected Stream stream;
         protected BinaryReader reader;
-        protected FOutputDevice error;
+        protected IOutputDevice error;
 
         public override void Ar(ref object obj)
         {
-            IArchived visited = obj as IArchived;
+            var visited = obj as IArchived;
             if (visited == null)
                 Debug.Assert(visited != null);
             else
@@ -104,7 +104,7 @@ namespace VARP.Serialization
     // ==============================================================================================
     public class FBinaryStreamWriter : FArchive
     {
-        public FBinaryStreamWriter(Stream inStream, FOutputDevice inError)
+        public FBinaryStreamWriter(Stream inStream, IOutputDevice inError)
         {
             stream = inStream;
             error = inError;
@@ -155,11 +155,11 @@ namespace VARP.Serialization
 
         protected Stream stream;
         protected BinaryWriter writer;
-        protected FOutputDevice error;
+        protected IOutputDevice error;
 
         public override void Ar(ref object obj)
         {
-            IArchived visited = obj as IArchived;
+            var visited = obj as IArchived;
             if (visited == null)
                 Debug.Assert(visited != null);
             else
@@ -180,19 +180,19 @@ namespace VARP.Serialization
     // ==============================================================================================
     public class FMemoryStreamReader : FBinaryStreamReader
     {
-        public FMemoryStreamReader(FOutputDevice inError) : base(new MemoryStream(), inError)
+        public FMemoryStreamReader(IOutputDevice inError) : base(new MemoryStream(), inError)
         {
 
         }
-        public FMemoryStreamReader(int capacity, FOutputDevice inError) : base(new MemoryStream(capacity), inError)
+        public FMemoryStreamReader(int capacity, IOutputDevice inError) : base(new MemoryStream(capacity), inError)
         {
 
         }
-        public FMemoryStreamReader(byte[] buffer, FOutputDevice inError) : base(new MemoryStream(buffer), inError)
+        public FMemoryStreamReader(byte[] buffer, IOutputDevice inError) : base(new MemoryStream(buffer), inError)
         {
 
         }
-        public FMemoryStreamReader(byte[] buffer, int index, int count, FOutputDevice inError) : base(new MemoryStream(buffer, index, count), inError)
+        public FMemoryStreamReader(byte[] buffer, int index, int count, IOutputDevice inError) : base(new MemoryStream(buffer, index, count), inError)
         {
 
         }
@@ -201,19 +201,19 @@ namespace VARP.Serialization
     // ==============================================================================================
     public class FMemoryStreamWriter : FBinaryStreamWriter
     {
-        public FMemoryStreamWriter(FOutputDevice inError) : base(new MemoryStream(), inError)
+        public FMemoryStreamWriter(IOutputDevice inError) : base(new MemoryStream(), inError)
         {
 
         }
-        public FMemoryStreamWriter(int capacity, FOutputDevice inError) : base(new MemoryStream(capacity), inError)
+        public FMemoryStreamWriter(int capacity, IOutputDevice inError) : base(new MemoryStream(capacity), inError)
         {
 
         }
-        public FMemoryStreamWriter(byte[] buffer, FOutputDevice inError) : base(new MemoryStream(buffer), inError)
+        public FMemoryStreamWriter(byte[] buffer, IOutputDevice inError) : base(new MemoryStream(buffer), inError)
         {
 
         }
-        public FMemoryStreamWriter(byte[] buffer, int index, int count, FOutputDevice inError) : base(new MemoryStream(buffer, index, count), inError)
+        public FMemoryStreamWriter(byte[] buffer, int index, int count, IOutputDevice inError) : base(new MemoryStream(buffer, index, count), inError)
         {
 
         }

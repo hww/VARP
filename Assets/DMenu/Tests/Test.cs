@@ -7,24 +7,24 @@ public class Test : MonoBehaviour {
 
     public GUISkin customSkin;
 
-    GUIStyle OnOffSlider;
-    GUIStyle OnOffSliderThumb;
-    GUIStyle MusicSlider;
-    GUIStyle MusicSliderThumb;
-    GUIStyle SoundSliderThumb;
+    private GUIStyle OnOffSlider;
+    private GUIStyle OnOffSliderThumb;
+    private GUIStyle MusicSlider;
+    private GUIStyle MusicSliderThumb;
+    private GUIStyle SoundSliderThumb;
 
-    GUIStyle ButtonTiny;
-    GUIStyle ButtonBig;
-    GUIStyle XButton;
-    GUIStyle TextFieldWithX;
-    GUIStyle SmallLabbel;
-    GUIStyle SliderLabel;
-    GUIStyle PopupWindow;
-    GUIStyle Dot;
-    GUIStyle NewsBox;
-    GUIStyle RadioButton;
+    private GUIStyle ButtonTiny;
+    private GUIStyle ButtonBig;
+    private GUIStyle XButton;
+    private GUIStyle TextFieldWithX;
+    private GUIStyle SmallLabbel;
+    private GUIStyle SliderLabel;
+    private GUIStyle PopupWindow;
+    private GUIStyle Dot;
+    private GUIStyle NewsBox;
+    private GUIStyle RadioButton;
 
-    void GetSkins () {
+    private void GetSkins () {
 
         OnOffSlider = GUI.skin.GetStyle("OnOffSlider");
         OnOffSliderThumb = GUI.skin.GetStyle("OnOffSliderThumb");
@@ -46,7 +46,8 @@ public class Test : MonoBehaviour {
     }
 
     public Rect menuRect = new Rect(0, 0, 250, 250);
-    void OnGUI()
+
+    private void OnGUI()
     {
         GUI.skin = customSkin;
         GetSkins();
@@ -55,7 +56,7 @@ public class Test : MonoBehaviour {
 
     }
 
-    void WindowFunction(int windowID)
+    private void WindowFunction(int windowID)
     {
 
         //using (var verticalScope = new GUILayout.AreaScope(rectangle))

@@ -36,7 +36,7 @@ public class UiObject : MonoBehaviour
     /// </summary>
     public Vector2 PositionOnCanvas
     {
-        get { return UiObject.GetPositionOnCanvas(transform); }
+        get { return GetPositionOnCanvas(transform); }
     }
 
     /// <summary>

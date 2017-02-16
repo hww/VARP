@@ -188,7 +188,7 @@ namespace VARP.Scheme.Data
 
         public NumBox(double value)
         {
-            this.NumVal = value;
+            NumVal = value;
         }
 
         public override string ToString()
@@ -210,7 +210,7 @@ namespace VARP.Scheme.Data
 
         public ValueBox(Value value)
         {
-            this.Value = value;
+            Value = value;
         }
 
         public override string ToString()
@@ -234,7 +234,7 @@ namespace VARP.Scheme.Data
             if (name == null)
                 throw new ArgumentNullException("name");
 
-            this.Name = name;
+            Name = name;
         }
 
         public string Name { get; private set; }
@@ -255,7 +255,7 @@ namespace VARP.Scheme.Data
         public UserDataWrapper(object value)
         {
             Debug.Assert(value != null);
-            this.RefVal = value;
+            RefVal = value;
         }
 
         public override int GetHashCode()

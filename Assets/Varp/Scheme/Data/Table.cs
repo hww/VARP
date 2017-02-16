@@ -41,8 +41,8 @@ namespace VARP.Scheme.Data
 
     public class Table : ValueClass, IMetatable, IEnumerable<KeyValuePair<Symbol, Value>>
     {
-        Dictionary<Symbol, Value> table;
-        Table metatable;
+        private Dictionary<Symbol, Value> table;
+        private Table metatable;
 
         public Table()
         {
@@ -85,7 +85,7 @@ namespace VARP.Scheme.Data
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             // Lets call the generic version here
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         #endregion

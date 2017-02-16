@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using DMenu;
+using VARP;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
-using Menu = DMenu.Menu;
+using Menu = VARP.Menu;
 
 [RequireComponent(typeof(Canvas))]
 public partial class UiManager : UiObject
@@ -97,7 +97,7 @@ public partial class UiManager : UiObject
         get
         {
             if (instance == null)
-                instance = GameObject.FindObjectOfType<UiManager>();
+                instance = FindObjectOfType<UiManager>();
             return instance;
         }
     }

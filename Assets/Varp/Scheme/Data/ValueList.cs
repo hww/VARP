@@ -43,14 +43,14 @@ namespace VARP.Scheme.Data
         }
         public static List<Value> FromArguments(params object[] args)
         {
-            List<Value> list = new List<Value>(args.Length);
+            var list = new List<Value>(args.Length);
             foreach (var o in args)
                 list.Add(new Value(o));
             return list;
         }
         public static List<Value> FromList<T>(List<T> args)
         {
-            List<Value> list = new List<Value>(args.Count);
+            var list = new List<Value>(args.Count);
             foreach (var o in args)
                 list.Add(new Value(o));
             return list;
@@ -58,8 +58,8 @@ namespace VARP.Scheme.Data
 
         public static string ToString<T>(List<T> list)
         {
-            StringBuilder sb = new StringBuilder();
-            bool appendSpace = false;
+            var sb = new StringBuilder();
+            var appendSpace = false;
             sb.Append("#(");
             foreach (var v in list)
             {

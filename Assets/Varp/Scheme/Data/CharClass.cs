@@ -45,8 +45,8 @@ namespace VARP.Scheme.Data
 
         #region Named Characters
 
-        static Dictionary<string, char> stringToCharMap;
-        static string[] charToStringMap = new string[256];
+        private static Dictionary<string, char> stringToCharMap;
+        private static string[] charToStringMap = new string[256];
 
         // TODO
         // Key Bucky bit prefix        Bucky bit
@@ -63,7 +63,7 @@ namespace VARP.Scheme.Data
         // #\meta-b                ; Meta-b
         // #\c-s-m-h-a             ; Control-Meta-Super-Hyper-A
 
-        static void DefineMapNamedLiteral(int character, string name)
+        private static void DefineMapNamedLiteral(int character, string name)
         {
             stringToCharMap.Add(name, (char)character);
             charToStringMap[character] = name;

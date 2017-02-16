@@ -37,18 +37,18 @@ namespace VARP.Scheme.Stx.Primitives
         // (cond () ...)
         public static AST Expand(Syntax stx, AstEnvironment env)
         {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();    //< list of syntax objects
-            int argc = GetArgsCount(list);
+            var list = stx.AsLinkedList<Value>();    //< list of syntax objects
+            var argc = GetArgsCount(list);
 
-            Syntax keyword = list[0].AsSyntax();
+            var keyword = list[0].AsSyntax();
             LinkedList<Value> allcases = null;
             LinkedList<Value> elsecase = null;
 
-            LinkedListNode<Value> curent = list.GetNodeAtIndex(1);
+            var curent = list.GetNodeAtIndex(1);
 
             while (curent!=null)
             {
-                Syntax conditional_stx = curent.Value.AsSyntax();
+                var conditional_stx = curent.Value.AsSyntax();
 
                 if (elsecase != null)
                     throw SchemeError.SyntaxError("cond", "unexpected expression after condition's else clause", conditional_stx);
@@ -56,26 +56,26 @@ namespace VARP.Scheme.Stx.Primitives
                 if (conditional_stx.IsExpression)
                 {
                     // Get single conditional expression
-                    LinkedList<Value> conditional_list = conditional_stx.AsLinkedList<Value>();
+                    var conditional_list = conditional_stx.AsLinkedList<Value>();
                     
                     // Check arguments count, should be 2 for each condition
-                    int size = conditional_list.Count;
+                    var size = conditional_list.Count;
                     if (size != 2) throw SchemeError.ArityError("cond", "arity mismatch", 2, size, conditional_list, conditional_stx);
                     
                     // Now get condition and it's expression
-                    Syntax var = conditional_list[0].AsSyntax();
-                    Syntax val = conditional_list[1].AsSyntax();
+                    var var = conditional_list[0].AsSyntax();
+                    var val = conditional_list[1].AsSyntax();
 
                     if (var.IsIdentifier && var.AsIdentifier() == Symbol.ELSE)
                     {
-                        AST ast = AstBuilder.Expand(val, env);
+                        var ast = AstBuilder.Expand(val, env);
                         elsecase = ValueLinkedList.FromArguments(new Value(var), new Value(ast));
                     }
                     else
                     {
-                        AST cond_ = AstBuilder.Expand(var, env);
-                        AST then_ = AstBuilder.Expand(val, env);
-                        LinkedList<Value> single_cond = ValueLinkedList.FromArguments(cond_, then_);
+                        var cond_ = AstBuilder.Expand(var, env);
+                        var then_ = AstBuilder.Expand(val, env);
+                        var single_cond = ValueLinkedList.FromArguments(cond_, then_);
                         if (allcases == null) allcases = new LinkedList<Value>();
                         allcases.AddLast(new Value(single_cond));
                     }

@@ -44,21 +44,21 @@ namespace VARP.Scheme.Data
         }
         public static LinkedList<Value> FromArguments(params AST[] args)
         {
-            LinkedList<Value> list = new LinkedList<Value>();
+            var list = new LinkedList<Value>();
             foreach (var o in args)
                 list.AddLast(new Value(o));
             return list;
         }
         public static LinkedList<Value> FromArguments(params int[] args)
         {
-            LinkedList<Value> list = new LinkedList<Value>();
+            var list = new LinkedList<Value>();
             foreach (var o in args)
                 list.AddLast(new Value(o));
             return list;
         }
         public static LinkedList<Value> FromArguments(params object[] args)
         {
-            LinkedList<Value> list = new LinkedList<Value>();
+            var list = new LinkedList<Value>();
             foreach (var o in args)
                 list.AddLast(new Value(o));
             return list;
@@ -66,14 +66,14 @@ namespace VARP.Scheme.Data
 
         public static LinkedList<Value> FromArray<T>(T[] args)
         {
-            LinkedList<Value> list = new LinkedList<Value>();
+            var list = new LinkedList<Value>();
             foreach (var o in args)
                 list.AddLast(new Value(o));
             return list;
         }
         public static LinkedList<Value> FromList<T>(List<T> args)
         {
-            LinkedList<Value> list = new LinkedList<Value>();
+            var list = new LinkedList<Value>();
             foreach (var o in args)
                 list.AddLast(new Value(o));
             return list;
@@ -81,11 +81,11 @@ namespace VARP.Scheme.Data
 
         public static string ToString<T>(LinkedList<T> list)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append("(");
 
 
-            LinkedListNode<T> curent = list.First;
+            var curent = list.First;
             while (curent != null)
             {
                 sb.Append(ValueString.ToString(curent.Value));

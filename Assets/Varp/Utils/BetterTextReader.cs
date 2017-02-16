@@ -35,10 +35,10 @@ namespace VARP.Utils
     /// EXAMPLE:
     /// char c = betterReader.PeekAt(2); 
     /// </summary>
-    class BetterTextReader
+    internal class BetterTextReader
     {
-        TextReader reader;
-        List<int> queue = new List<int>();
+        private readonly TextReader reader;
+        private readonly List<int> queue = new List<int>();
 
         public BetterTextReader(TextReader reader)
         {

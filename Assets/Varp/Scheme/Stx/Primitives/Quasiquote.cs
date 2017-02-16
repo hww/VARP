@@ -35,10 +35,10 @@ namespace VARP.Scheme.Stx.Primitives
         // `(foo ...)
         public static AST Expand(Syntax stx, AstEnvironment env)
         {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();
-            int argc = GetArgsCount(list);
+            var list = stx.AsLinkedList<Value>();
+            var argc = GetArgsCount(list);
             AssertArgsEqual("quaziquote", "arity mismatch", 1, argc, list, stx);
-            Syntax lit = list[0].AsSyntax();
+            var lit = list[0].AsSyntax();
             if (lit.IsLiteral)
             {
                 return new AstLiteral(lit);

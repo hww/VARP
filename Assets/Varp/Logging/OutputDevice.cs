@@ -25,35 +25,30 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 using VARP.Scheme.Data;
 
 namespace VARP.Logging
 {
-    public abstract class FOutputDevice
+    public interface IOutputDevice
     {
 
         //	FOutputDevice interface.
-        public abstract void Serialize(string V, Symbol Event);
+        void Serialize(string v, Symbol evt);
 
 	    //	Simple text printing.
-	    public abstract void Log(string s);
-        public abstract void Log(Symbol type, string s);
-        public abstract void Logf(string fmt, params object[] values);
-        public abstract void Logf(Symbol type, string Fmt, params object[] values);
+	    void Log(string s);
+        void Log(Symbol type, string s);
+        void Logf(string fmt, params object[] values);
+        void Logf(Symbol type, string fmt, params object[] values);
     }
 
     // =================================================================
     //!	Error device.
     // =================================================================
 
-    public abstract class FOutputDeviceError : FOutputDevice
-    {
-	    public abstract void HandleError();
-    };
+    //public abstract class OutputDeviceError : IOutputDevice
+    //{
+	//    public abstract void HandleError();
+    //};
 
 }

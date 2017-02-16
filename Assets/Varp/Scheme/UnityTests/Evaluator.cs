@@ -38,8 +38,7 @@ using VARP.Scheme.VM;
 [ExecuteInEditMode]
 public class Evaluator : MonoBehaviour
 {
-
-    Tokenizer lexer;
+    private Tokenizer lexer;
 
     [TextArea(5, 100)]
     public string testString;
@@ -56,17 +55,17 @@ public class Evaluator : MonoBehaviour
     [TextArea(5, 100)]
     public string envString;
 
-    void Start()
+    private void Start()
     {
         OnValidate();
     }
 
-    void OnValidate()
+    private void OnValidate()
     {
-        System.Text.StringBuilder sbsyntax = new System.Text.StringBuilder();
-        System.Text.StringBuilder sbast = new System.Text.StringBuilder();
-        System.Text.StringBuilder sbcode = new System.Text.StringBuilder();
-        System.Text.StringBuilder sbeval = new System.Text.StringBuilder();
+        var sbsyntax = new System.Text.StringBuilder();
+        var sbast = new System.Text.StringBuilder();
+        var sbcode = new System.Text.StringBuilder();
+        var sbeval = new System.Text.StringBuilder();
 
         try
         {
@@ -78,18 +77,18 @@ public class Evaluator : MonoBehaviour
 
             do
             {
-                Syntax syntax = Parser.Parse(lexer);
+                var syntax = Parser.Parse(lexer);
                 if (syntax == null) break;
                 sbsyntax.AppendLine(Inspector.Inspect(syntax));
 
-                AST ast = AstBuilder.Expand(syntax);
+                var ast = AstBuilder.Expand(syntax);
                 sbast.AppendLine(ast.Inspect());
 
-                Template temp = CodeGenerator.GenerateCode(ast);
+                var temp = CodeGenerator.GenerateCode(ast);
                 sbcode.AppendLine(temp.Inspect());
 
-                VarpVM vm = new VarpVM();
-                Value vmres = vm.RunTemplate(temp, VARP.Scheme.VM.Environment.Top);
+                var vm = new VarpVM();
+                var vmres = vm.RunTemplate(temp, Environment.Top);
                 sbeval.Append(Inspector.Inspect(vmres));
 
             } while (lexer.LastToken != null);
@@ -125,11 +124,11 @@ public class Evaluator : MonoBehaviour
 
     }
 
-    void InspectEnvironment()
+    private void InspectEnvironment()
     {
         if (astEnvironment)
             envString = SystemEnvironemnt.environment.Inspect();
         else
-            envString = VARP.Scheme.VM.Environment.Top.Inspect();
+            envString = Environment.Top.Inspect();
     }
 }

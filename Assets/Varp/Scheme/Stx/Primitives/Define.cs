@@ -38,24 +38,24 @@ namespace VARP.Scheme.Stx.Primitives
         // (define (x) ...)
         public static AST Expand(Syntax stx, AstEnvironment env)
         {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();
-            int argc = GetArgsCount(list);
+            var list = stx.AsLinkedList<Value>();
+            var argc = GetArgsCount(list);
             AssertArgsMinimum("define", "arity mismatch", 2, argc, list, stx);
 
-            Syntax def_stx = list[0].AsSyntax();        // define
-            Syntax var_stx = list[1].AsSyntax();        // ()
+            var def_stx = list[0].AsSyntax();        // define
+            var var_stx = list[1].AsSyntax();        // ()
 
             if (var_stx.IsIdentifier)
             {
                 AssertArgsMaximum("define", "arity mismatch", 2, argc, list, stx);
-                Syntax val_stx = list[2].AsSyntax();
+                var val_stx = list[2].AsSyntax();
 
                 // ----------------------------------------------------------------
                 // identifier aka: (define x ...)
                 // ----------------------------------------------------------------
-                AST value = AstBuilder.Expand(val_stx, env);
-                Symbol var_id = var_stx.AsIdentifier();
-                AstBinding binding = env.Lookup(var_id);
+                var value = AstBuilder.Expand(val_stx, env);
+                var var_id = var_stx.AsIdentifier();
+                var binding = env.Lookup(var_id);
 
                 if (binding == null)
                 {
@@ -65,7 +65,7 @@ namespace VARP.Scheme.Stx.Primitives
                 else if (binding.IsUpvalue)
                 {
                     /// Up-value variable
-                    UpBinding ubind = binding as UpBinding;
+                    var ubind = binding as UpBinding;
                     return new AstSet(stx, var_stx, value, binding.VarIdx, ubind.RefEnvIdx, ubind.RefVarIdx);
                 }
                 else
@@ -79,16 +79,16 @@ namespace VARP.Scheme.Stx.Primitives
                 // ----------------------------------------------------------------
                 // identifier aka: (define (x ...) ...) as result lambda expression
                 // ----------------------------------------------------------------
-                LinkedList<Value> args_list = var_stx.AsLinkedList<Value>();
+                var args_list = var_stx.AsLinkedList<Value>();
 
-                AstEnvironment newenv = ArgumentsParser.ParseLambda(stx, args_list, env);
+                var newenv = ArgumentsParser.ParseLambda(stx, args_list, env);
 
-                LinkedList<Value> lambda_body = AstBuilder.ExpandListElements(list, 2, newenv);
-                AstLambda lambda = new AstLambda(stx, def_stx, newenv, lambda_body);
+                var lambda_body = AstBuilder.ExpandListElements(list, 2, newenv);
+                var lambda = new AstLambda(stx, def_stx, newenv, lambda_body);
 
-                Syntax identifier_stx = args_list[0].AsSyntax();
-                Symbol identifier = identifier_stx.AsIdentifier();
-                AstBinding binding = env.Lookup(identifier);
+                var identifier_stx = args_list[0].AsSyntax();
+                var identifier = identifier_stx.AsIdentifier();
+                var binding = env.Lookup(identifier);
 
                 if (binding == null)
                 {
@@ -98,7 +98,7 @@ namespace VARP.Scheme.Stx.Primitives
                 else if (binding.IsUpvalue)
                 {
                     /// Up-value variable
-                    UpBinding ubind = binding as UpBinding;
+                    var ubind = binding as UpBinding;
                     return new AstSet(stx, var_stx, lambda, binding.VarIdx, ubind.RefEnvIdx, ubind.RefVarIdx);
                 }
                 else

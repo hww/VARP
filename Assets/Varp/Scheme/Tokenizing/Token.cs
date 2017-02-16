@@ -45,15 +45,15 @@ namespace VARP.Scheme.Tokenizing
         }
         public Token(TokenType type, string value, Location location = null) 
         {
-            this.Type = type;
-            this.Value = value;
+            Type = type;
+            Value = value;
             this.location = location;
         }
         public Token(Token token) 
         {
-            this.Type = token.Type;
-            this.Value = token.Value;
-            this.location = token.location;
+            Type = token.Type;
+            Value = token.Value;
+            location = token.location;
         }
 
 
@@ -124,7 +124,7 @@ namespace VARP.Scheme.Tokenizing
             }
             else
             {
-                char c = (char)0;
+                var c = (char)0;
                 if (CharClass.NameToCharacter(Value, out c))
                     return c;
                 throw SchemeError.SyntaxError("get-character", "improperly formed char value", this);

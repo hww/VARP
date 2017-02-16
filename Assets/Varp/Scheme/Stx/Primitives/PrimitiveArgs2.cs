@@ -37,11 +37,11 @@ namespace VARP.Scheme.Stx.Primitives
         // (foo 1 2)
         public static AST Expand(Syntax stx, AstEnvironment env)
         {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();
-            int argc = GetArgsCount(list);
+            var list = stx.AsLinkedList<Value>();
+            var argc = GetArgsCount(list);
             AssertArgsMinimum("primitive2", "arity mismatch", 2, argc, list, stx);
-            Syntax set_kwd = list[0].AsSyntax();
-            LinkedList<Value> arguments = AstBuilder.ExpandListElements(list, 1, env);
+            var set_kwd = list[0].AsSyntax();
+            var arguments = AstBuilder.ExpandListElements(list, 1, env);
             if (argc == 2)
             {
                 return new AstPrimitive(stx, set_kwd, arguments);
@@ -49,14 +49,14 @@ namespace VARP.Scheme.Stx.Primitives
             else
             {
                 // for expression (+ 1 2 3 4)
-                LinkedList<Value> args = arguments.DuplicateReverse(0,-1);     //< (+ 4 3 2 1)
-                Value rightarg = args[0];                                     //< 4
-                int skip = 1;
-                foreach (Value leftarg in args)                                     //< 3, 2, 1, 
+                var args = arguments.DuplicateReverse(0,-1);     //< (+ 4 3 2 1)
+                var rightarg = args[0];                                     //< 4
+                var skip = 1;
+                foreach (var leftarg in args)                                     //< 3, 2, 1, 
                 {
                     if (skip-- > 0) continue;
-                    LinkedList<Value> values = ValueLinkedList.FromArguments(leftarg, rightarg);
-                    AstPrimitive prim = new AstPrimitive(stx, set_kwd, values);
+                    var values = ValueLinkedList.FromArguments(leftarg, rightarg);
+                    var prim = new AstPrimitive(stx, set_kwd, values);
                     rightarg.Set(prim);
                 }
                 return rightarg.AsAST();

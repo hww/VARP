@@ -29,14 +29,14 @@
     public class BetterStringBuilder
     {
 
-        private char[] Buffer;
-        private int BufferPos;
+        private readonly char[] buffer;
+        private int bufferPos;
 
-        private string StringCache;
+        private string stringCache;
 
         public BetterStringBuilder(int capacity)
         {
-            this.Buffer = new char[capacity];
+            buffer = new char[capacity];
         }
 
         /// <summary>
@@ -45,8 +45,8 @@
         /// <param name="c">Character to add</param>
         public void Append(char c)
         {
-            Buffer[BufferPos++] = c;
-            StringCache = null;
+            buffer[bufferPos++] = c;
+            stringCache = null;
         }
 
         /// <summary>
@@ -54,8 +54,8 @@
         /// </summary>
         public void Clear()
         {
-            BufferPos = 0;
-            StringCache = null;
+            bufferPos = 0;
+            stringCache = null;
         }
 
         /// <summary>
@@ -63,7 +63,7 @@
         /// </summary>
         public int Size
         {
-            get { return BufferPos; }
+            get { return bufferPos; }
         }
 
         /// <summary>
@@ -72,9 +72,9 @@
         /// <returns>String</returns>
         public override string ToString()
         {
-            if (StringCache != null)
-                return StringCache;
-            return StringCache = new string(Buffer, 0, BufferPos);
+            if (stringCache != null)
+                return stringCache;
+            return stringCache = new string(buffer, 0, bufferPos);
         }
     }
 

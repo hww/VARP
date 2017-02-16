@@ -38,8 +38,7 @@ using VARP.Scheme.VM;
 [ExecuteInEditMode]
 public class CodegenTest : MonoBehaviour
 {
-
-    Tokenizer lexer;
+    private Tokenizer lexer;
 
     [TextArea(5, 100)]
     public string testString;
@@ -54,12 +53,12 @@ public class CodegenTest : MonoBehaviour
     [TextArea(5, 100)]
     public string envString;
 
-    void Start()
+    private void Start()
     {
         OnValidate();
     }
 
-    void OnValidate()
+    private void OnValidate()
     {
         System.Text.StringBuilder sb;
         try
@@ -69,7 +68,7 @@ public class CodegenTest : MonoBehaviour
             // ------------------------------------------------------------------
             sb = new System.Text.StringBuilder();
             lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
-            Token token = lexer.ReadToken();
+            var token = lexer.ReadToken();
             while (token != null)
             {
                 sb.Append(Inspector.Inspect(token) + " ");
@@ -97,14 +96,14 @@ public class CodegenTest : MonoBehaviour
             lexer = new Tokenizer(new StringReader(testString), "TokenizerTest");
 
             sb = new System.Text.StringBuilder();
-            System.Text.StringBuilder sbcode = new System.Text.StringBuilder();
+            var sbcode = new System.Text.StringBuilder();
             do
             {
-                Syntax result = Parser.Parse(lexer);
+                var result = Parser.Parse(lexer);
                 if (result == null) break;
-                AST ast = AstBuilder.Expand(result);
+                var ast = AstBuilder.Expand(result);
                 sb.AppendLine(ast.Inspect());
-                Template temp = CodeGenerator.GenerateCode(ast);
+                var temp = CodeGenerator.GenerateCode(ast);
                 sbcode.AppendLine(temp.Inspect());
             } while (lexer.LastToken != null);
             astString = sb.ToString();

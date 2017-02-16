@@ -98,7 +98,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<T> GetEnumerator()
         {
-            DoubleLinkBaseAdv<T> node = this;
+            var node = this;
             while (node != null && !node.IsEnd)
             {
                 yield return node.Data;
@@ -108,7 +108,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<T> GetEnumeratorReversed()
         {
-            DoubleLinkBaseAdv<T> node = this;
+            var node = this;
             while (node != null && !node.IsEnd)
             {
                 yield return node.Data;
@@ -123,7 +123,7 @@ namespace VARP.DataStructures
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             // Lets call the generic version here
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         #endregion
@@ -154,7 +154,7 @@ namespace VARP.DataStructures
 
     public class DoubleLinkedListAdv<T> : IEnumerable<T> where T : class
     {
-        DoubleLinkRootAdv<T> Root;
+        private DoubleLinkRootAdv<T> Root;
         public DoubleLinkBaseAdv<T> First { get { return Root.Next; } set { Root.Next = value; } }
         public DoubleLinkBaseAdv<T> Last { get { return Root.Previous; } set { Root.Previous = value; } }
         public int count;
@@ -265,7 +265,7 @@ namespace VARP.DataStructures
         {
             if (IsEmpty) return null;
             var node = First;
-            for (int i = 0; i < index; i++)
+            for (var i = 0; i < index; i++)
             {
                 if (node.IsEnd)
                     return null;
@@ -296,7 +296,7 @@ namespace VARP.DataStructures
         // Convert to List<T>
         public List<T> ToList()
         {
-            List<T> list = new List<T>(count);
+            var list = new List<T>(count);
             var node = First;
             while (!node.IsEnd)
             {
@@ -308,8 +308,8 @@ namespace VARP.DataStructures
         // Convert to array
         public T[] ToArray()
         {
-            T[] list = new T[count];
-            var node = First; int i = 0;
+            var list = new T[count];
+            var node = First; var i = 0;
             while (!node.IsEnd)
             {
                 list[i++] = node.Data;
@@ -320,7 +320,7 @@ namespace VARP.DataStructures
         // Join elements to the string
         public string Join(string delimeter)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             var node = First;
             if (!node.IsEnd)
             {
@@ -340,7 +340,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<T> GetEnumerator()
         {
-            DoubleLinkBaseAdv<T> node = First;
+            var node = First;
             while (node != null && !node.IsEnd)
             {
                 yield return node.Data;
@@ -350,7 +350,7 @@ namespace VARP.DataStructures
 
         public IEnumerator<T> GetEnumeratorReversed()
         {
-            DoubleLinkBaseAdv<T> node = Last;
+            var node = Last;
             while (node != null && !node.IsEnd)
             {
                 yield return node.Data;
@@ -360,7 +360,7 @@ namespace VARP.DataStructures
         // Convert to single line string
         public new string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             var node = First;
             sb.Append("(");
             while (!node.IsEnd)
@@ -377,8 +377,8 @@ namespace VARP.DataStructures
         /// <returns></returns>
         public virtual string ToReadable()
         {
-            string listAsString = string.Empty;
-            int i = 0;
+            var listAsString = string.Empty;
+            var i = 0;
             var node = First;
 
             while (!node.IsEnd)
@@ -397,7 +397,7 @@ namespace VARP.DataStructures
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             // Lets call the generic version here
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         #endregion

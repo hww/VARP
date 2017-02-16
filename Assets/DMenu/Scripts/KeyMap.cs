@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 
-namespace DMenu
+namespace VARP
 {
 
 
@@ -65,10 +65,13 @@ namespace DMenu
     /// </summary>
     public class KeyMap 
     {
-        public string title;
-        public KeyMap parent;
-        public List<KeyMapItem> items;
+        public static readonly KeyMap GlobalKeymap = new KeyMap("global-keymap");
 
+        public string title;                //< title of keymap
+        public KeyMap parent;               //< parent key map
+        public List<KeyMapItem> items;      //< kay map items
+        public KeyMapItem defaultBinding;   //< default binding or null
+        
         /// <summary>
         /// Create emty keymap
         /// </summary>
@@ -125,16 +128,15 @@ namespace DMenu
         {
             if (!Event.IsValid(evt))
                 throw new ArgumentOutOfRangeException("evt");
+            var binding = new KeyMapItem(evt, value);
             var index = GetIndexOf(evt);
             if (index >= 0)
-            {
-                items[index] = new KeyMapItem(evt, value);
-            }
+                items[index] = binding;
             else
-            {
-                var item = new KeyMapItem(evt, value);
-                items.Add(item);
-            }
+                items.Add(binding);
+
+            if (evt == Event.DefaultPseudoCode)
+                defaultBinding = binding;
         }
 
         public virtual KeyMapItem GetLocal(int evt, bool acceptDefaults = false)
@@ -142,42 +144,50 @@ namespace DMenu
             if (!Event.IsValid(evt))
                 throw new ArgumentOutOfRangeException("evt");
             var index = GetIndexOf(evt);
-            return index >= 0 ? items[index] : null;
+            if (index >= 0 && items[index].value != null)
+                return items[index];
+
+            return acceptDefaults ? defaultBinding : null;
         }
 
         #region Use full expression to define and lookup the definition
 
         public virtual KeyMapItem LokupKey(int[] sequence, bool acceptDefaults = false)
         {
-            return LokupKey(sequence, 0, acceptDefaults);
+            return LokupKey(sequence, 0, sequence.Length, acceptDefaults);
         }
 
-        public virtual KeyMapItem LokupKey(int[] sequence, int starts, bool acceptDefaults = false)
+        public virtual KeyMapItem LokupKey([NotNull] int[] sequence, int starts, int length, bool acceptDefaults = false)
         {
+            if (sequence == null) throw new ArgumentNullException("sequence");
+            if (starts <= 0 || starts >= sequence.Length) throw new ArgumentOutOfRangeException("starts");
+            if (length < starts || length >= sequence.Length) throw new ArgumentOutOfRangeException("length");
+
             var curentMap = this;
             var lastIndex = sequence.Length - 1;
             var tmp = null as KeyMapItem;
 
-            for (var i=starts; i<sequence.Length; i++)
+            for (var i=starts; i< length; i++)
             { 
-                tmp = curentMap.GetLocal(sequence[i]);
+                tmp = curentMap.GetLocal(sequence[i], acceptDefaults);
                 if (tmp == null)
-                    return curentMap.parent != null ? curentMap.parent.LokupKey(sequence, acceptDefaults) : null;
-
-                if (i != lastIndex)
                 {
-                    var map = tmp.value as KeyMap;
-                    if (map == null)
-                        throw new Exception(string.Format("Expect KeyMap at '{0}' found: '{1}' in: '{2}'",
-                            sequence[i], tmp, sequence.ToString()));
-                    curentMap = map;
+                    return curentMap.parent != null ? curentMap.parent.LokupKey(sequence, acceptDefaults) : null;
                 }
+
+                var map = tmp.value as KeyMap;
+                if (map != null)
+                    curentMap = map;
+                else
+                    return tmp; //< we found binding and it is not key map
             }
             return tmp;
         }
 
-        public virtual bool Define(int[] sequence, object value, bool acceptDefaults = false)
+        public virtual bool Define([NotNull] int[] sequence, object value)
         {
+            if (sequence == null) throw new ArgumentNullException("sequence");
+
             var curentMap = this;
             var lastIndex = sequence.Length - 1;
 
@@ -218,11 +228,11 @@ namespace DMenu
                         if (map != null)
                             curentMap = map;
                         else
-                            throw new Exception(string.Format("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
+                            throw new Exception(string.Format("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence));
                     }
                 }
             }
-            throw new Exception(string.Format("We can't be here"));
+            throw new Exception("We can\'t be here");
         }
 
         #endregion
@@ -266,7 +276,7 @@ namespace DMenu
             if (!Event.IsValid(evt))
                 throw new ArgumentOutOfRangeException("evt");
             // do not support keys with modificators
-            if (evt >= Event.Alt)
+            if (evt >= KeyModifyers.Alt)
                 throw new ArgumentOutOfRangeException("evt");
 
             items[evt] = new KeyMapItem(evt, value);
@@ -277,7 +287,7 @@ namespace DMenu
             if (!Event.IsValid(evt))
                 throw new ArgumentOutOfRangeException("evt");
             // do not support keys with modificators
-            if (evt >= Event.Alt)
+            if (evt >= KeyModifyers.Alt)
                 throw new ArgumentOutOfRangeException("evt");
 
             return (evt < items.Count && items[evt]!=null) ? items[evt] : (parent != null ? parent.GetLocal(evt, acceptDefaults) : null);

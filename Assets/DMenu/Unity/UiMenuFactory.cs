@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using DMenu;
+using VARP;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -88,7 +88,7 @@ public class UiMenuFactory : MonoBehaviour
 
     private UiMenu CreateMenuPanel(Vector3 position, GameObject prefab)
     {
-        var panel = GameObject.Instantiate(prefab);
+        var panel = Instantiate(prefab);
         panel.transform.SetParent(UiManager.I.transform, false);
 
         var umenu = panel.GetComponent<UiMenu>();
@@ -103,7 +103,7 @@ public class UiMenuFactory : MonoBehaviour
 
     public UiMenuLine CreateMenuItem(UiMenu menu, string text, string shortcut, GameObject prefab)
     {
-        var item = GameObject.Instantiate(prefab);
+        var item = Instantiate(prefab);
         item.transform.SetParent(menu.transform, false);
 
         var mitem = item.GetComponent<UiMenuSimpleLine>();
@@ -121,7 +121,7 @@ public class UiMenuFactory : MonoBehaviour
 
     public UiMenuLine CreateSeparator(UiMenu menu, GameObject prefab)
     {
-        var item = GameObject.Instantiate(prefab);
+        var item = Instantiate(prefab);
         item.transform.SetParent(menu.transform, false);
 
         var mitem = item.GetComponent<UiMenuLine>();

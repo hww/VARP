@@ -36,26 +36,26 @@ namespace VARP.Scheme.Stx.Primitives
         // (let () ...)
         public static AST Expand(Syntax stx, AstEnvironment env)
         {
-            LinkedList<Value> list = stx.AsLinkedList<Value>();
-            int argc = GetArgsCount(list);
+            var list = stx.AsLinkedList<Value>();
+            var argc = GetArgsCount(list);
             AssertArgsMinimum("let", "arity mismatch", 2, argc, list, stx);
 
-            Syntax keyword = list[0].AsSyntax();     // let arguments
-            Syntax arguments = list[1].AsSyntax();   // let arguments
+            var keyword = list[0].AsSyntax();     // let arguments
+            var arguments = list[1].AsSyntax();   // let arguments
 
             if (!arguments.IsExpression) throw SchemeError.SyntaxError("let", "bad syntax (missing name or binding pairs)", stx);
 
-            AstEnvironment localEnv = ArgumentsParser.ParseLet(stx, arguments.AsLinkedList<Value>(), env);
+            var localEnv = ArgumentsParser.ParseLet(stx, arguments.AsLinkedList<Value>(), env);
 
             AST lambda = new AstLambda(stx, keyword, localEnv, AstBuilder.ExpandListElements(list, 2, localEnv));
 
-            LinkedList<Value> result = new LinkedList<Value>();
+            var result = new LinkedList<Value>();
             result.AddLast(lambda.ToValue());
             foreach (var v in localEnv)
             {
                 if (v is ArgumentBinding)
                 {
-                    ArgumentBinding arg = v as ArgumentBinding;
+                    var arg = v as ArgumentBinding;
                     if (arg.ArgType == ArgumentBinding.Type.Required) result.AddLast(new Value(arg.Initializer));
                 }
             }
