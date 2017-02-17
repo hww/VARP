@@ -68,10 +68,14 @@ namespace VARP
         public static readonly KeyMap GlobalKeymap = new KeyMap("global-keymap");
 
         public string title;                //< title of keymap
+        public string help;                 //< help for this item (used for menu only)
         public KeyMap parent;               //< parent key map
         public List<KeyMapItem> items;      //< kay map items
         public KeyMapItem defaultBinding;   //< default binding or null
-        
+
+        public virtual string Title { get { return title; } }
+        public virtual string Help { get { return help; } }
+
         /// <summary>
         /// Create emty keymap
         /// </summary>
@@ -95,9 +99,23 @@ namespace VARP
             items = new List<KeyMapItem>();
         }
 
+        public KeyMap(string title, string keys = null, string help = null) : this(title)
+        {
+            this.title = help;
+            this.keys = keys;
+        }
+
+        public KeyMap(KeyMap parent, string title, string keys = null, string help = null) : this(parent, title)
+        {
+            this.title = help;
+            this.keys = keys;
+        }
+
         public virtual void CopyTo(KeyMap other)
         {
             other.title = title;
+            other.title = help;
+            other.keys = keys;
             other.parent = parent;
             foreach (var item in items)
                 other.SetLocal(item.key, item.value);
@@ -181,6 +199,13 @@ namespace VARP
                     return tmp; //< we found binding and it is not key map
             }
             return tmp;
+        }
+
+        // this way used for defining menu
+        public bool Define(string[] sequence, object value)
+        {
+            var newsequence = Kbd.ParsePseudo(sequence);
+            return Define(newsequence, value);
         }
 
         public virtual bool Define([NotNull] int[] sequence, object value)

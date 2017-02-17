@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace VARP
 {
+    /*
     /// <summary>
     /// The menu object behave same as key map
     /// </summary>
@@ -89,5 +90,5 @@ namespace VARP
     }
 
 
-
+    */
 }

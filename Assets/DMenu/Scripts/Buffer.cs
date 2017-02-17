@@ -71,7 +71,11 @@ namespace VARP
 
         #region IBuffer
 
-
+        /// <summary>
+        /// Main entry of all keys. Will find the binding for the curen mode
+        /// end evaluate it
+        /// </summary>
+        /// <param name="evt"></param>
         public void OnKeyDown(int evt)
         {
             inputBuffer.OnKeyDown(evt);
@@ -81,13 +85,48 @@ namespace VARP
                 inputBuffer.Clear(); // no reason to continue
                 return;
             }
-            if (result.value is NativeFunction)
+
+            Eval(result);
+        }
+
+        /// <summary>
+        /// Evaluate the keybinding. 
+        /// </summary>
+        /// <param name="item"></param>
+        private void Eval(KeyMapItem item)
+        {
+            var value = item.value;
+            
+            if (value is KeyMap)
             {
-                var o = result.value as NativeFunction;
+                var o = value as KeyMap;
+                // KeyMap without title is just keyMap
+                if (o.Title == null)
+                    return;
+                // KeyMap with title behave as menu
+                UiManager.I.CreateMenu(o, Vector3.zero, 200f);
+            }
+            else if (value is NativeFunction)                    
+            {
+                // native function
+                var o = value as NativeFunction;
                 var returns = o.Call();
                 inputBuffer.Clear();
             }
+            else if (value is string)
+            {
+                // string expression
+                var o = value as string;
+                NativeFunctionRepl.Instance.Evaluate(o);
+            }
+            else if (value is MenuItemSimple)
+        }
 
+        private void Eval(string function)
+        {
+            string[] args = function.Split(' ');
+            
+            var func = NativeFunction.Lockup(function);
         }
 
         public void Enable()

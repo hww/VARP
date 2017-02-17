@@ -23,7 +23,7 @@ public class UiMenuFactory : MonoBehaviour
     public GameObject separatorDashedLine;
 
 
-    public UiMenu CreateMenu(Menu menu, Vector3 position, float width = 0)
+    public UiMenu CreateMenu(KeyMap menu, Vector3 position, float width = 0)
     {
         var panel = CreateMenuPanel(position, menuPanel);
 

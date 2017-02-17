@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
 using UnityEngine;
-using UnityEngine.Analytics;
 using VARP;
 using Buffer = VARP.Buffer;
 using Console = VARP.Console;
@@ -13,6 +10,14 @@ using System.IO;
 
 public class NativeFunctionRepl : MonoBehaviour
 {
+    private static NativeFunctionRepl instance;
+
+    public static NativeFunctionRepl Instance
+    {
+        get { return (instance!=null) ? instance : (instance = UiSingletone.FindSingletoneOfType<NativeFunctionRepl>()); }
+    }
+
+
     private Mode replMode;
 
     private Buffer replBuffer;
@@ -33,7 +38,7 @@ public class NativeFunctionRepl : MonoBehaviour
         // define some functions
         NativeFunction.Define("help", Help, "Display short help for commands.");
         NativeFunction.Define("man", Man, "Display manual for the command. It works only if 'man' contains manual for given command.");
-        ReadLine.Instance.Read(prompt, OnEnterText);
+        ReadLine.Instance.Read(prompt, Evaluate);
     }
 
     private string[] AutoCompletionHandler(string text, int caretPosition)
@@ -48,7 +53,7 @@ public class NativeFunctionRepl : MonoBehaviour
         return list.ToArray();
     }
 
-    public object OnEnterText(string text)
+    public object Evaluate(string text)
     {
         object result = null;
         var args = text.Split(' ');
@@ -62,7 +67,7 @@ public class NativeFunctionRepl : MonoBehaviour
         {
             Console.WriteLine(string.Format("The command '{0}' is not exists", text));
         }
-        ReadLine.Instance.Read(prompt, OnEnterText);
+        ReadLine.Instance.Read(prompt, Evaluate);
         return result;
     }
 
