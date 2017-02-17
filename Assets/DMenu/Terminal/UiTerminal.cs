@@ -57,11 +57,9 @@ public partial class UiTerminal : UiObject, ITerminal
         inputField.customCaretColor = true;
         Console.terminal = this;
 
-        WriteLine("1) " + LoremIpsum.Text);
         SetColor(Color.red);
-        WriteLine("2) " + LoremIpsum.Text);
-        SetColor(Color.blue);
-        WriteLine("3) " + LoremIpsum.Text);
+        WriteLine(LoremIpsum.Text);
+        SetColor(Color.white);
     }
 
     private void Update()
@@ -169,6 +167,23 @@ public partial class UiTerminal : UiObject, ITerminal
     public void SetColor(Color color)
     {
         foregroundColor = color;
+    }
+
+    // Read state of input field
+    public bool GetInputLine(out string text, out int caretPosition)
+    {
+        text = inputField.text;
+        caretPosition = inputField.caretPosition;
+        return inputField.isFocused;
+    }
+
+    // Set state of input field
+    public void SetInputLine(string text, int caretPosition, bool setFocus)
+    {
+        inputField.text = text;
+        inputField.caretPosition = caretPosition;
+        inputField.Select();
+        inputField.ActivateInputField();
     }
 
     #endregion

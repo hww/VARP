@@ -26,4 +26,9 @@ public interface ITerminal
     // Set foreground color
     void SetColor(Color color);
 
+    // Get iput line and carret position. Return true if field is focused
+    bool GetInputLine(out string text, out int caretPosition);
+
+    // Set iput line and carret position. 
+    void SetInputLine(string text, int caretPosition, bool setFocus);
 }

@@ -7,13 +7,13 @@ using JetBrains.Annotations;
 /// This class give the way to declarate calls from 
 /// simple REPL script the list of native functions
 /// </summary>
-public class NativeFunction
+public sealed class NativeFunction
 {
     public delegate object Function(params object[] paramList);
 
     public readonly string name;
     public readonly string help;
-    private readonly Function function;
+    public readonly Function function;
 
     public NativeFunction(string name, Function function, string help = null)
     {
@@ -38,7 +38,7 @@ public class NativeFunction
             throw new Exception(string.Format("The function '{0}' is already defined", name));
         return AllFunctions[name] = new NativeFunction(name, func, help);
     }
-
+    // show error message if a function is not found
     public static NativeFunction Lockup([NotNull] string name)
     {
         if (name == null) throw new ArgumentNullException("name");
@@ -46,6 +46,15 @@ public class NativeFunction
         if (AllFunctions.TryGetValue(name, out f))
             return f;
         throw new Exception(string.Format("The function '{0}' is not defined", name));
+    }
+    // does not show error message if the function is not found
+    public static NativeFunction TryLockup([NotNull] string name)
+    {
+        if (name == null) throw new ArgumentNullException("name");
+        NativeFunction f;
+        if (AllFunctions.TryGetValue(name, out f))
+            return f;
+        return null;
     }
 
     public static object Call(string name, params object[] paramList)
@@ -55,7 +64,7 @@ public class NativeFunction
     }
 
 
-    public string[] GetNames()
+    public static string[] GetNames()
     {
         var idx = 0;
         var result = new string[AllFunctions.Count];

@@ -154,20 +154,19 @@ namespace VARP
 
         public virtual KeyMapItem LokupKey(int[] sequence, bool acceptDefaults = false)
         {
-            return LokupKey(sequence, 0, sequence.Length, acceptDefaults);
+            return LokupKey(sequence, 0, sequence.Length - 1, acceptDefaults);
         }
 
-        public virtual KeyMapItem LokupKey([NotNull] int[] sequence, int starts, int length, bool acceptDefaults = false)
+        public virtual KeyMapItem LokupKey([NotNull] int[] sequence, int starts, int ends, bool acceptDefaults = false)
         {
             if (sequence == null) throw new ArgumentNullException("sequence");
-            if (starts <= 0 || starts >= sequence.Length) throw new ArgumentOutOfRangeException("starts");
-            if (length < starts || length >= sequence.Length) throw new ArgumentOutOfRangeException("length");
+            if (starts < 0 || starts >= sequence.Length) throw new ArgumentOutOfRangeException("starts");
+            if (ends < starts || ends >= sequence.Length) throw new ArgumentOutOfRangeException("ends");
 
             var curentMap = this;
-            var lastIndex = sequence.Length - 1;
             var tmp = null as KeyMapItem;
 
-            for (var i=starts; i< length; i++)
+            for (var i=starts; i < ends; i++)
             { 
                 tmp = curentMap.GetLocal(sequence[i], acceptDefaults);
                 if (tmp == null)
@@ -194,7 +193,7 @@ namespace VARP
             for (var i = 0; i < sequence.Length; i++)
             {
                 var key = sequence[i];
-                var tmp = curentMap.GetLocal(key);
+                var tmp = curentMap.GetLocal(key); // do not alow defaults
                 if (tmp == null)
                 {
                     // there is no this binding
@@ -248,6 +247,7 @@ namespace VARP
     /// </summary>
     public class FullKeymap : KeyMap
     {
+        private const int MaxSize = 2048;
 
         /// <summary>
         /// Create emty keymap
@@ -275,9 +275,24 @@ namespace VARP
         {
             if (!Event.IsValid(evt))
                 throw new ArgumentOutOfRangeException("evt");
+
             // do not support keys with modificators
             if (evt >= KeyModifyers.Alt)
                 throw new ArgumentOutOfRangeException("evt");
+
+            // limit by some "rational" number ;)
+            if (evt >= MaxSize)
+                throw new ArgumentOutOfRangeException("evt");
+
+            if (evt >= items.Count)
+            {
+                // extend size of the items list
+                var large = new List<KeyMapItem>(evt + 10);
+                var i = 0;
+                foreach (var item in items)
+                    large[i++] = item;
+                items = large;
+            }
 
             items[evt] = new KeyMapItem(evt, value);
         }
@@ -286,94 +301,21 @@ namespace VARP
         {
             if (!Event.IsValid(evt))
                 throw new ArgumentOutOfRangeException("evt");
+
             // do not support keys with modificators
             if (evt >= KeyModifyers.Alt)
                 throw new ArgumentOutOfRangeException("evt");
 
-            return (evt < items.Count && items[evt]!=null) ? items[evt] : (parent != null ? parent.GetLocal(evt, acceptDefaults) : null);
+            // limit by some "rational" number ;)
+            if (evt >= MaxSize)
+                throw new ArgumentOutOfRangeException("evt");
+
+            if (evt < items.Count && items[evt] != null && items[evt].value != null)
+                return items[evt];
+
+            return acceptDefaults ? defaultBinding : null;
         }
-
-        #region Use full expression to define and lookup the definition
-
-        public override KeyMapItem LokupKey(int[] sequence, bool acceptDefaults = false)
-        {
-            return LokupKey(sequence, 0, acceptDefaults);
-        }
-
-        public override KeyMapItem LokupKey(int[] sequence, int starts, bool acceptDefaults = false)
-        {
-            var curentMap = this as KeyMap;
-            var lastIndex = sequence.Length - 1;
-            var tmp = null as KeyMapItem;
-
-            for (var i = starts; i < sequence.Length; i++)
-            {
-                tmp = curentMap.GetLocal(sequence[i]);
-                if (tmp == null)
-                    return curentMap.parent != null ? curentMap.parent.LokupKey(sequence, acceptDefaults) : null;
-
-                if (i != lastIndex)
-                {
-                    var map = tmp.value as KeyMap;
-                    if (map == null)
-                        throw new Exception(string.Format("Expect KeyMap at '{0}' found: '{1}' in: '{2}'",
-                            sequence[i], tmp, sequence.ToString()));
-                    curentMap = map;
-                }
-            }
-            return tmp;
-        }
-
-        public override bool Define(int[] sequence, object value, bool acceptDefaults = false)
-        {
-            var curentMap = this as KeyMap;
-            var lastIndex = sequence.Length - 1;
-
-            for (var i = 0; i < sequence.Length; i++)
-            {
-                var key = sequence[i];
-                var tmp = curentMap.GetLocal(key);
-                if (tmp == null)
-                {
-                    // there is no this binding
-                    // N.B. Do not look at the parent one!
-                    if (i == lastIndex)
-                    {
-                        // the curentMap is the target map and it does not have definition 
-                        curentMap.SetLocal(key, value);
-                        return true;
-                    }
-                    else
-                    {
-                        // the curentMap is the map in the sequence and it does not have definition 
-                        var newMap = new KeyMap();
-                        curentMap.SetLocal(key, newMap);
-                        curentMap = newMap;
-                    }
-                }
-                else
-                {
-                    // we found binding in curentMap
-                    if (i == lastIndex)
-                    {
-                        // curentMap is target map, it has binding but we have to redefine it
-                        curentMap.SetLocal(key, value);
-                    }
-                    else
-                    {
-                        // the curentMap is the map in the sequence and it has definition 
-                        var map = tmp.value as KeyMap;
-                        if (map != null)
-                            curentMap = map;
-                        else
-                            throw new Exception(string.Format("Expect KeyMap at '{0}' found: '{1}' in: '{2}'", sequence[i], tmp, sequence.ToString()));
-                    }
-                }
-            }
-            throw new Exception(string.Format("We can't be here"));
-        }
-
-        #endregion
+      
     }
 
 }

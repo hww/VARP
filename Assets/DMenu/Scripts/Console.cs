@@ -66,14 +66,40 @@ namespace VARP
         {
             if (terminal != null) terminal.Write(message);
         }
+        public static void WriteLine()
+        {
+            if (terminal != null) terminal.WriteLine("");
+        }
         public static void WriteLine(string message)
         {
             if (terminal != null) terminal.WriteLine(message);
+        }
+        public static void WriteLine(string format, params string[] args)
+        {
+            if (terminal != null) terminal.WriteLine(string.Format(format,args));
         }
         public static void WritePrompt(string message)
         {
             if (terminal != null) terminal.WritePrompt(message);
         }
+
+        public static bool GetInputLine(out string text, out int caretPosition)
+        {
+            if (terminal != null)
+                return terminal.GetInputLine(out text, out caretPosition);
+            text = "";
+            caretPosition = 0;
+            return false;
+        }
+
+        public static void SetInputLine(string text, int caretPosition, bool setFocus)
+        {
+            if (terminal != null)
+                terminal.SetInputLine(text, caretPosition, setFocus);
+        }
+
+        public static int BufferHeight { get { return 1000; } }
+        public static int BufferWidth { get { return 80; } }
 
         #endregion
 

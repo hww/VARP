@@ -77,14 +77,14 @@ namespace VARP
 
     public static class KeyModifyers
     {
-        public static readonly int MaxCode = 1 << 29;
-        public static readonly int Pseudo = 1 << 28;
+        public static readonly int MaxCode = 1 << 28 - 1;
         public static readonly int Meta = 1 << 27;
         public static readonly int Control = 1 << 26;
         public static readonly int Shift = 1 << 25;
         public static readonly int Hyper = 1 << 24;
         public static readonly int Super = 1 << 23;
         public static readonly int Alt = 1 << 22;
+        public static readonly int Pseudo = 1 << 21;    
 
         /// <summary>
         /// Use for masking the modifyer bits
@@ -258,7 +258,11 @@ namespace VARP
             if (m == 'C' || m == 'A' || m == 'S')
             {
                 var evt = ParseWordWithModifyers(expression);
-                if (evt >= 0) return evt;
+                if (evt >= 0)
+                {
+ 
+                    return evt;
+                }
             }
 
             // There is test for named character Shift, LeftAlt, Space
@@ -341,7 +345,13 @@ namespace VARP
             if (sufix != string.Empty)
             {
                 var tmp = GetKeyCodeInternal(sufix);
-                if (tmp >= 0) return tmp;
+                if (tmp >= 0)
+                {
+                    if (modifyers == KeyModifyers.Control && tmp < 256)
+                        return tmp & 0x1F;
+                    else
+                        return MakeEvent(tmp, modifyers);
+                }
                 throw new Exception(string.Format("Expected character after C-,A-,S- found '{0}' in expression '{0:X}'", sufix, expression));
             }
             else
