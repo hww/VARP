@@ -24,7 +24,7 @@ public class NativeFunctionRepl : MonoBehaviour
     private KeyMap keyMap;
     private string prompt = "> ";
 
-    private void Start()
+    private void OnEnable()
     {
         keyMap = new KeyMap();
         replMode = new Mode("repl", keyMap: keyMap);
@@ -39,7 +39,44 @@ public class NativeFunctionRepl : MonoBehaviour
         NativeFunction.Define("help", Help, "Display short help for commands.");
         NativeFunction.Define("man", Man, "Display manual for the command. It works only if 'man' contains manual for given command.");
         ReadLine.Instance.Read(prompt, Evaluate);
+
+        Application.logMessageReceived += HandleLog;
     }
+
+    private void OnDisable()
+    {
+        Application.logMessageReceived -= HandleLog;
+    }
+
+    private void HandleLog(string logString, string  stackTrace, LogType type)
+    {
+        switch (type)
+        {
+            case LogType.Error:
+                Console.ResetColor();
+                Console.WriteLine("ERRO " + logString);
+                break;
+            case LogType.Assert:
+                Console.SetColor(Color.red);
+                Console.WriteLine("ASRT " + logString);
+                break;
+            case LogType.Warning:
+                Console.WriteLine("WARN " + logString);
+                break;
+            case LogType.Log:
+                Console.SetColor(Color.yellow);
+                Console.WriteLine("INFO " + logString);
+                break;
+            case LogType.Exception:
+                Console.SetColor(Color.red);
+                Console.WriteLine("ERRO " + logString);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException("type", type, null);
+        }
+        Console.ResetColor();
+    }
+
 
     private string[] AutoCompletionHandler(string text, int caretPosition)
     {
@@ -122,7 +159,7 @@ public class NativeFunctionRepl : MonoBehaviour
                 }
                 else
                 {
-                    Console.WriteLine(string.Format("Command '{0}' does not exists", fun.name));
+                    Console.WriteLine(string.Format("Command '{0}' does not exists", arg));  
                 }
 
             }

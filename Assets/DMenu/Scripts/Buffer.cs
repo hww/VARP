@@ -9,7 +9,6 @@ namespace VARP
 {
     public interface IBuffer
     {
-        void OnKeyDown(int evt);
         void Enable();
         string Name { get; }
         string Help { get; }
@@ -20,7 +19,7 @@ namespace VARP
         KeyMapItem Lockup(int[] sequence, int starts, int ends, bool acceptDefaults);
     }
 
-    public class Buffer : IBuffer
+    public class Buffer : IBuffer, IOnKeyDown
     {
         private EventHandler onEnableListeners;
         public event EventHandler OnEnableListeners
@@ -76,17 +75,18 @@ namespace VARP
         /// end evaluate it
         /// </summary>
         /// <param name="evt"></param>
-        public void OnKeyDown(int evt)
+        public bool OnKeyDown(int evt)
         {
             inputBuffer.OnKeyDown(evt);
             var result = Lockup(inputBuffer.buffer, 0, inputBuffer.Count, true);
             if (result == null || result.value == null)
             {
                 inputBuffer.Clear(); // no reason to continue
-                return;
+                return false;
             }
 
             Eval(result);
+            return true;
         }
 
         /// <summary>
@@ -119,7 +119,14 @@ namespace VARP
                 var o = value as string;
                 NativeFunctionRepl.Instance.Evaluate(o);
             }
-            else if (value is MenuItemSimple)
+            else if (value is MenuLineBaseComplex)
+            {
+
+            }
+            else if (value is MenuLineBaseSimple)
+            {
+
+            }
         }
 
         private void Eval(string function)

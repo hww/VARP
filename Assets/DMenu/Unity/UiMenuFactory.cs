@@ -9,9 +9,12 @@ public class UiMenuFactory : MonoBehaviour
 {
     [Header("Style")]
     public Color panelColor = Color.black;
-    public ColorBlock colors;
+    public ColorBlock normalColors;
+    [HideInInspector]
+    public ColorBlock highlightColors;
     public Color textNormalColor = Color.white;
     public Color textHighlightedColor = Color.black;
+
     [Header("Prefabs")]
     public GameObject menuPanel;
     public GameObject lineSimpe;
@@ -22,68 +25,15 @@ public class UiMenuFactory : MonoBehaviour
     public GameObject separatorSingleLine;
     public GameObject separatorDashedLine;
 
-
-    public UiMenu CreateMenu(KeyMap menu, Vector3 position, float width = 0)
+    private void Awake()
     {
-        var panel = CreateMenuPanel(position, menuPanel);
-
-        foreach (var item in menu.items)
-        {
-            var mitem = item.value as MenuItem;
-
-            if (mitem != null)
-            {
-                if (mitem is MenuItemSimple)
-                {
-                    if (mitem is MenuItemComplex)
-                    {
-                        var mitemcomp = mitem as MenuItemComplex;
-                        switch (mitemcomp.buttonType)
-                        {
-                            case MenuItemComplex.ButtonType.NoButton:
-                                CreateMenuItem(panel, mitem.Text, mitem.Shorcut, lineSimpe);
-                                break;
-                            case MenuItemComplex.ButtonType.Toggle:
-                                CreateMenuItem(panel, mitem.Text, mitem.Shorcut, lineToggle);
-                                break;
-                            case MenuItemComplex.ButtonType.Radio:
-                                CreateMenuItem(panel, mitem.Text, mitem.Shorcut, lineRadio);
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-                    }
-                    else
-                        CreateMenuItem(panel, mitem.Text, mitem.Shorcut, lineSimpe);
-                }
-
-                else if (mitem is MenuSeparator)
-                {
-                    switch ((mitem as MenuSeparator).type)
-                    {
-                        case MenuSeparator.Type.NoLine:
-                            CreateSeparator(panel, separatorNoLine);
-                            break;
-                        case MenuSeparator.Type.Space:
-                            CreateSeparator(panel, separatorSpace);
-                            break;
-                        case MenuSeparator.Type.SingleLine:
-                            CreateSeparator(panel, separatorSingleLine);
-                            break;
-                        case MenuSeparator.Type.DashedLine:
-                            CreateSeparator(panel, separatorDashedLine);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-                }
-            }
-        }
-        var rt = panel.GetComponent<RectTransform>();
-        rt.anchoredPosition = position;
-        //rt.anchorMin = new Vector2(0, 0.5f);
-        //rt.anchorMax = new Vector2(1, 0.5f);
-        return panel;
+        if (Math.Abs(normalColors.colorMultiplier) < 0.1f)
+            normalColors.colorMultiplier = 1f;
+        highlightColors.normalColor = normalColors.highlightedColor;
+        highlightColors.highlightedColor = normalColors.highlightedColor;
+        highlightColors.pressedColor = normalColors.pressedColor;
+        highlightColors.disabledColor = normalColors.disabledColor;
+        highlightColors.colorMultiplier = normalColors.colorMultiplier;
     }
 
     private UiMenu CreateMenuPanel(Vector3 position, GameObject prefab)
@@ -101,36 +51,93 @@ public class UiMenuFactory : MonoBehaviour
         return umenu;
     }
 
-    public UiMenuLine CreateMenuItem(UiMenu menu, string text, string shortcut, GameObject prefab)
+    public UiMenu CreateMenu(KeyMap menu, Vector3 position, float width = 0, UiObject parent = null)
     {
-        var item = Instantiate(prefab);
-        item.transform.SetParent(menu.transform, false);
+        var panel = CreateMenuPanel(position, menuPanel);
+        panel.parentFocus = parent;
 
-        var mitem = item.GetComponent<UiMenuSimpleLine>();
-        mitem.SetFactory(this);
-        mitem.menuText.text = text;
-        mitem.menuShortcut.text = shortcut;
-        
-        menu.Add(mitem);
+        foreach (var item in menu.items)
+        {
+            var mitem = item.value;
 
-        //var rt = item.GetComponent<RectTransform>();
-        //rt.anchorMin = new Vector2(0, 0.5f);
-        //rt.anchorMax = new Vector2(1, 0.5f);
-        return mitem;
+            if (mitem != null)
+            {
+                if (mitem is MenuLineBaseSimple)
+                {
+                    var mitemsimp = (MenuLineBaseSimple)mitem;
+                    CreateMenuItem(panel, mitemsimp, lineSimpe);
+                }
+                else if (mitem is MenuLineBaseComplex)
+                {
+                    var mitemcomp = (MenuLineBaseComplex)mitem;
+                    switch (mitemcomp.buttonType)
+                    {
+                        case MenuLineBaseComplex.ButtonType.NoButton:
+                            CreateMenuItem(panel, mitemcomp, lineSimpe);
+                            break;
+                        case MenuLineBaseComplex.ButtonType.Toggle:
+                            CreateMenuItem(panel, mitemcomp, lineToggle);
+                            break;
+                        case MenuLineBaseComplex.ButtonType.Radio:
+                            CreateMenuItem(panel, mitemcomp, lineRadio);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+                else if (mitem is MenuSeparator)
+                {
+                    var msepar = (MenuSeparator) mitem;
+                    switch ((mitem as MenuSeparator).type)
+                    {
+                        case MenuSeparator.Type.NoLine:
+                            CreateSeparator(panel, msepar, separatorNoLine);
+                            break;
+                        case MenuSeparator.Type.Space:
+                            CreateSeparator(panel, msepar, separatorSpace);
+                            break;
+                        case MenuSeparator.Type.SingleLine:
+                            CreateSeparator(panel, msepar, separatorSingleLine);
+                            break;
+                        case MenuSeparator.Type.DashedLine:
+                            CreateSeparator(panel, msepar, separatorDashedLine);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+            }
+        }
+        var rt = panel.GetComponent<RectTransform>();
+        rt.anchoredPosition = position;
+        panel.IsSelected = true;
+
+        return panel;
     }
 
-    public UiMenuLine CreateSeparator(UiMenu menu, GameObject prefab)
+    public UiMenuLineBase CreateMenuItem(UiMenu menu, MenuLineBase menuLineBase, GameObject prefab)
     {
         var item = Instantiate(prefab);
         item.transform.SetParent(menu.transform, false);
 
-        var mitem = item.GetComponent<UiMenuLine>();
-        mitem.SetFactory(this);
-        menu.Add(mitem);
+        var uMenuLine = item.GetComponent<UiMenuLine>();
+        uMenuLine.SetFactory(this);
+        uMenuLine.MenuLineBase = menuLineBase;
 
-        //var rt = item.GetComponent<RectTransform>();
-        //rt.anchorMin = new Vector2(0, 0.5f);
-        //rt.anchorMax = new Vector2(1, 0.5f);
-        return mitem;
+        menu.Add(uMenuLine);
+        return uMenuLine;
+    }
+
+    public UiMenuLineBase CreateSeparator(UiMenu menu, MenuLineBase menuLineBase, GameObject prefab)
+    {
+        var item = Instantiate(prefab);
+        item.transform.SetParent(menu.transform, false);
+
+        var uMenuLine = item.GetComponent<UiMenuLineBase>();
+        uMenuLine.SetFactory(this);
+        uMenuLine.MenuLineBase = menuLineBase;
+
+        menu.Add(uMenuLine);
+        return uMenuLine;
     }
 }

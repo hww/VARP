@@ -99,23 +99,20 @@ namespace VARP
             items = new List<KeyMapItem>();
         }
 
-        public KeyMap(string title, string keys = null, string help = null) : this(title)
+        public KeyMap(string title, string help = null) : this(title)
         {
             this.title = help;
-            this.keys = keys;
         }
 
-        public KeyMap(KeyMap parent, string title, string keys = null, string help = null) : this(parent, title)
+        public KeyMap(KeyMap parent, string title, string help = null) : this(parent, title)
         {
             this.title = help;
-            this.keys = keys;
         }
 
         public virtual void CopyTo(KeyMap other)
         {
             other.title = title;
             other.title = help;
-            other.keys = keys;
             other.parent = parent;
             foreach (var item in items)
                 other.SetLocal(item.key, item.value);

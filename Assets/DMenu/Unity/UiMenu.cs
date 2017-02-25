@@ -1,36 +1,37 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UiMenu : UiObject
+public class UiMenu : UiObject, IOnKeyDown
 {
+    [Header("UiMenu")]
     public bool isMenuBar;
-    private Image image;
-    private List<UiMenuLine> menuLines;
-    private UiObject submenu;
 
+    private Image image;
+    private List<UiMenuLineBase> menuLines;
+    private int selectedLine;
+
+    #region MonoBehaviour
 
     // ReSharper disable once UnusedMember.Local
     private void Awake()
     {
         image = GetComponent<Image>();
-        menuLines = new List<UiMenuLine>();
+        menuLines = new List<UiMenuLineBase>();
     }
 
-    /// <summary>
-    /// Reference to the parent. For menu it will be
-    /// item used to open it. (or maybe anchor)
-    /// </summary>
-    public override void SetParent(UiObject parent)
+    private void Update()
     {
-        this.parent = parent;
-        if (parent == null) return;
-        var line = parent.GetComponent<UiMenuLine>();
-        if (line == null) return;
-
-        OnRectTransformDimensionsChange();
+        if (refresh)
+            Refresh();
     }
+
+    #endregion
+
+    #region UiObject
 
     /// <summary>
     /// Reference to the parent
@@ -41,36 +42,200 @@ public class UiMenu : UiObject
         image.color = factory.panelColor;
     }
 
-    public void Add(UiMenuLine line)
+    /// <summary>
+    /// Focus on menu will make first line of menu focused
+    /// </summary>
+    public override void Focus()
     {
-        menuLines.Add(line);
-
-
-        var button = line.GetComponent<UiMenuSimpleLine>();
-        if (button!=null)
-            button.menuButton.onClick.AddListener(() => { OnClickMenuItemHandle(line); });
+        base.Focus();
+        SelecLine(FindSeectable(0));
     }
 
-    public void Remove(UiMenuLine line)
+
+    public override void Close()
     {
-        menuLines.Remove(line);
+        foreach (var line in menuLines)
+            line.Close();
+        base.Close();
     }
 
-    private void OnClickMenuItemHandle(UiObject line)
+    public override void Refresh()
     {
-        if (submenu != null)
-            UiManager.I.DestoryMenu(submenu);
-
-        Vector3 pos = line.PreferedChildPosition;
-        submenu = UiManager.I.CreateTestMenu(pos);
-        submenu.SetParent(line);
+        foreach (var line in menuLines)
+        {
+            line.Refresh();        
+        }    
+        base.Refresh();
     }
 
-    // ReSharper disable once UnusedMember.Local
-    private void OnDestroy()
+    #endregion
+
+    #region LineSelection
+
+    /// <summary>
+    /// Find selectable line from start value and to direction
+    /// </summary>
+    /// <param name="starts"></param>
+    /// <param name="reversed"></param>
+    /// <returns></returns>
+    private int FindSeectable(int starts, bool reversed = false)
     {
-        if (submenu != null)
-            Destroy(submenu.gameObject);
+        if (menuLines.Count == 0)
+            return -1;
+        var max = menuLines.Count;
+
+        if (reversed)
+        {
+            var i = Math.Max(0, Math.Min(starts - 1, max));
+            while(i >= 0)
+            {
+                if (menuLines[i].IsSelectable)
+                    return i;
+                i--;
+            } 
+        }
+        else
+        {
+            var i = Math.Max(0, Math.Min(starts + 1, max));
+            while (i <= max) 
+            {
+                if (menuLines[i].IsSelectable)
+                    return i;
+                i++;
+            }
+        }
+        return starts;
+    }
+
+    public void SelectLine(UiMenuLineBase lineBase)
+    {
+        SelecLine(menuLines.IndexOf(lineBase));
+    }
+
+    public void DeselectLine(UiMenuLineBase lineBase)
+    {
+        lineBase.Defocus();
+        selectedLine = -1;
+        RequestRefresh();
+    }
+
+    private void SelecLine(int index)
+    {
+        var oldLine = this[selectedLine];
+        if (oldLine != null)
+            oldLine.Defocus();
+
+        selectedLine = index; 
+
+        var newLine = this[selectedLine];
+        if (newLine != null)
+            newLine.Focus();
+        RequestRefresh();
+    }
+
+    #endregion
+
+    #region List of Items
+
+    /// <summary>
+    /// Add menu item
+    /// </summary>
+    /// <param name="lineBase"></param>
+    public void Add(UiMenuLineBase lineBase)
+    {
+        menuLines.Add(lineBase);
+        lineBase.parentFocus = this;
+        var button = lineBase.GetComponent<UiMenuLine>();
+        if (button != null)
+            button.menuButton.onClick.AddListener(() => { OnClickMenuItemHandle(lineBase); });
+        RequestRefresh();
+    }
+
+    /// <summary>
+    /// Remove menu item
+    /// </summary>
+    /// <param name="lineBase"></param>
+    public void Remove(UiMenuLineBase lineBase)
+    {
+        menuLines.Remove(lineBase);
+        RequestRefresh();
+    }
+
+    public UiMenuLineBase this[int index]
+    {
+        get
+        {
+            return (index>= 0 && index < menuLines.Count) ? menuLines[index] : null;
+        }
+    }
+
+    #endregion
+
+    #region IOnKeyDown
+
+    public override bool OnKeyDown(int evt)
+    {
+
+        switch ((KeyCode)VARP.Event.GetKeyCode(evt))
+        {
+            case KeyCode.DownArrow:
+                return OnDownArrow(evt);
+
+            case KeyCode.UpArrow:
+                return OnUpArrow(evt);
+
+            case KeyCode.LeftArrow:
+                return OnLeftArrow(evt);
+
+            case KeyCode.RightArrow:
+                return OnRightArrow(evt);
+
+            case KeyCode.Mouse0:
+                return OnRightArrow(evt);
+        }
+        return false;
+    }
+
+    #endregion
+
+    #region Events Handlers
+
+    private bool OnRightArrow(int evt)
+    {
+        var selected = menuLines[selectedLine];
+        if (selected != null)
+            selected.OnKeyDown(evt);
+        return true;
+    }
+
+    private bool OnLeftArrow(int evt)
+    {
+        Close();
+        return true;
+    }
+
+    private bool OnUpArrow(int evt)
+    {
+        SelecLine(FindSeectable(selectedLine, true));
+        return true;
+    }
+
+    private bool OnDownArrow(int evt)
+    {
+        SelecLine(FindSeectable(selectedLine, false));
+        return true;
+    }
+
+    #endregion
+
+
+
+
+    private void OnClickMenuItemHandle(UiMenuLineBase focusLineBase)
+    {
+        SelectLine(focusLineBase);
+        var line = this[selectedLine];
+        if (line != null) line.OnKeyDown((int) KeyCode.Mouse0);
     }
 
     // ReSharper disable once UnusedMember.Local
@@ -83,25 +248,26 @@ public class UiMenu : UiObject
         }
         else
         {
-            if (parent!=null)
-                RectTransform.anchoredPosition = GetFitPosition(parent);
+            if (parentFocus!=null)
+                RectTransform.anchoredPosition = GetFitPosition();
         }
+        SelecLine(selectedLine);
     }
+
 
     /// <summary>
     /// </summary>
-    /// <param name="parent"></param>
     /// <returns></returns>
-    public Vector2 GetFitPosition(UiObject parent)
+    public Vector2 GetFitPosition()
     {
-        if (parent == null)
+        if (parentFocus == null)
             return Vector2.zero;
 
         // anchor point
         var canvasSize = UiManager.I.RectTransform.rect.size;
         // submenu size
         var thisRect = RectTransform.rect;
-        var thisPos = parent.PreferedChildPosition;
+        var thisPos = parentFocus.ChildPosition;
         // There is interesting phenomen. position of object is in top left 
         thisRect.position = new Vector2(thisPos.x, thisPos.y - thisRect.height);
 
@@ -109,8 +275,8 @@ public class UiMenu : UiObject
         {
             thisRect.position = new Vector2(canvasSize.x - thisRect.width, thisRect.position.y);
 
-            var parentRect = parent.RectTransform.rect;
-            var parentPos = parent.PositionOnCanvas;
+            var parentRect = parentFocus.RectTransform.rect;
+            var parentPos = parentFocus.PositionOnCanvas;
             // There is interesting phenomen. position of object is in top left 
             parentRect.position = new Vector2(parentPos.x, parentPos.y - parentRect.height);
 
@@ -129,40 +295,5 @@ public class UiMenu : UiObject
 
         thisRect.position = new Vector2(thisRect.position.x, thisRect.position.y + thisRect.height);
         return thisRect.position;
-
-        /*       Rect(anchor.x, anchor.y, submenusize.x, submenusize.y);
-       
-               // get the canvas size
-               // top left corner of the canvas is 0,0
-               var canvasSize = UiManager.I.RectTransform.sizeDelta;
-               
-               // get menu item size
-               // pos +--------------------------+
-               //     |                          |
-               //     +--------------------------+ max
-               var linepos = parent.PositionOnCanvas;
-               var linesize = parent.RectTransform.rect.size;
-               var linemax = linepos + linesize;
-       
-               var x = 0f;
-               var y = 0f;
-               if (submenumax.x < canvasSize.x)
-               {
-                   x = achor.x;
-               }
-               else
-               {
-                   x = canvasSize.x - submenusize.x;
-               }
-       
-               if (newRect.Overlaps(parent.RectTransform.rect))
-               {
-                   
-               }
-               else
-               {
-                   return new Vector2(x, achor.y);
-               }*/
-
     }
 }
