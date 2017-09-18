@@ -107,8 +107,9 @@ public class UiMenuLine : UiMenuLineBase, IPointerEnterHandler, IPointerExitHand
 
     public override void Defocus()
     {
-        if (submenu != null)
-            submenu.Close();
+       // if (submenu != null)
+       //     submenu.Close();
+        base.Defocus();
     }
 
     public override bool IsSelectable

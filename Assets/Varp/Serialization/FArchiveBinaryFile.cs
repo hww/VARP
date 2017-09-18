@@ -177,46 +177,4 @@ namespace VARP.Serialization
         public override void Ar(ref float v) { writer.Write(v); }
         public override void Ar(ref double v) { writer.Write(v); }
     }
-    // ==============================================================================================
-    public class FMemoryStreamReader : FBinaryStreamReader
-    {
-        public FMemoryStreamReader(IOutputDevice inError) : base(new MemoryStream(), inError)
-        {
-
-        }
-        public FMemoryStreamReader(int capacity, IOutputDevice inError) : base(new MemoryStream(capacity), inError)
-        {
-
-        }
-        public FMemoryStreamReader(byte[] buffer, IOutputDevice inError) : base(new MemoryStream(buffer), inError)
-        {
-
-        }
-        public FMemoryStreamReader(byte[] buffer, int index, int count, IOutputDevice inError) : base(new MemoryStream(buffer, index, count), inError)
-        {
-
-        }
-
-    }
-    // ==============================================================================================
-    public class FMemoryStreamWriter : FBinaryStreamWriter
-    {
-        public FMemoryStreamWriter(IOutputDevice inError) : base(new MemoryStream(), inError)
-        {
-
-        }
-        public FMemoryStreamWriter(int capacity, IOutputDevice inError) : base(new MemoryStream(capacity), inError)
-        {
-
-        }
-        public FMemoryStreamWriter(byte[] buffer, IOutputDevice inError) : base(new MemoryStream(buffer), inError)
-        {
-
-        }
-        public FMemoryStreamWriter(byte[] buffer, int index, int count, IOutputDevice inError) : base(new MemoryStream(buffer, index, count), inError)
-        {
-
-        }
-    }
-
 }

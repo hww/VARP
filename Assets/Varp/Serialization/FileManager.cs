@@ -44,7 +44,7 @@ namespace VARP.Serialization
         LastAccess = 1,
         LastWrite = 2,
     };
-
+    [Flags]
     public enum EFileWrite
     {
         None = 0x00,
@@ -55,7 +55,7 @@ namespace VARP.Serialization
         Append = 0x10,
         AllowRead = 0x20
     };
-
+    [Flags]
     public enum EFileRead
     {
         None = 0x00,
@@ -110,18 +110,69 @@ namespace VARP.Serialization
     // ===================================================================
     //! FileManager implementation 
     // ===================================================================
-    public abstract class FFileManagerGeneric : FFileManager
+    public class FFileManagerGeneric : FFileManager
     {
+        public FFileManagerGeneric()
+        {
+
+        }
+
         // ---------------------------------------------------------------
         // Makes reader writer
         // ---------------------------------------------------------------
         public override FArchive CreateFileReader(string filename, EFileRead readFlags = EFileRead.None, IOutputDevice error = null)
         {
-            return null;
+
+            if (filename == null) throw new ArgumentNullException("filename");
+            FileStream fs = null;
+
+            var fileInfo = new FileInfo(filename);
+            if (fileInfo.Exists)
+            {
+                fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            }
+            else
+            {
+                if (readFlags.IsFlagSet(EFileRead.NoFail))
+                    fs = new FileStream(filename, FileMode.Create, FileAccess.Read, FileShare.ReadWrite);
+                else
+                    throw new FileNotFoundException(filename);
+            }
+            return new FBinaryStreamReader(fs, error);
         }
         public override FArchive CreateFileWriter(string filename, EFileWrite writeFlags = EFileWrite.None, IOutputDevice error = null)
         {
-            return null;
+            if (filename == null) throw new ArgumentNullException("filename");
+            FileStream fs = null;
+
+            var fileInfo = new FileInfo(filename);
+            if (fileInfo.Exists)
+            {
+                if (writeFlags.IsFlagSet(EFileWrite.NoReplaceExisting))
+                    throw new FileLoadException("Can't replace existing file: " + filename);
+
+                if (fileInfo.IsReadOnly)
+                {
+                    if (writeFlags.IsFlagSet(EFileWrite.ReadOnly))
+                        fileInfo.IsReadOnly = false;
+                    else
+                        throw new FileLoadException("Can't write to read only file: " + filename);
+                }
+
+                if (writeFlags.IsFlagSet(EFileWrite.Append))
+                {
+                    fs = new FileStream(filename, FileMode.Append, FileAccess.Write, FileShare.Read);
+                }
+                else
+                {
+                    fs = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Read);
+                }
+            }
+            else
+            {
+                fs = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.Read);
+            }
+            return new FBinaryStreamWriter(fs, error);
         }
         // ---------------------------------------------------------------
         // File operations
@@ -130,21 +181,73 @@ namespace VARP.Serialization
         {
             if (filename == null) throw new ArgumentNullException("filename");
             var fileInfo = new FileInfo(filename);
-            return fileInfo.IsReadOnly;
+            return fileInfo.Exists ? fileInfo.IsReadOnly : false;
         }
         public override long FileSize([NotNull] string filename)
         {
             if (filename == null) throw new ArgumentNullException("filename");
             var fileInfo = new FileInfo(filename);
-            return fileInfo.Length;
+            return fileInfo.Exists ? fileInfo.Length : 0;
         }
+        //todo: add or remove argument: attributes
+        //todo: add or remove argument: progress
         public override bool Copy(string dest, string source, bool replace = true, bool evenReadOnly = false, bool attributes = false, OnProgressDelegate progress = null)
         {
-            return false;
+            if (dest == null) throw new ArgumentNullException("dest");
+            if (source == null) throw new ArgumentNullException("source");
+            if (FileExist(dest))
+            {
+                var fileInfo = new FileInfo(dest);
+
+                if (replace)
+                {
+                    if (fileInfo.IsReadOnly)
+                    {
+                        if (evenReadOnly)
+                            Delete(dest, false, true);
+                        else
+                            return false;
+                    }
+                    else
+                    {
+                        Delete(dest, false, true);
+                    }
+                }
+                else
+                    return false;
+            }
+            File.Copy(source, dest);
+            return true;
         }
-        public override bool Move(string dest, string source, bool replace = true, bool evenReadOnly = false, bool attributes = false, bool bDoNotRetryOrError = false)
+        //todo: add or remove argument: attributes
+        //todo: add or remove argument: bDoNotRetryOrError
+        public override bool Move([NotNull] string dest, [NotNull] string source, bool replace = true, bool evenReadOnly = false, bool attributes = false, bool bDoNotRetryOrError = false)
         {
-            return false;
+            if(dest == null) throw new ArgumentNullException("dest");
+            if(source == null) throw new ArgumentNullException("source");
+            if (FileExist(dest))
+            {
+                var fileInfo = new FileInfo(dest);
+
+                if (replace)
+                {
+                    if (fileInfo.IsReadOnly)
+                    {
+                        if (evenReadOnly)
+                            Delete(dest, false, true);
+                        else
+                            return false;
+                    }
+                    else
+                    {
+                        Delete(dest, false, true);
+                    }
+                }
+                else
+                    return false;
+            }
+            File.Move(source, dest);
+            return true;
         }
         public override bool Delete([NotNull] string filename, bool requireExists = false, bool evenReadOnly = false, bool quiet = false)
         {
@@ -192,6 +295,11 @@ namespace VARP.Serialization
 
             var startDirectory = Path.GetDirectoryName(path);
             var fileName = Path.GetFileName(path);
+
+            if (fileName == null) fileName = "*";
+            if (string.IsNullOrEmpty(startDirectory))
+                startDirectory = GetDefaultDirectory();
+
             if (files)
             {
                 var list = Directory.GetFiles(startDirectory, fileName, SearchOption.TopDirectoryOnly);
@@ -209,6 +317,9 @@ namespace VARP.Serialization
             if (foundNames == null) throw new ArgumentNullException("foundNames");
             if (startDirectory == null) throw new ArgumentNullException("startDirectory");
 
+            if (string.IsNullOrEmpty(startDirectory))
+                startDirectory = GetDefaultDirectory();
+
             if (fileName == null) fileName = "*";
             if (files)
             {   // find files in this directory
@@ -224,13 +335,14 @@ namespace VARP.Serialization
             // find all directories, to look inside
             var dirs = Directory.GetDirectories(startDirectory);
             foreach (var d in dirs)
-                FindFilesRecursive(ref foundNames, startDirectory, fileName, files, directories);
+                FindFilesRecursive(ref foundNames, d, fileName, files, directories);
         }
         // ---------------------------------------------------------------
         // Directories
         // ---------------------------------------------------------------
         public override bool DirectoryExists(string path)
         {
+            if (path == null) throw new ArgumentNullException("path");
             return Directory.Exists(path);
         }
         // Create directory with @path. Create all directory tree if @tree is true 

@@ -32,25 +32,26 @@ public partial class UiManager : UiObject, IOnKeyDown
     {
         //CreateTestMenu(new Vector3(100, -150, 0)); 
 
-        var m1 = new KeyMap("Menu1", "Help2");
-        m1.Define(new[] { "1" }, new MenuLineBaseSimple("Help2.1", "?I1", "Help Item1"));
-        m1.Define(new[] { "2" }, new MenuLineBaseSimple("Help2.2", "?I2", "Help Item2"));
-        m1.Define(new[] { "3" }, new MenuLineBaseSimple("Help2.3", "?I3", "Help Item3"));
-        m1.Define(new[] { "4" }, new MenuLineBaseSimple("Help2.4", "?I4", "Help Item4"));
-        m1.Define(new[] { "-3" }, new MenuSeparator(MenuSeparator.Type.Space));
+        var m2 = new KeyMap("Menu2", "Help2");
+        m2.Define(new[] { "1" }, new MenuLineBaseSimple("Help2.1", "?I1", "Help Item1"));
+        m2.Define(new[] { "2" }, new MenuLineBaseSimple("Help2.2", "?I2", "Help Item2"));
+        m2.Define(new[] { "3" }, new MenuLineBaseSimple("Help2.3", "?I3", "Help Item3"));
+        m2.Define(new[] { "4" }, new MenuLineBaseSimple("Help2.4", "?I4", "Help Item4"));
+        m2.Define(new[] { "-3" }, new MenuSeparator(MenuSeparator.Type.Space));
 
        
 
         var m = new KeyMap("Menu1", "Help1");
-        m.Define(new[] { "1" }, new MenuLineBaseSimple("Menu1.1", m1, "?I1", "Help Item1"));
+        m.Define(new[] { "1" }, new MenuLineBaseSimple("Menu1.1", m2, "?I1", "Help Item1"));
         m.Define(new[] { "2" }, new MenuLineBaseSimple("Menu1.2", "help", "?I2", "Help Item2"));
-        m.Define(new[] { "3" }, new MenuLineBaseSimple("Menu1.3", m1, "?I3", "Help Item3"));
+        m.Define(new[] { "3" }, new MenuLineBaseSimple("Menu1.3", m2, "?I3", "Help Item3"));
         m.Define(new[] { "4" }, new MenuLineBaseSimple("Menu1.4", "?I4", "Help Item4"));
         m.Define(new[] { "5" }, new MenuLineBaseSimple("Menu1.5", "?I5", "Help Item5"));
         m.Define(new[] { "6" }, new MenuLineBaseSimple("Menu1.6", "?I6", "Help Item6"));
         curentMenu = CreateMenu(m, new Vector3(0, 0, 0), 200f);
 
-        // m.Define(new[] { "-1" }, new MenuSeparator(MenuSeparator.Type.NoLine));
+       // KeyMap.GlobalKeymap.Define(new[])
+        //m.Define(new[] { "-1" }, new MenuSeparator(MenuSeparator.Type.NoLine));
         //m.Define(new[] { "-2" }, new MenuSeparator(MenuSeparator.Type.SingleLine));
         //m.Define(new[] { "-3" }, new MenuSeparator(MenuSeparator.Type.Space));
         //m.Define(new[] { "-4" }, new MenuSeparator(MenuSeparator.Type.DashedLine));

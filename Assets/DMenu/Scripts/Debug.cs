@@ -46,73 +46,73 @@ namespace VARP
 
         public static void Log(object message)
         {
-            UnityEngine.Debug.logger.Log(LogType.Log, Wrap(LogType.Log, message));
+            UnityEngine.Debug.unityLogger.Log(LogType.Log, Wrap(LogType.Log, message));
         }
 
         public static void Log(object message, UnityEngine.Object context)
         {
-            UnityEngine.Debug.logger.Log(LogType.Log, Wrap(LogType.Log, message), context);
+            UnityEngine.Debug.unityLogger.Log(LogType.Log, Wrap(LogType.Log, message), context);
         }
 
         public static void LogFormat(string format, params object[] args)
         {
-            UnityEngine.Debug.logger.LogFormat(LogType.Log, WrapFormat(LogType.Log, format, args));
+            UnityEngine.Debug.unityLogger.LogFormat(LogType.Log, WrapFormat(LogType.Log, format, args));
         }
 
         public static void LogFormat(UnityEngine.Object context, string format, params object[] args)
         {
-            UnityEngine.Debug.logger.LogFormat(LogType.Log, context, WrapFormat(LogType.Log, format, args));
+            UnityEngine.Debug.unityLogger.LogFormat(LogType.Log, context, WrapFormat(LogType.Log, format, args));
         }
 
         public static void LogError(object message)
         {
-            UnityEngine.Debug.logger.Log(LogType.Error, Wrap(LogType.Error, message));
+            UnityEngine.Debug.unityLogger.Log(LogType.Error, Wrap(LogType.Error, message));
         }
 
         public static void LogError(object message, UnityEngine.Object context)
         {
-            UnityEngine.Debug.logger.Log(LogType.Error, Wrap(LogType.Error, message), context);
+            UnityEngine.Debug.unityLogger.Log(LogType.Error, Wrap(LogType.Error, message), context);
         }
 
         public static void LogErrorFormat(string format, params object[] args)
         {
-            UnityEngine.Debug.logger.LogFormat(LogType.Error, WrapFormat(LogType.Error, format, args));
+            UnityEngine.Debug.unityLogger.LogFormat(LogType.Error, WrapFormat(LogType.Error, format, args));
         }
 
         public static void LogErrorFormat(UnityEngine.Object context, string format, params object[] args)
         {
-            UnityEngine.Debug.logger.LogFormat(LogType.Error, context, WrapFormat(LogType.Error, format, args));
+            UnityEngine.Debug.unityLogger.LogFormat(LogType.Error, context, WrapFormat(LogType.Error, format, args));
         }
 
         public static void LogException(Exception exception)
         {
-            UnityEngine.Debug.logger.LogException(exception, null);
+            UnityEngine.Debug.unityLogger.LogException(exception, null);
         }
 
         public static void LogException(Exception exception, UnityEngine.Object context)
         {
-            UnityEngine.Debug.logger.LogException(exception, context);
+            UnityEngine.Debug.unityLogger.LogException(exception, context);
         }
 
 
         public static void LogWarning(object message)
         {
-            UnityEngine.Debug.logger.Log(LogType.Warning, Wrap(LogType.Warning, message));
+            UnityEngine.Debug.unityLogger.Log(LogType.Warning, Wrap(LogType.Warning, message));
         }
 
         public static void LogWarning(object message, UnityEngine.Object context)
         {
-            UnityEngine.Debug.logger.Log(LogType.Warning, Wrap(LogType.Warning, message), context);
+            UnityEngine.Debug.unityLogger.Log(LogType.Warning, Wrap(LogType.Warning, message), context);
         }
 
         public static void LogWarningFormat(string format, params object[] args)
         {
-            UnityEngine.Debug.logger.LogFormat(LogType.Warning, WrapFormat(LogType.Warning, format, args));
+            UnityEngine.Debug.unityLogger.LogFormat(LogType.Warning, WrapFormat(LogType.Warning, format, args));
         }
 
         public static void LogWarningFormat(UnityEngine.Object context, string format, params object[] args)
         {
-            UnityEngine.Debug.logger.LogFormat(LogType.Warning, context, WrapFormat(LogType.Warning, format, args));
+            UnityEngine.Debug.unityLogger.LogFormat(LogType.Warning, context, WrapFormat(LogType.Warning, format, args));
         }
 
 
@@ -121,7 +121,7 @@ namespace VARP
         {
             if (!condition)
             {
-                UnityEngine.Debug.logger.Log(LogType.Assert, Wrap(LogType.Assert, "Assertion failed"));
+                UnityEngine.Debug.unityLogger.Log(LogType.Assert, Wrap(LogType.Assert, "Assertion failed"));
             }
         }
 
@@ -130,7 +130,7 @@ namespace VARP
         {
             if (!condition)
             {
-                UnityEngine.Debug.logger.Log(LogType.Assert, Wrap(LogType.Assert, "Assertion failed" as object), context);
+                UnityEngine.Debug.unityLogger.Log(LogType.Assert, Wrap(LogType.Assert, "Assertion failed" as object), context);
             }
         }
 
@@ -139,7 +139,7 @@ namespace VARP
         {
             if (!condition)
             {
-                UnityEngine.Debug.logger.Log(LogType.Assert, Wrap(LogType.Assert, message));
+                UnityEngine.Debug.unityLogger.Log(LogType.Assert, Wrap(LogType.Assert, message));
             }
         }
 
@@ -148,7 +148,7 @@ namespace VARP
         {
             if (!condition)
             {
-                UnityEngine.Debug.logger.Log(LogType.Assert, Wrap(LogType.Assert, message));
+                UnityEngine.Debug.unityLogger.Log(LogType.Assert, Wrap(LogType.Assert, message));
             }
         }
 
@@ -157,7 +157,7 @@ namespace VARP
         {
             if (!condition)
             {
-                UnityEngine.Debug.logger.Log(LogType.Assert, Wrap(LogType.Assert, message), context);
+                UnityEngine.Debug.unityLogger.Log(LogType.Assert, Wrap(LogType.Assert, message), context);
             }
         }
 
@@ -166,7 +166,7 @@ namespace VARP
         {
             if (!condition)
             {
-                UnityEngine.Debug.logger.Log(LogType.Assert, Wrap(LogType.Assert, message) as object, context);
+                UnityEngine.Debug.unityLogger.Log(LogType.Assert, Wrap(LogType.Assert, message) as object, context);
             }
         }
 
@@ -175,7 +175,7 @@ namespace VARP
         {
             if (!condition)
             {
-                UnityEngine.Debug.logger.LogFormat(LogType.Assert, WrapFormat(LogType.Assert, format, args));
+                UnityEngine.Debug.unityLogger.LogFormat(LogType.Assert, WrapFormat(LogType.Assert, format, args));
             }
         }
 
@@ -184,32 +184,32 @@ namespace VARP
         {
             if (!condition)
             {
-                UnityEngine.Debug.logger.LogFormat(LogType.Assert, context, WrapFormat(LogType.Assert, format, args));
+                UnityEngine.Debug.unityLogger.LogFormat(LogType.Assert, context, WrapFormat(LogType.Assert, format, args));
             }
         }
 
         [Conditional("UNITY_ASSERTIONS")]
         public static void LogAssertion(object message)
         {
-            UnityEngine.Debug.logger.Log(LogType.Assert, Wrap(LogType.Assert, message));
+            UnityEngine.Debug.unityLogger.Log(LogType.Assert, Wrap(LogType.Assert, message));
         }
 
         [Conditional("UNITY_ASSERTIONS")]
         public static void LogAssertion(object message, UnityEngine.Object context)
         {
-            UnityEngine.Debug.logger.Log(LogType.Assert, Wrap(LogType.Assert, message), context);
+            UnityEngine.Debug.unityLogger.Log(LogType.Assert, Wrap(LogType.Assert, message), context);
         }
 
         [Conditional("UNITY_ASSERTIONS")]
         public static void LogAssertionFormat(string format, params object[] args)
         {
-            UnityEngine.Debug.logger.LogFormat(LogType.Assert, WrapFormat(LogType.Assert, format, args));
+            UnityEngine.Debug.unityLogger.LogFormat(LogType.Assert, WrapFormat(LogType.Assert, format, args));
         }
 
         [Conditional("UNITY_ASSERTIONS")]
         public static void LogAssertionFormat(UnityEngine.Object context, string format, params object[] args)
         {
-            UnityEngine.Debug.logger.LogFormat(LogType.Assert, context, WrapFormat(LogType.Assert, format, args));
+            UnityEngine.Debug.unityLogger.LogFormat(LogType.Assert, context, WrapFormat(LogType.Assert, format, args));
         }
 
     }

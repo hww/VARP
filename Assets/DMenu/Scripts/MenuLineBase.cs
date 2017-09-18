@@ -28,7 +28,7 @@ namespace VARP
         public MenuLineBaseSimple(string text, string shortcut = null, string help = null)
         {
             this.text = text;
-            this.text = help;
+            this.help = help;
             this.shortcut = shortcut;
         }
 
@@ -42,7 +42,7 @@ namespace VARP
         public MenuLineBaseSimple(string text, object binding, string shortcut = null, string help = null) 
         {
             this.text = text;
-            this.text = help;
+            this.help = help;
             this.shortcut = shortcut;
             this.binding = binding;
         }
@@ -109,7 +109,7 @@ namespace VARP
         public MenuLineBaseComplex(string text, string shortcut = null, string help = null) 
         {
             this.text = text;
-            this.text = help;
+            this.help = help;
             this.shortcut = shortcut;
         }
 

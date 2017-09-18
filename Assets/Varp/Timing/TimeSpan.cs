@@ -33,6 +33,5 @@ namespace VARP.Timing
         public static float Minutes(float time) { return time * 60f; }
         public static float Seconds(float time) { return time; }
         public static float Milliseconds(float time) { return time * 1000f; }
-
     }
 }

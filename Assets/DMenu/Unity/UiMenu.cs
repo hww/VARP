@@ -57,6 +57,8 @@ public class UiMenu : UiObject, IOnKeyDown
         foreach (var line in menuLines)
             line.Close();
         base.Close();
+        if (parentFocus != null)
+            parentFocus.RequestRefresh();
     }
 
     public override void Refresh()
