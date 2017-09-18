@@ -138,9 +138,11 @@ namespace VARP.Scheme.Stx
         public Type ArgType;
         public AstBinding Refrence;
         public AST Initializer;
+
         public ArgumentBinding(AstEnvironment environment, Syntax identifier, Type type, AST initializer) : base(environment, identifier)
         {
-            Debug.Assert(initializer != null);
+            //if (initializer == null)
+            //    Debug.LogError(string.Format("The initializer is null! identifier: '{0}' type: '{1}' env: {2}", identifier.ToString(), type.ToString().ToString(), environment.ToString()));
             Initializer = initializer;
             ArgType = type;
         }
