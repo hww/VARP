@@ -47,7 +47,8 @@ namespace VARP.Scheme.Codegen
             var lambda = new CodeGenerator();
 
             // now generate the code
-            int result = lambda.Generate(ast);
+            var result = lambda.Generate(ast);
+            lambda.GenerateReturn(result);
 
             // now lets create template from dummy lambda
             var templ = lambda.GetTemplate();

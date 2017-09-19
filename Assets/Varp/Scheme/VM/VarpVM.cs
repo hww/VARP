@@ -143,7 +143,7 @@ namespace VARP.Scheme.VM
                                 var binding = environment.LookupRecursively(literal);
                                 if (binding == null)
                                 {
-                                    //    throw SchemeError.Error("vm-set-gloabal", "undefined variable", upVal.AsSymbol());
+                                    //throw SchemeError.Error("vm-set-gloabal", "undefined variable", upVal.AsSymbol());
                                     environment[literal] = values[op.A];
                                 }
                                 else
@@ -497,10 +497,18 @@ namespace VARP.Scheme.VM
                             break;
 
                         case OpCode.RETURN:
-                            // return R(A)
-                            var res = values[op.A];
-                            frame = frame.parent;
-                            return res;
+                            // return R(A) quantity of RB
+                            if (op.B == 0)
+                            {
+                                frame = frame.parent;
+                                return Value.Void;
+                            }
+                            else
+                            {
+                                var res = values[op.A];
+                                frame = frame.parent;
+                                return res;
+                            }
                             break;
 
                         case OpCode.FORLOOP:
@@ -588,7 +596,7 @@ namespace VARP.Scheme.VM
 #if PROFILER
             _profiler.EnterFunction(null, TEMPLATE);
 #endif
-            return values[frame.SP];
+            return Value.Void;//values[frame.SP];
         }
 
         /// <summary>
