@@ -24,8 +24,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
- namespace VARP.Utils
+namespace VARP.Utils
 {
+    /// <summary>
+    /// Has fixed maximum capacity. Does not produce garbage
+    /// after .Clear() method.
+    /// </summary>
     public class BetterStringBuilder
     {
 

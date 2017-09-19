@@ -31,12 +31,11 @@ namespace VARP.Logging
 {
     public interface IOutputDevice
     {
-
-        //	FOutputDevice interface.
+        // FOutputDevice interface.
         void Serialize(string v, Symbol evt);
 
-	    //	Simple text printing.
-	    void Log(string s);
+        // Simple text printing.
+        void Log(string s);
         void Log(Symbol type, string s);
         void Logf(string fmt, params object[] values);
         void Logf(Symbol type, string fmt, params object[] values);
@@ -48,7 +47,7 @@ namespace VARP.Logging
 
     //public abstract class OutputDeviceError : IOutputDevice
     //{
-	//    public abstract void HandleError();
+    //    public abstract void HandleError();
     //};
 
 }
