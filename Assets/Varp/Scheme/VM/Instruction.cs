@@ -98,7 +98,7 @@ namespace VARP.Scheme.VM
         }
 
         private const int AShift = 6;
-        private const int AMask = 0xFF;
+        internal const int AMask = 0xFF;
 
         public int A
         {
@@ -107,7 +107,7 @@ namespace VARP.Scheme.VM
         }
 
         private const int BShift = 23;
-        private const int BMask = 0x1FF;
+        internal const int BMask = 0x1FF;
 
         public int B
         {
@@ -116,7 +116,9 @@ namespace VARP.Scheme.VM
         }
 
         private const int CShift = 14;
-        private const int CMask = 0x1FF;
+        internal const int CMask = 0x1FF;
+        internal const int BitK = 1 << 8;
+        internal const int BitKNeg = BitK - 1;
 
         public int C
         {
@@ -125,7 +127,8 @@ namespace VARP.Scheme.VM
         }
 
         private const int BxShift = 14;
-        private const int BxMask = 0x3FFFF;
+        internal const int BxMask = 0x3FFFF;
+        internal const int BitKx = 0x20000;
 
         public int Bx
         {
@@ -155,7 +158,7 @@ namespace VARP.Scheme.VM
             PackedValue = (uint)(PackedValue & ~(mask << shift)) | (uint)(value << shift);
         }
 
-        internal const int BitK = 1 << 8;
+
         internal const int FieldsPerFlush = 50;
 
         #endregion

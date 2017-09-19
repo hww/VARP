@@ -43,7 +43,7 @@ namespace VARP.Scheme.Data
 
         public CompactValue(Value value)
         {
-            if (value.RefVal == FloatClass.Instance)
+            if (value.RefVal == global::NumericalClass.Float)
                 RefVal = new NumBox(value.NumVal);
             else
                 RefVal = value.RefVal;
@@ -54,14 +54,14 @@ namespace VARP.Scheme.Data
             RefVal = new NumBox(value);
         }
 
-        public CompactValue(ValueClass value)
+        public CompactValue(ValueType value)
         {
             RefVal = value;
         }
 
         public void Set(ref Value value)
         {
-            if (value.RefVal == FloatClass.Instance)
+            if (value.RefVal == global::NumericalClass.Float)
                 Set(value.NumVal);
             else
                 RefVal = value.RefVal;
@@ -86,7 +86,7 @@ namespace VARP.Scheme.Data
             var asNum = RefVal as NumBox;
             if (asNum != null)
             {
-                v.RefVal = FloatClass.Instance;
+                v.RefVal = global::NumericalClass.Float;
                 v.NumVal = asNum.NumVal;
             }
             else
@@ -128,7 +128,7 @@ namespace VARP.Scheme.Data
             if (RefVal == value.RefVal)
                 return true;
 
-            if (value.RefVal is FloatClass)
+            if (value.RefVal is FloatType)
             {
                 var asNum = RefVal as NumBox;
                 return asNum != null && asNum.NumVal == value.NumVal;
@@ -143,7 +143,7 @@ namespace VARP.Scheme.Data
             return asNum != null && asNum.NumVal == value;
         }
 
-        public bool Equals(ValueClass value)
+        public bool Equals(ValueType value)
         {
             if (value == RefVal) return true;
             if (value == null) return false;
@@ -152,10 +152,10 @@ namespace VARP.Scheme.Data
 
         public override int GetHashCode()
         {
-            if (RefVal == null || RefVal == FloatClass.Instance)
+            if (RefVal == null || RefVal == global::NumericalClass.Float)
                 return 0;
 
-            if (RefVal == BoolClass.True)
+            if (RefVal == BoolType.True)
                 return 1;
 
             var asNum = RefVal as NumBox;
@@ -178,7 +178,7 @@ namespace VARP.Scheme.Data
     /// <summary>
     /// Number type container
     /// </summary>
-    internal sealed class NumBox : ValueClass
+    internal sealed class NumBox : ValueType
     {
         public double NumVal;
 
@@ -200,7 +200,7 @@ namespace VARP.Scheme.Data
     /// <summary>
     /// Container for the value references
     /// </summary>
-    internal sealed class ValueBox : ValueClass
+    internal sealed class ValueBox : ValueType
     {
         public Value Value;
 
@@ -227,7 +227,7 @@ namespace VARP.Scheme.Data
     /// the lines read in the last example with the 
     /// following code:
     /// </summary>
-    public class Sentinel : ValueClass
+    public class Sentinel : ValueType
     {
         public Sentinel(string name)
         {
@@ -248,7 +248,7 @@ namespace VARP.Scheme.Data
     /// <summary>
     /// Pint to object which is not belongs to ValueClass
     /// </summary>
-    internal class UserDataWrapper : ValueClass
+    internal class UserDataWrapper : ValueType
     {
         public object RefVal;
 

@@ -32,7 +32,7 @@ namespace VARP.Scheme.Data
     /// <summary>
     /// Class representing a scheme symbol
     /// </summary>
-    public sealed class Symbol : ValueClass
+    public sealed class Symbol : SObject
     {
         private string name;    //< symbol's name
         private bool keyword;   //< is this symbol the keyword

@@ -332,6 +332,39 @@ namespace VARP.Scheme.Exception
         }
 
         // ----------------------
+        // Compiller error methods
+        // ----------------------
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name">name of method where happen error</param>
+        /// <param name="message">error message</param>
+        /// <param name="expression">expression where happen error</param>
+        /// <param name="subexpression">exact token or syntax where happen error</param>
+        /// <returns></returns>
+        public static string CompillerErrorMessage(string name, string message, object expression, object subexpression = null)
+        {
+            var expressionStr = Inspect(expression);
+            if (subexpression == null)
+            {
+                var loc = GetLocationString(expression);
+                return string.Format("{0}: {1}: {2} in: {3}", loc, name, message, expressionStr);
+            }
+            else
+            {
+                var loc = GetLocationString(subexpression);
+                var subexpressionStr = Inspect(expression);
+                return string.Format("{0}: {1}: {2} in: {3}\n error syntax: {4}", loc, name, message, expressionStr);
+            }
+        }
+
+        public static SchemeError CompillerError(string name, string message, object expression, object subexpression = null)
+        {
+            return new SchemeError(CompillerErrorMessage(name, message, expression, subexpression));
+        }
+
+        // ----------------------
         // Inspector
         // ----------------------
 
@@ -348,8 +381,8 @@ namespace VARP.Scheme.Exception
                 return "()";
             if (o is Value)
                 return ((Value)o).AsString();
-            if (o is ValueClass)
-                return (o as ValueClass).ToString();
+            if (o is ValueType)
+                return (o as ValueType).ToString();
             return o.ToString();
         }
     }

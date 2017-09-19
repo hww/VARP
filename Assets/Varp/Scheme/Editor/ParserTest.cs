@@ -77,14 +77,14 @@ namespace VARP.Scheme.Test
                 bool addSpace = false;
                 do
                 {
-                    ValueClass result = Parser.Parse(lexer);
+                    SObject result = Parser.Parse(lexer);
                     if (result == null) break;
                     if (addSpace) sb.Append(" "); else addSpace = true; 
                     sb.Append(result.Inspect());
                     
                 } while (lexer.LastToken != null);
                 string sresult = sb.ToString();
-                Assert.AreEqual(sresult, expectedResult);
+                Assert.AreEqual(expectedResult, sresult);
             }
             catch (System.Exception ex)
             {

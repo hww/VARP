@@ -57,13 +57,13 @@ namespace VARP.Scheme.Data
 
         public override int GetHashCode()
         {
-            if (RefVal == null || RefVal == BoolClass.False)
+            if (RefVal == null || RefVal == BoolType.False)
                 return 0;
 
-            if (RefVal == BoolClass.True)
+            if (RefVal == BoolType.True)
                 return 1;
 
-            if (RefVal == FloatClass.Instance)
+            if (RefVal == global::NumericalClass.Float)
                 return GetHashCode(NumVal);
 
             return GetHashCode(RefVal);
@@ -75,22 +75,22 @@ namespace VARP.Scheme.Data
 
         public bool Equals(bool value)
         {
-            return value ? RefVal is TrueClass : RefVal is FalseClass;
+            return value ? RefVal is TrueType : RefVal is FalseType;
         }
 
         public bool Equals(int value)
         {
-            return RefVal is NumericalClass && (int)NumVal == value;
+            return RefVal is NumericalType && (int)NumVal == value;
         }
 
         public bool Equals(uint value)
         {
-            return RefVal is NumericalClass && (uint)NumVal == value;
+            return RefVal is NumericalType && (uint)NumVal == value;
         }
 
         public bool Equals(double value)
         {
-            return RefVal is NumericalClass && NumVal == value;
+            return RefVal is NumericalType && NumVal == value;
         }
 
         public bool Equals(string str)
@@ -111,14 +111,14 @@ namespace VARP.Scheme.Data
 
         public static bool Equals(Value a, Value b)
         {
-            if (a.RefVal is NumericalClass && b.RefVal is NumericalClass)
+            if (a.RefVal is NumericalType && b.RefVal is NumericalType)
                 return a.NumVal == b.NumVal;
 
             if (a.RefVal == b.RefVal)
                 return true;
 
-            if (a.RefVal is ValueClass)
-                return (a.RefVal as ValueClass).Equals(b);
+            if (a.RefVal is ValueType)
+                return (a.RefVal as ValueType).Equals(b);
 
             if (a.RefVal is string)
                 return (a.RefVal as string).Equals(b.RefVal as string);

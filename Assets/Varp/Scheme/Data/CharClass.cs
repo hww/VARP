@@ -38,9 +38,9 @@ namespace VARP.Scheme.Data
     /// These strings may contain nulls and are not null-terminated.
     /// </remarks>
     [Serializable]
-    public sealed class CharClass : NumericalClass, INumeric
+    public sealed class CharType : NumericalType, INumeric
     {
-        public static CharClass Instance = new CharClass();
+        public static CharType Empty = new CharType();
         public string ToString(double value) { return CharacterToName((char)value); }
 
         #region Named Characters
@@ -69,7 +69,7 @@ namespace VARP.Scheme.Data
             charToStringMap[character] = name;
         }
 
-        static CharClass()
+        static CharType()
         {
             stringToCharMap = new Dictionary<string, char>();
             DefineMapNamedLiteral(' ', "#\\space");

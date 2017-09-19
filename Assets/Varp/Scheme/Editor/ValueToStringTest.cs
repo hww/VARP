@@ -41,8 +41,8 @@ namespace VARP.Scheme.Test
     /// </summary>
     public class ValueToStringTest
     {
-        static string True = BoolClass.True.ToString();
-        static string False = BoolClass.False.ToString();
+        static string True = BoolType.True.ToString();
+        static string False = BoolType.False.ToString();
 
         [Test]
         public void BooleanTest()

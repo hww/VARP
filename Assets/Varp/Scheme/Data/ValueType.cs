@@ -26,32 +26,6 @@
  */
 
 using System;
-/* 
- * Copyright (c) 2016 Valery Alex P.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -62,6 +36,90 @@ namespace VARP.Scheme.Data
     using REPL;
     using Stx;
     using DataStructures;
+
+
+
+    /// <summary>
+    /// The Value object is sort of variative container. It has two fields: 
+    /// 
+    ///     internal double NumVal;     Numerical value
+    ///     internal object RefVal;     Referenced value
+    ///     
+    /// In case if the value contains: integer, boolean, float, character, etc.
+    /// the NumVal contains the value of variable. But the reference point
+    /// to the ValueType object. This object designate the type of data 
+    /// located in the NumVal
+    /// 
+    /// The class ValueType have to be used as parent class for
+    /// any value type.
+    /// </summary>
+    public abstract class ValueType
+    {
+        /// <summary>
+        /// When upvalue reffer to this tag the numeric part has index
+        /// of variable. 
+        /// </summary>
+        internal static readonly UpvalueType OpenUpValueTag = new UpvalueType();
+
+        public virtual bool AsBool() { return false; }
+        public override string ToString() { return base.ToString(); }
+        public virtual string Inspect() { return Inspector.Inspect(this); }
+
+    }
+
+    // =================================================================================
+    // Classes for the types which does not need
+    // reference inside the Value structure.
+    // Each this class have also statically allocated 
+    // object of this class.
+    // When Value structure contains the Nill, Void, Number or Bool
+    // it's reference pointer point to that static object
+    // =================================================================================
+
+    /// <summary>
+    /// The value is UpValue of VM.  
+    /// </summary>
+    public class UpvalueType : ValueType
+    {
+    }
+
+    /// <summary>
+    /// When Nill type the numeric part does not mater
+    /// </summary>
+    //public sealed class NilType : ValueType {
+    //    public static readonly NilType Nil = new NilType();
+    //    public override string ToString() { return "nil"; }
+    //    public override bool AsBool() { return false; }
+    //}
+
+    /// <summary>
+    /// When Boolean type the numeric part does not mater
+    /// </summary>
+    public abstract class BoolType : ValueType {
+        public static readonly VARP.Scheme.Data.BoolType True = new TrueType();
+        public static readonly VARP.Scheme.Data.BoolType False = new FalseType();
+    }
+
+    /// <summary>
+    /// True class
+    /// </summary>
+    public sealed class TrueType : BoolType {
+        public override string ToString() { return "#t"; }
+        public override bool AsBool() { return true; }
+    }
+
+    /// <summary>
+    /// False class
+    /// </summary>
+    public sealed class FalseType : BoolType {
+        public override string ToString() { return "#f"; }
+        public override bool AsBool() { return false; }
+    }
+
+    /// <summary>
+    /// When Numeric type the numeric part contains the value
+    /// </summary>
+    public abstract class NumericalType : ValueType {}
 
     /// <summary>
     /// This Value class uses double value for containing
@@ -78,107 +136,18 @@ namespace VARP.Scheme.Data
     }
 
     /// <summary>
-    /// Any object reference by the Value have to be inherit from this class
-    /// </summary>
-    [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public class ValueClass
-    {
-        public ValueClass()
-        {
-        }
-
-        public virtual bool AsBool() { return false; }
-        public override string ToString() { return base.ToString(); }
-        public virtual string Inspect() { return Inspector.Inspect(this); }
-
-        public Value ToValue()
-        {
-            // N.B. will make exception for numerical
-            // because ValueClass does not have numerical
-            // info
-            return new Value(this); 
-        }
-
-
-        #region DebuggerDisplay 
-        public virtual string DebuggerDisplay
-        {
-            get
-            {
-                try
-                {
-                    return string.Format(Inspector.Inspect(this));
-                }
-                catch (System.Exception ex)
-                {
-                    return string.Format("#<value-class ispect-error='{0}'>", ex.Message);
-                }
-            }
-        }
-        #endregion
-
-    }
-
-    // =================================================================================
-    // Classes for the types which does not need
-    // reference inside the Value structure.
-    // Each this class have also statically allocated 
-    // object of this class.
-    // When Value structure contains the Nill, Void, Number or Bool
-    // it's reference pointer point to that static object
-    // =================================================================================
-    public class UpvalueClass : ValueClass
-    {
-    }
-
-    /// <summary>
-    /// When Nill type the numeric part does not mater
-    /// </summary>
-    public sealed class NillClass : ValueClass {
-        public static readonly NillClass Instance = new NillClass();
-        public override string ToString() { return "nil"; }
-        public override bool AsBool() { return false; }
-    }
-
-    /// <summary>
-    /// When Boolean type the numeric part does not mater
-    /// </summary>
-    public class BoolClass : ValueClass {
-        public static readonly BoolClass True = new TrueClass();
-        public static readonly BoolClass False = new FalseClass();
-    }
-
-    public sealed class TrueClass : BoolClass {
-        public override string ToString() { return "#t"; }
-        public override bool AsBool() { return true; }
-
-    }
-
-    public sealed class FalseClass : BoolClass {
-        public override string ToString() { return "#f"; }
-        public override bool AsBool() { return false; }
-    }
-
-    /// <summary>
-    /// When Numeric type the numeric part contains the value
-    /// </summary>
-    public class NumericalClass : ValueClass {}
-
-    /// <summary>
     /// When Float type the numeric part contains the value
     /// </summary>
-    public sealed class FloatClass : NumericalClass, INumeric
+    public sealed class FloatType : NumericalType, INumeric
     {
-        public static readonly FloatClass Instance = new FloatClass();
         public string ToString(double value) { return Convert.ToSingle(value).ToString("0.0##############"); }
     }
 
     /// <summary>
     /// When FixNum type the numeric part contains the value
     /// </summary>
-    public sealed class FixnumClass : NumericalClass, INumeric
+    public sealed class FixnumType : NumericalType, INumeric
     {
-        public static readonly FixnumClass Instance = new FixnumClass();
         public string ToString(double value) { return Convert.ToInt32(value).ToString(); }
     }
 
@@ -199,8 +168,7 @@ namespace VARP.Scheme.Data
     /// Difference between SVoid and SNull: SVoid can be recognized as empty list
     /// As it can be with SNull
     /// </summary>
-    public sealed class VoidClass : ValueClass {
-        public static readonly VoidClass Instance = new VoidClass();
+    public sealed class VoidType : ValueType {
         public override string ToString() { return "void"; }
         public override bool AsBool() { return false; }
     }
@@ -210,39 +178,34 @@ namespace VARP.Scheme.Data
     /// </summary>
     public partial struct Value
     {
-        public static readonly Value Nill = new Value(NillClass.Instance);
-        public static readonly Value Void = new Value(VoidClass.Instance);
-        public static readonly Value False = new Value(false);
-        public static readonly Value True = new Value(true);
+        internal static readonly Value Nil = new Value(null);
+        internal static readonly Value Void = new Value(global::VoidType.Void);
+        internal static readonly Value False = new Value(BoolType.False);
+        internal static readonly Value True = new Value(BoolType.True);
 
-        /// <summary>
-        /// When upvalue reffer to this tag the numeric part has index
-        /// of variable. 
-        /// </summary>
-        internal static readonly UpvalueClass OpenUpValueTag = new UpvalueClass();
+
 
         /// <summary>
         /// Get type of the object. 
         /// </summary>
-        public ValueClass Type
-        {
-            get
-            {
-                if (RefVal == null)
-                    return NillClass.Instance;
-                return RefVal as ValueClass;
-            }
-        }
+        //public ValueType Type
+        //{
+        //    get {
+        //        if (RefVal == null)
+        //            return ValueType.Nil;
+        //        if (RefVal: RefVal as ValueType; }
+        //}
 
         public bool Is<T>() { return RefVal is T; }
         public bool IsNil { get { return RefVal == null; } }
         public bool IsNotNil { get { return RefVal != null; } }
-        public bool IsBool { get { return RefVal is BoolClass; } }
-        public bool IsTrue { get { return RefVal is TrueClass; } }
-        public bool IsFalse { get { return RefVal is FalseClass; } }
-        public bool IsNumber { get { return RefVal is NumericalClass; } }
-        public bool IsFixnum { get { return RefVal is FixnumClass; } }
-        public bool IsFloat { get { return RefVal is FloatClass; } }
+        public bool IsValueType { get { return RefVal is ValueType; } }
+        public bool IsBool { get { return RefVal is BoolType; } }
+        public bool IsTrue { get { return RefVal is TrueType; } }
+        public bool IsFalse { get { return RefVal is FalseType; } }
+        public bool IsNumber { get { return RefVal is NumericalType; } }
+        public bool IsFixnum { get { return RefVal is FixnumType; } }
+        public bool IsFloat { get { return RefVal is FloatType; } }
         public bool IsString { get { return RefVal is string; } }
         public bool IsSymbol { get { return RefVal is Symbol; } }
         public bool IsLinkedList<T>() { return RefVal is LinkedList<T>; }

@@ -46,24 +46,24 @@ namespace VARP.Scheme.Data
 
         public void Set(bool value)
         {
-            RefVal = value ? BoolClass.True : BoolClass.False;
+            RefVal = value ? BoolType.True : BoolType.False;
         }
 
         public void Set(int value)
         {
-            RefVal = FixnumClass.Instance;
+            RefVal = global::NumericalClass.Fixnum;
             NumVal = value;
         }
 
         public void Set(uint value)
         {
-            RefVal = FixnumClass.Instance;
+            RefVal = global::NumericalClass.Fixnum;
             NumVal = value;
         }
 
         public void Set(double value)
         {
-            RefVal = FloatClass.Instance;
+            RefVal = global::NumericalClass.Float;
             NumVal = value;
         }
         public void Set(string value)
@@ -72,18 +72,15 @@ namespace VARP.Scheme.Data
             NumVal = 0;
         }
 
-        public void Set(BoolClass value)
+        public void Set(BoolType value)
         {
             RefVal = value;
             NumVal = 0;
         }
 
-        public void Set(ValueClass value)
+        public void Set(ValueType value)
         {
-            if (value is NumericalClass)
-                throw SchemeError.Error("value-set", "cant assign numeric value type", value);
             RefVal = value;
-            NumVal = 0;
         }
 
         public void Set(Value value)
@@ -101,14 +98,9 @@ namespace VARP.Scheme.Data
                 return;
             }
 
-            if (value is ValueClass)
+            if (value is ValueType)
             {
-                if (value is NumericalClass)
-                    throw SchemeError.Error("value-set", "cant assign numeric value type", value);
-                if (value is BoolClass)
-                    Set(value as BoolClass); //< will check possible options
-                RefVal = value as ValueClass;
-                NumVal = 0;
+                RefVal = value as ValueType;
                 return;
             }
 
@@ -122,6 +114,7 @@ namespace VARP.Scheme.Data
 
             // This is the class type which is not ValueType
             RefVal = value;
+            NumVal = 0;
         }
 
         /// <summary>

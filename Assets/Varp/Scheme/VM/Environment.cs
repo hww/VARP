@@ -26,6 +26,7 @@
  */
 
  using System.Collections.Generic;
+ using System.Runtime.InteropServices;
 
 namespace VARP.Scheme.VM
 {
@@ -39,7 +40,7 @@ namespace VARP.Scheme.VM
         public Value value;
     }
 
-    public sealed class Environment : ValueClass, IEnumerable<Binding>
+    public sealed class Environment : SObject, IEnumerable<Binding>
     {
         // Create system environment
         public static Environment Top = new Environment(null, Symbol.Intern("*SYSTEM-ENV*"), 1000);
@@ -66,8 +67,22 @@ namespace VARP.Scheme.VM
         /// <returns></returns>
         public Value this[Symbol name]
         {
-            get { return Bindings[name].value; }
-            set { Bindings[name].value = value; }
+            get
+            {
+                Binding bind = null;
+                if (Bindings.TryGetValue(name, out bind))
+                    return Bindings[name].value;
+                else
+                    return Value.Nil;
+            }
+            set
+            {
+                Binding bind = null;
+                if (Bindings.TryGetValue(name, out bind))
+                    bind.value = value;
+                else
+                    Bindings[name] = new Binding() {environment = this, value = value }; 
+            }
         }
 
         /// <summary>

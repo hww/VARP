@@ -38,7 +38,7 @@ namespace VARP.Scheme.Stx
     /// <summary>
     /// Class that reads symbols from a Tokenizer and turns them into an object
     /// </summary>
-    public sealed class Parser : ValueClass
+    public sealed class Parser : ValueType
     {
 
         /// <summary>
@@ -201,7 +201,7 @@ namespace VARP.Scheme.Stx
             else
             {
                 if (listContents.Count == 0)
-                    return new Syntax(Value.Nill, thisToken);
+                    return new Syntax(Value.Nil, thisToken);
                 else
                     return new Syntax(ValueLinkedList.FromList<Syntax>(listContents), thisToken);
             }

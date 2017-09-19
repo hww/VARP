@@ -44,9 +44,9 @@ namespace VARP.Scheme.VM
             return RunClosure(new Frame(null, template, environment), template);
         }
 
-        private delegate ValueType RkDelegate(int i);
+        private delegate SObject RkDelegate(int i);
 
-        private Value RunClosure(Frame frame, Template template, params ValueType[] args)
+        private Value RunClosure(Frame frame, Template template, params System.ValueType[] args)
         {
             var environment = frame.environment;
             var literals = template.Literals;
@@ -102,10 +102,26 @@ namespace VARP.Scheme.VM
 
                         case OpCode.GETGLOBAL:
                             {
-                                var c = op.C;
-                                var key = (c & Instruction.BitK) != 0 ?
-                                    literals[c & ~Instruction.BitK] :
-                                    values[c];
+                                // R(A) = G[K(Bx)]
+                                var literal = literals[op.Bx].AsSymbol();
+                                var binding = environment.LookupRecursively(literal);
+                                if (binding == null)
+                                {
+                                    //    throw SchemeError.Error("vm-set-gloabal", "undefined variable", upVal.AsSymbol());
+                                    values[op.A] = Value.Nil;
+                                }
+                                else
+                                {
+                                    values[op.A] = environment[literal];
+                                }
+
+                                //Value upVal;
+                                //frame.environment.LookupRecursively(frame, ref literals[op.B], out upVal);
+
+                                //var c = op.C;
+                                //var key = (c & Instruction.BitK) != 0 ?
+                                //    literals[c & Instruction.BitKNeg] :
+                                //    values[c];
                                 //Value upVal;
                                 //frame.environment.LookupRecursively(frame, ref upvalues[op.B], out upVal);
                                 //Binding bind = environment.LookupRecursively(upVal.AsSymbol());
@@ -117,28 +133,23 @@ namespace VARP.Scheme.VM
                             break;
 
                         case OpCode.GETTABLE:
+                            // RA = R(B)[Rk(C)]
                             break;
 
                         case OpCode.SETGLOBAL:
                             {
-                                var b = op.B;
-                                var key = (b & Instruction.BitK) != 0 ?
-                                    literals[b & ~Instruction.BitK] :
-                                    values[b];
-
-                                var c = op.C;
-                                var value = (c & Instruction.BitK) != 0 ?
-                                    literals[c & ~Instruction.BitK] :
-                                    values[c];
-
-                                //Value upVal;
-                                //ReadUpValue(frame, ref upvalues[op.A], out upVal);
-                                //
-                                //Binding bind = environment.LookupRecursively(upVal.AsSymbol());
-                                //if (bind != null)
-                                //    bind.value.Set(value);
-                                //else
-                                //    throw SchemeError.Error("vm-set-gloabal", "undefined variable", upVal.AsSymbol());
+                                // G[Bx] = R(A)
+                                var literal = literals[op.Bx].AsSymbol();
+                                var binding = environment.LookupRecursively(literal);
+                                if (binding == null)
+                                {
+                                    //    throw SchemeError.Error("vm-set-gloabal", "undefined variable", upVal.AsSymbol());
+                                    environment[literal] = values[op.A];
+                                }
+                                else
+                                {
+                                    binding.value = values[op.A];
+                                }
                             }
                             break;
 
@@ -156,12 +167,12 @@ namespace VARP.Scheme.VM
                         case OpCode.SETTABLE:
                             //{
                             //    int b = op.B;
-                            //    var key = (b & Instruction.BitK) != 0 ?
+                            //    var key = (b & Instruction.BitKB) != 0 ?
                             //        literals[b & ~Instruction.BitK] :
                             //        values[b];
                             //
                             //    int c = op.C;
-                            //    var value = (c & Instruction.BitK) != 0 ?
+                            //    var value = (c & Instruction.BitKC) != 0 ?
                             //        literals[c & ~Instruction.BitK] :
                             //        values[c];
                             //
@@ -185,7 +196,7 @@ namespace VARP.Scheme.VM
 
                                 var c = op.C;
                                 var key = (c & Instruction.BitK) != 0 ?
-                                    literals[c & ~Instruction.BitK] :
+                                    literals[c & Instruction.BitKNeg] :
                                     values[c];
 
                                 //GetTable(table, ref key, stackBase + op.A);
@@ -201,12 +212,12 @@ namespace VARP.Scheme.VM
                             {
                                 var ib = op.B;
                                 var b = (ib & Instruction.BitK) != 0 ?
-                                    literals[ib & ~Instruction.BitK] :
+                                    literals[ib & Instruction.BMask] :
                                     values[ib];
 
                                 var ic = op.C;
                                 var c = (ic & Instruction.BitK) != 0 ?
-                                    literals[ic & ~Instruction.BitK] :
+                                    literals[ic & Instruction.BitKNeg] :
                                     values[ic];
 
                                 if (b.RefVal is INumeric &&
@@ -223,7 +234,7 @@ namespace VARP.Scheme.VM
                                         case OpCode.POW: rv = Math.Pow(bv, cv); break;
                                         default: throw new NotImplementedException();
                                     }
-                                    if (c.RefVal is FixnumClass && c.RefVal is FixnumClass)
+                                    if (c.RefVal is FixnumType && c.RefVal is FixnumType)
                                         values[op.A].Set((int)rv);
                                     else
                                         values[op.A].Set(rv);
@@ -239,12 +250,12 @@ namespace VARP.Scheme.VM
                             {
                                 var ib = op.B;
                                 var b = (ib & Instruction.BitK) != 0 ?
-                                    literals[ib & ~Instruction.BitK] :
+                                    literals[ib & Instruction.BMask] :
                                     values[ib];
 
-                                if (b.RefVal is FloatClass)
+                                if (b.RefVal is FloatType)
                                     values[op.A].Set(-b.NumVal);
-                                else if (b.RefVal is FixnumClass)
+                                else if (b.RefVal is FixnumType)
                                     values[op.A].Set(-(int)b.NumVal);
                                 else
                                     DoArith(op.OpCode, b, b, ref values[op.A]);
@@ -261,7 +272,7 @@ namespace VARP.Scheme.VM
                             {
                                 var ib = op.B;
                                 var b = (ib & Instruction.BitK) != 0 ?
-                                    literals[ib & ~Instruction.BitK] :
+                                    literals[ib & Instruction.BMask] :
                                     values[ib];
                                 DoGetLen(ref b, out values[op.A]);
                             }
@@ -292,12 +303,12 @@ namespace VARP.Scheme.VM
                             {
                                 var b = op.B;
                                 var bv = (b & Instruction.BitK) != 0 ?
-                                    literals[b & ~Instruction.BitK] :
+                                    literals[b & Instruction.BitKNeg] :
                                     values[b];
 
                                 var c = op.C;
                                 var cv = (c & Instruction.BitK) != 0 ?
-                                    literals[c & ~Instruction.BitK] :
+                                    literals[c & Instruction.BitKNeg] :
                                     values[c];
 
                                 bool test;
@@ -306,36 +317,36 @@ namespace VARP.Scheme.VM
                                 {
                                     case OpCode.EQ:
                                         test = bv.RefVal == cv.RefVal ?
-                                            bv.RefVal is NumericalClass && bv.NumVal == cv.NumVal :
+                                            bv.RefVal is NumericalType && bv.NumVal == cv.NumVal :
                                             Equal(ref bv, ref cv);
                                         break;
 
                                     case OpCode.LT:
-                                        test = (bv.RefVal is NumericalClass && cv.RefVal is NumericalClass) ?
+                                        test = (bv.RefVal is NumericalType && cv.RefVal is NumericalType) ?
                                             bv.NumVal < cv.NumVal :
                                             Less(ref bv, ref cv);
                                         break;
 
                                     case OpCode.LE:
-                                        test = (bv.RefVal is NumericalClass && cv.RefVal is NumericalClass) ?
+                                        test = (bv.RefVal is NumericalType && cv.RefVal is NumericalType) ?
                                             bv.NumVal <= cv.NumVal :
                                             LessEqual(ref bv, ref cv);
                                         break;
 
                                     case OpCode.NE:
                                         test = bv.RefVal != cv.RefVal ?
-                                            bv.RefVal is NumericalClass && bv.NumVal == cv.NumVal :
+                                            bv.RefVal is NumericalType && bv.NumVal == cv.NumVal :
                                             !Equal(ref bv, ref cv);
                                         break;
 
                                     case OpCode.GT:
-                                        test = (bv.RefVal is NumericalClass && cv.RefVal is NumericalClass) ?
+                                        test = (bv.RefVal is NumericalType && cv.RefVal is NumericalType) ?
                                             bv.NumVal > cv.NumVal :
                                             !LessEqual(ref bv, ref cv);
                                         break;
 
                                     case OpCode.GE:
-                                        test = (bv.RefVal is NumericalClass && cv.RefVal is NumericalClass) ?
+                                        test = (bv.RefVal is NumericalType && cv.RefVal is NumericalType) ?
                                             bv.NumVal >= cv.NumVal :
                                             !Less(ref bv, ref cv);
                                         break;
@@ -350,7 +361,7 @@ namespace VARP.Scheme.VM
                             {
                                 // if ((bool)R(A) != (bool)C) then {skip next instruction}
                                 var a = values[op.A].RefVal;
-                                var isfalse = a == null || a == BoolClass.False;
+                                var isfalse = a == null || a == BoolType.False;
 
                                 if ((op.C == 0) == isfalse)
                                 {
@@ -368,7 +379,7 @@ namespace VARP.Scheme.VM
                         case OpCode.TESTSET:
                             {
                                 var b = values[op.B].RefVal;
-                                var test = b == null || b == BoolClass.False;
+                                var test = b == null || b == BoolType.False;
 
                                 if ((op.C != 0) == test)
                                 {
@@ -638,7 +649,7 @@ namespace VARP.Scheme.VM
             var str = val.AsString();
             if (str != null)
             {
-                ret.RefVal = FixnumClass.Instance;
+                ret.RefVal = global::NumericalClass.Fixnum;
                 ret.NumVal = str.Length;
                 return;
             }
@@ -646,7 +657,7 @@ namespace VARP.Scheme.VM
             var asTable = val.RefVal as Table;
             if (asTable != null)
             {
-                ret.RefVal = FixnumClass.Instance;
+                ret.RefVal = global::NumericalClass.Fixnum;
                 ret.NumVal = asTable.Count;
                 return;
             }
@@ -661,7 +672,7 @@ namespace VARP.Scheme.VM
             if (str != null)
                 return str.Equals(b.RefVal as string);
 
-            if (a.RefVal is BoolClass)
+            if (a.RefVal is BoolType)
                 return b.AsBool() == a.AsBool();
 
             return a.Equals(b);

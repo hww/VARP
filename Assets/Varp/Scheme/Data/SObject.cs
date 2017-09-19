@@ -24,71 +24,45 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
 namespace VARP.Scheme.Data
 {
-    /// <summary>
-    /// Fields of the class
-    /// </summary>
-    public partial struct Value
+    using System.Diagnostics;
+    using VARP.Scheme.REPL;
+
+    [DebuggerDisplay("{DebuggerDisplay,nq}")]
+    public abstract class SObject
     {
-        internal double NumVal;
-        internal object RefVal;
 
-        #region Constructors
-        public Value(ValueType type)
+        public SObject()
         {
-            RefVal = type;
-            NumVal = 0;
-        }
-        public Value(BoolType value)
-        {
-            RefVal = value;
-            NumVal = 0;
-        }
-        public Value(char value)
-        {
-            RefVal = CharType.Empty;
-            NumVal = value;
         }
 
-        public Value(bool value)
+        public virtual bool AsBool() { return false; }
+        public override string ToString() { return base.ToString(); }
+        public virtual string Inspect() { return Inspector.Inspect(this); }
+
+        public Value ToValue()
         {
-            RefVal = value ? BoolType.True : BoolType.False;
-            NumVal = 0;
+            return new Value(this);
         }
 
-        public Value(int value)
-        {
-            RefVal = global::NumericalClass.Fixnum;
-            NumVal = value;
-        }
 
-        public Value(uint value)
+        #region DebuggerDisplay 
+        public virtual string DebuggerDisplay
         {
-            RefVal = global::NumericalClass.Fixnum;
-            NumVal = value;
-        }
-
-        public Value(double value)
-        {
-            RefVal = global::NumericalClass.Float;
-            NumVal = value;
-        }
-
-        public Value(object value) : this()
-        {
-            Set(value);
+            get
+            {
+                try
+                {
+                    return string.Format(Inspector.Inspect(this));
+                }
+                catch (System.Exception ex)
+                {
+                    return string.Format("#<value-type ispect-error='{0}'>", ex.Message);
+                }
+            }
         }
         #endregion
 
     }
-
-
- 
 }

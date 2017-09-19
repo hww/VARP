@@ -34,7 +34,7 @@ namespace VARP.Scheme.Data
     using DataStructures;
 
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public sealed class ValuePair : ValueClass
+    public sealed class ValuePair : SObject
     {
         public Value Item1;
         public Value Item2;

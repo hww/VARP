@@ -175,7 +175,7 @@ namespace VARP.Scheme.Test
 
                 string sresult = sb.ToString();
 
-                Assert.AreEqual(sresult, expectedResult);
+                Assert.AreEqual(expectedResult, sresult);
             }
             catch (System.Exception ex)
             {

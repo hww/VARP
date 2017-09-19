@@ -94,10 +94,10 @@ namespace VARP.Scheme.Data
                 return AddQuotes(val.ToString());
             return val.ToString();
         }
-        public static string ToString(ValueClass val)
+        public static string ToString(ValueType val)
         {
             Debug.Assert(val != null);
-            if (val is NumericalClass)
+            if (val is NumericalType)
                 throw SchemeError.Error("to-string", "can't inspect number-class", val);
             return val.ToString();
         }

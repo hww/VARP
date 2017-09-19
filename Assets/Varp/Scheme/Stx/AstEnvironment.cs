@@ -38,7 +38,7 @@ namespace VARP.Scheme.Stx
     /// <summary>
     /// The lexical environment
     /// </summary>
-    public class AstEnvironment : ValueClass, IEnumerable<AstBinding>
+    public class AstEnvironment : SObject, IEnumerable<AstBinding>
     {
         // Pointer to the parent environment.
         // For global environment it is null

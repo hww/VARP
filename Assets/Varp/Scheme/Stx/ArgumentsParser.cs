@@ -129,7 +129,7 @@ namespace VARP.Scheme.Stx
         }
 
 
-        private delegate void AddDelegate(ref LinkedList<Value> first, ref LinkedList<Value> last, ValueClass obj);
+        private delegate void AddDelegate(ref LinkedList<Value> first, ref LinkedList<Value> last, SObject obj);
 
         /// <summary>
         /// The result structure has lists of arguments where

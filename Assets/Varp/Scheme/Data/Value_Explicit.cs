@@ -74,9 +74,9 @@ namespace VARP.Scheme.Data
 
         public static explicit operator bool(Value value)
         {
-            if (value.RefVal is TrueClass)
+            if (value.RefVal is TrueType)
                 return true;
-            if (value.RefVal is FalseClass)
+            if (value.RefVal is FalseType)
                 return false;
 
             throw new InvalidCastException();
@@ -84,21 +84,21 @@ namespace VARP.Scheme.Data
 
         public static explicit operator char(Value value)
         {
-            if (value.RefVal is CharClass)
+            if (value.RefVal is CharType)
                 return (char)value.NumVal;
             throw new InvalidCastException();
         }
 
         public static explicit operator int(Value value)
         {
-            if (value.RefVal is NumericalClass)
+            if (value.RefVal is NumericalType)
                 return (int)value.NumVal;
             throw new InvalidCastException();
         }
 
         public static explicit operator uint(Value value)
         {
-            if (value.RefVal is NumericalClass)
+            if (value.RefVal is NumericalType)
                 return (uint)value.NumVal;
             throw new InvalidCastException();
 
@@ -107,14 +107,14 @@ namespace VARP.Scheme.Data
 
         public static explicit operator double(Value value)
         {
-            if (value.RefVal is NumericalClass)
+            if (value.RefVal is NumericalType)
                 return value.NumVal;
             throw new InvalidCastException();
         }
 
         public static explicit operator float(Value value)
         {
-            if (value.RefVal is NumericalClass)
+            if (value.RefVal is NumericalType)
                 return (float)value.NumVal;
             throw new InvalidCastException();
         }

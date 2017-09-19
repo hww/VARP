@@ -39,7 +39,7 @@ namespace VARP.Scheme.Data
         Table Metatable { get; }
     }
 
-    public class Table : ValueClass, IMetatable, IEnumerable<KeyValuePair<Symbol, Value>>
+    public class Table : ValueType, IMetatable, IEnumerable<KeyValuePair<Symbol, Value>>
     {
         private Dictionary<Symbol, Value> table;
         private Table metatable;

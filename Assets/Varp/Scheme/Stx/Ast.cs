@@ -44,7 +44,7 @@ namespace VARP.Scheme.Stx
     /// Syntax and Pair. Use the data in existing data structure and do not make copy
     /// values without reason. It will make more loaded GC but at same time simpify code.
     /// </summary>
-    public abstract class AST : ValueClass
+    public abstract class AST : SObject
     {
         /// <summary>
         /// This is location of the expression
@@ -81,7 +81,8 @@ namespace VARP.Scheme.Stx
         }
         public static Value GetDatum(Value value)
         {
-            if (value == null) return Value.Nill;
+            if (value == null)
+                return Value.Nil;
             if (value.IsAST)
                 return GetDatum(value.AsAST());
             if (value.IsSyntax)
@@ -95,7 +96,7 @@ namespace VARP.Scheme.Stx
         public static Value GetDatum(LinkedList<Value> list)
         {
             var result = new LinkedList<Value>();
-            if (list == null) return Value.Nill;
+            if (list == null) return Value.Nil;
             foreach (var curent in list)
                 result.AddLast(GetDatum(curent));
             return new Value(result);

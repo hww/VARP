@@ -37,10 +37,12 @@ namespace VARP.Scheme.Stx
     using DataStructures;
     using REPL;
 
-    public sealed class Syntax : ValueClass
+    public sealed class Syntax : SObject
     {
-        public readonly static Syntax False = new Syntax(Value.False, null as Location);
         public readonly static Syntax Void = new Syntax(Value.Void, null as Location);
+        public readonly static Syntax Nil = new Syntax(Value.Nil, null as Location);
+        public readonly static Syntax True = new Syntax(Value.True, null as Location);
+        public readonly static Syntax False = new Syntax(Value.False, null as Location);
 
         private Value expression;
         private Location location;
@@ -48,7 +50,7 @@ namespace VARP.Scheme.Stx
         public Syntax() : base()
         {
         }
-        public Syntax(ValueClass expression) : base()
+        public Syntax(SObject expression) : base()
         {
             this.expression = new Value(expression);
         }

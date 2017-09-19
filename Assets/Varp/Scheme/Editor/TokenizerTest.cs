@@ -82,7 +82,7 @@ namespace VARP.Scheme.Test
             }
 
             string result = sb.ToString();
-            Assert.AreEqual(result, expectedResult);
+            Assert.AreEqual(expectedResult, result);
         }
 
     }

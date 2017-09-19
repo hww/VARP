@@ -64,8 +64,11 @@ namespace VARP.Scheme.REPL
             if (x is Value)
                 return InspectInternal((Value)x, options);
 
-            if (x is ValueClass)
-                return InspectInternal(x as ValueClass, options);
+            //if (x is ValueType)
+            //    return InspectInternal(x as ValueType, options);
+
+            if (x is SObject)
+                return InspectInternal(x as SObject, options);
 
             if (x is Inspectable)
                 return (x as Inspectable).Inspect();
@@ -75,12 +78,12 @@ namespace VARP.Scheme.REPL
 
         private static string InspectInternal(Value x, InspectOptions options = InspectOptions.Default)
         {
-            if (x.IsNil || x.IsBool || x.IsNumber)
+            if (x.IsNil || x.IsValueType)
                 return x.ToString();
             return Inspect(x.RefVal, options);
         }
 
-        private static string InspectInternal(ValueClass x, InspectOptions options = InspectOptions.Default)
+        private static string InspectInternal(SObject x, InspectOptions options = InspectOptions.Default)
         {
             if (x is Location)
                 return InspectInternal(x as Location, options);

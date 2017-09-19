@@ -114,14 +114,14 @@ namespace VARP.Scheme.Codegen
             var value = ast.GetDatum();
             var refval = value.RefVal;
             var sp = Push();
-            if (refval is BoolClass)
-            {
-                Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, sp, value.AsBool() ? (short)1 : (short)0));
-                return sp;
-            }
-            else if (refval is NillClass)
+            if (refval == null)
             {
                 Code.Add(Instruction.MakeAB(OpCode.LOADNIL, sp, 1));
+                return sp;
+            }
+            else if(refval is BoolType)
+            {
+                Code.Add(Instruction.MakeAB(OpCode.LOADBOOL, sp, value.AsBool() ? (short)1 : (short)0));
                 return sp;
             }
             else if (refval is Symbol)
@@ -150,7 +150,7 @@ namespace VARP.Scheme.Codegen
             if (ast.IsGlobal)
             {
                 // R(A) := G[K(Bx)]
-                var dst = SP++;
+                var dst = Push();
                 var litId = DefineLiteral(new Value(ast.Identifier));
                 AddABX(OpCode.GETGLOBAL, dst, litId);
                 return dst;
@@ -163,7 +163,7 @@ namespace VARP.Scheme.Codegen
                 {
                     // UpValue case
                     // R(A) := U[B]
-                    var dst = SP++;
+                    var dst = Push();
                     AddAB(OpCode.GETUPVAL, dst, 0);
                     return dst;
                 }
@@ -181,26 +181,41 @@ namespace VARP.Scheme.Codegen
             var value = ast.Value;
             int target = Generate(value);
 
+
             if (ast.IsGlobal)
             {
                 // G[K(Bx)] := R(A)
                 var varid = new Value(ast.Identifier);
                 var litId = DefineLiteral(varid);
+                if (litId > Instruction.BxMask)
+                    throw SchemeError.CompillerError("GenerateSet", "the index is too large for Bx", ast);
                 AddABX(OpCode.SETGLOBAL, (short)target, litId);
             }
             else
             {
                 var envIdx = ast.RefEnvIdx;
                 var varIdx = ast.RefVarIdx;
+
                 if (envIdx > 0)
                 {
                     // UpValue case
-
+                    // U[B] := R(A)
+                    if (varIdx > Instruction.BMask)
+                        throw SchemeError.CompillerError("GenerateSet", "the index is too large for RB", ast);
+                    if (target > Instruction.AMask)
+                        throw SchemeError.CompillerError("GenerateSet", "the index is too large for RA", ast);
+                  //  AddAB(OpCode.SETUPVAL, (short)varIdx, (short)target);
                 }
                 else
                 {
                     // Local case
+                    // R(A) = R(B)
+                    if (varIdx > Instruction.AMask)
+                        throw SchemeError.CompillerError("GenerateSet", "the index is too large for RA", ast);
+                    if (target > Instruction.BMask)
+                        throw SchemeError.CompillerError("GenerateSet", "the index is too large for RB", ast);
 
+                    AddAB(OpCode.MOVE, (short)varIdx, (short)target);
                 }
             }
             return -1;

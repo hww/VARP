@@ -34,7 +34,7 @@ namespace VARP.Scheme.Stx
     using Exception;
 
 
-    public sealed class AstBuilder : ValueClass
+    public sealed class AstBuilder : SObject
     {
         
 

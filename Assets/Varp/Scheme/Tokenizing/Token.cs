@@ -34,7 +34,7 @@ namespace VARP.Scheme.Tokenizing
     using Exception;
     using Libs;
 
-    public sealed class Token : ValueClass
+    public sealed class Token : SObject
     { 
         public TokenType Type;
         public string Value;
@@ -125,7 +125,7 @@ namespace VARP.Scheme.Tokenizing
             else
             {
                 var c = (char)0;
-                if (CharClass.NameToCharacter(Value, out c))
+                if (CharType.NameToCharacter(Value, out c))
                     return c;
                 throw SchemeError.SyntaxError("get-character", "improperly formed char value", this);
             }

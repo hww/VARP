@@ -48,7 +48,7 @@ namespace VARP.Scheme.Data
         /// </summary>
         public char AsChar()
         {
-            return RefVal is CharClass ? Convert.ToChar(NumVal) : (char)0;
+            return RefVal is CharType ? Convert.ToChar(NumVal) : (char)0;
         }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace VARP.Scheme.Data
         /// </summary>
         public bool AsBool()
         {
-            return RefVal != null && RefVal != BoolClass.False;
+            return RefVal != null && RefVal != BoolType.False;
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace VARP.Scheme.Data
         /// </summary>
         public double AsDouble()
         {
-            return RefVal is NumericalClass ? (double)NumVal : 0;
+            return RefVal is NumericalType ? (double)NumVal : 0;
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace VARP.Scheme.Data
         /// </summary>
         public int AsInt32()
         {
-            return RefVal is NumericalClass ? (int)NumVal : 0;
+            return RefVal is NumericalType ? (int)NumVal : 0;
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace VARP.Scheme.Data
         /// </summary>
         public uint AsUInt32()
         {
-            return RefVal is NumericalClass ? (uint)NumVal : 0;
+            return RefVal is NumericalType ? (uint)NumVal : 0;
         }
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace VARP.Scheme.Data
         {
             var val = RefVal;
 
-            if (val is NumericalClass || val is BoolClass)
+            if (val is NumericalType || val is BoolType)
                 return null;
 
             return val as T;
@@ -190,8 +190,8 @@ namespace VARP.Scheme.Data
                 return RefVal as string;
             if (RefVal is INumeric)
                 return (RefVal as INumeric).ToString(NumVal);
-            if (RefVal is ValueClass)
-                return (RefVal as ValueClass).ToString();
+            if (RefVal is ValueType)
+                return (RefVal as ValueType).ToString();
             if (RefVal is List<Value>)
                 return ValueList.ToString(RefVal as List<Value>);
             if (RefVal is LinkedList<Value>)

@@ -33,7 +33,7 @@ namespace VARP.Scheme.Stx
     using Data;
     using Exception;
 
-    public class AstBinding : ValueClass
+    public class AstBinding : SObject
     {
         public Syntax Id;
         public byte EnvIdx;           //< the variable binded to environment

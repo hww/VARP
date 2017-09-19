@@ -83,7 +83,7 @@ public class CodegenTest : MonoBehaviour
             sb = new System.Text.StringBuilder();
             do
             {
-                ValueClass result = Parser.Parse(lexer);
+                SObject result = Parser.Parse(lexer);
                 if (result == null) break;
                 sb.AppendLine(result.Inspect());
             } while (lexer.LastToken != null);
