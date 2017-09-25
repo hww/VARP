@@ -29,11 +29,12 @@ namespace VARP.Scheme.Stx.Primitives
 {
     using DataStructures;
     using Data;
+    using VM;
 
     public sealed class QuotePrimitive : BasePrimitive
     {
         // '(foo ...)
-        public static AST Expand(Syntax stx, AstEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             var list = stx.AsLinkedList<Value>();
             var argc = GetArgsCount(list);

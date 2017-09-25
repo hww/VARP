@@ -29,12 +29,13 @@ namespace VARP.Scheme.Stx.Primitives
 {
     using DataStructures;
     using Data;
+    using VM;
 
     public sealed class PrimitiveArgsX : BasePrimitive
     {
 
         // (display 1 2 3 4 ...)
-        public static AST Expand(Syntax stx, AstEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             var list = stx.AsLinkedList<Value>();
             var argc = GetArgsCount(list);

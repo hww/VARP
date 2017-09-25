@@ -153,15 +153,13 @@ namespace VARP.Scheme.Stx
                 return new Value(dst);
             }
 
-
             if (expression.IsValuePair)
             {
                 var pair = expression.AsValuePair();
                 return new Value(new ValuePair(GetDatum(pair.Item1), GetDatum(pair.Item2)));
             }
 
-
-                return expression;
+            return expression;
         }
         #endregion
 

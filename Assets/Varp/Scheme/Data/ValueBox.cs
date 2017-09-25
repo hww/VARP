@@ -43,7 +43,7 @@ namespace VARP.Scheme.Data
 
         public CompactValue(Value value)
         {
-            if (value.RefVal == global::NumericalClass.Float)
+            if (value.RefVal == NumericalType.Float)
                 RefVal = new NumBox(value.NumVal);
             else
                 RefVal = value.RefVal;
@@ -61,7 +61,7 @@ namespace VARP.Scheme.Data
 
         public void Set(ref Value value)
         {
-            if (value.RefVal == global::NumericalClass.Float)
+            if (value.RefVal == NumericalType.Float)
                 Set(value.NumVal);
             else
                 RefVal = value.RefVal;
@@ -86,7 +86,7 @@ namespace VARP.Scheme.Data
             var asNum = RefVal as NumBox;
             if (asNum != null)
             {
-                v.RefVal = global::NumericalClass.Float;
+                v.RefVal = NumericalType.Float;
                 v.NumVal = asNum.NumVal;
             }
             else
@@ -152,7 +152,7 @@ namespace VARP.Scheme.Data
 
         public override int GetHashCode()
         {
-            if (RefVal == null || RefVal == global::NumericalClass.Float)
+            if (RefVal == null || RefVal == NumericalType.Float)
                 return 0;
 
             if (RefVal == BoolType.True)

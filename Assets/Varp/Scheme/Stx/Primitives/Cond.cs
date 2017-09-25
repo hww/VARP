@@ -31,11 +31,12 @@ namespace VARP.Scheme.Stx.Primitives
     using Data;
     using DataStructures;
     using Exception;
+    using VM;
 
     public sealed class PrimitiveCond : BasePrimitive
     {
         // (cond () ...)
-        public static AST Expand(Syntax stx, AstEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             var list = stx.AsLinkedList<Value>();    //< list of syntax objects
             var argc = GetArgsCount(list);
@@ -68,13 +69,13 @@ namespace VARP.Scheme.Stx.Primitives
 
                     if (var.IsIdentifier && var.AsIdentifier() == Symbol.ELSE)
                     {
-                        var ast = AstBuilder.Expand(val, env);
+                        var ast = AstBuilder.ExpandInternal(val, env);
                         elsecase = ValueLinkedList.FromArguments(new Value(var), new Value(ast));
                     }
                     else
                     {
-                        var cond_ = AstBuilder.Expand(var, env);
-                        var then_ = AstBuilder.Expand(val, env);
+                        var cond_ = AstBuilder.ExpandInternal(var, env);
+                        var then_ = AstBuilder.ExpandInternal(val, env);
                         var single_cond = ValueLinkedList.FromArguments(cond_, then_);
                         if (allcases == null) allcases = new LinkedList<Value>();
                         allcases.AddLast(new Value(single_cond));

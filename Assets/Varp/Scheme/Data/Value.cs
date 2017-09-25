@@ -65,19 +65,19 @@ namespace VARP.Scheme.Data
 
         public Value(int value)
         {
-            RefVal = global::NumericalClass.Fixnum;
+            RefVal = NumericalType.Fixnum;
             NumVal = value;
         }
 
         public Value(uint value)
         {
-            RefVal = global::NumericalClass.Fixnum;
+            RefVal = NumericalType.Fixnum;
             NumVal = value;
         }
 
         public Value(double value)
         {
-            RefVal = global::NumericalClass.Float;
+            RefVal = NumericalType.Float;
             NumVal = value;
         }
 

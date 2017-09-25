@@ -63,7 +63,7 @@ namespace VARP.Scheme.Test
         "'(,() `() ,@())","(quote ((unquote nil) (quasiquote nil) (unquote-splicing nil)))",
         // Lambda
         "(lambda (x y) (+ x y) (- x y))","(lambda (x y) (+ x y) (- x y))",
-        "(lambda (x y &optional (o 1) (o 2) &key (k 1) (k 2) &rest r))","(lambda (x y &optional (o 1) (o 2) &key (k 1) (k 2) &rest r))",
+        "(lambda (x y &optional (o1 1) (o2 2) &key (k1 1) (k2 2) &rest r))","(lambda (x y &optional (o1 1) (o2 2) &key (k1 1) (k2 2) &rest r))",
         // Let
         "(let ((x 1) (y 2)) 3 4)","(let ((x 1) (y 2)) 3 4)",
         // Conditions

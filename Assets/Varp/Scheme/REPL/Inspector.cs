@@ -36,6 +36,7 @@ namespace VARP.Scheme.REPL
     using Data;
     using Stx;
     using Tokenizing;
+    using VM;
 
     public interface Inspectable
     {
@@ -58,6 +59,8 @@ namespace VARP.Scheme.REPL
 
         public static string Inspect(Object x, InspectOptions options = InspectOptions.Default)
         {
+
+
             if (x == null)
                 return "null";
 
@@ -78,6 +81,8 @@ namespace VARP.Scheme.REPL
 
         private static string InspectInternal(Value x, InspectOptions options = InspectOptions.Default)
         {
+            if (x.IsVoid)
+                return string.Empty;
             if (x.IsNil || x.IsValueType)
                 return x.ToString();
             return Inspect(x.RefVal, options);
@@ -97,8 +102,8 @@ namespace VARP.Scheme.REPL
                 return InspectInternal(x as AST, options);
             if (x is AstBinding)
                 return InspectInternal(x as AstBinding, options);
-            if (x is AstEnvironment)
-                return InspectInternal(x as AstEnvironment, options);
+            if (x is Environment)
+                return InspectInternal(x as Environment, options);
             // all another just convert to string
             return x.ToString();
         }
@@ -120,6 +125,7 @@ namespace VARP.Scheme.REPL
         private static string InspectInternal(Syntax x, InspectOptions options = InspectOptions.Default)
         {
             var loc = x.Location;
+
             if (loc == null)
                 return string.Format("#<syntax {0}>", x.ToString());
             else
@@ -128,14 +134,22 @@ namespace VARP.Scheme.REPL
 
         private static string InspectInternal(AstBinding bind, InspectOptions options = InspectOptions.Default)
         {
-            var prefix = bind.IsPrimitive ? "#Prim" : string.Empty; 
-                if (bind.IsGlobal)
-                    return string.Format("{0} {1}", prefix, bind.Identifier.Name);
-                else
-                    return string.Format("[{0}] {1} {2}>", bind.VarIdx, prefix, bind.Identifier.Name);
+            if (bind is UpBinding)
+            {
+                var upbind = bind as UpBinding;
+                return string.Format("[{0},{1}] {1}>", upbind.UpEnvIdx, upbind.UpVarIdx, bind.Identifier.Name);
+            }
+            else if (bind is PrimitiveBinding)
+            {
+                return string.Format("#Prim {0}", bind.Identifier.Name);
+            }
+            else
+            {
+                return string.Format(" {0}", bind.Identifier.Name);
+            }
         }
 
-        private static string InspectInternal(AstEnvironment env, InspectOptions options = InspectOptions.Default)
+        private static string InspectInternal(Environment env, InspectOptions options = InspectOptions.Default)
         {
             var tabs = env.GetEnvironmentIndex();
             var tabstr = new string(' ', tabs * 4);

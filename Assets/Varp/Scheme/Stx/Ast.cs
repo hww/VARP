@@ -33,12 +33,8 @@ namespace VARP.Scheme.Stx
     using Data;
     using Exception;
     using REPL;
-    using System.Diagnostics;
+    using VM;
 
-    public interface IDatum
-    {
-        Value GetDatum();
-    }
     /// <summary>
     /// This structure have to be used as shortcuts to already existing type such as
     /// Syntax and Pair. Use the data in existing data structure and do not make copy
@@ -46,6 +42,8 @@ namespace VARP.Scheme.Stx
     /// </summary>
     public abstract class AST : SObject
     {
+        protected const int MAX_INDEX = 255;
+
         /// <summary>
         /// This is location of the expression
         /// For instance the expression (+ 1 2) will have
@@ -71,6 +69,7 @@ namespace VARP.Scheme.Stx
         public Value GetDatum() { return GetDatum(Expression); }
 
         #region Datum Extractor Methods
+
         public static Value GetDatum(AST ast)
         {
             return ast.GetDatum();
@@ -83,7 +82,7 @@ namespace VARP.Scheme.Stx
         {
             if (value == null)
                 return Value.Nil;
-            if (value.IsAST)
+            if (value.IsAst)
                 return GetDatum(value.AsAST());
             if (value.IsSyntax)
                 return GetDatum(value.AsSyntax());
@@ -116,13 +115,13 @@ namespace VARP.Scheme.Stx
         public override string ToString() { return ValueString.ToString(GetDatum()); }
         public override abstract string Inspect();
         #endregion
+
         protected string GetLocationString()
         {
             if (Expression == null) return string.Empty;
             if (Expression.Location == null) return string.Empty;
             return string.Format(":{0}:{1}", Expression.Location.LineNumber, Expression.Location.ColNumber);
         }
-
 
         #region DebuggerDisplay 
         public override string DebuggerDisplay
@@ -158,10 +157,22 @@ namespace VARP.Scheme.Stx
         #endregion
     }
 
+    // the variable type
+    public enum AstReferenceType
+    {
+        Local,
+        Global,
+        UpValue
+    }
 
     // variable reference  e.g. x
     public sealed class AstReference : AST
     {
+        /// <summary>
+        /// Type of this reference
+        /// </summary>
+        public AstReferenceType ReferenceType;
+
         /// <summary>
         /// index of the argument (local var index)
         /// </summary>
@@ -172,33 +183,52 @@ namespace VARP.Scheme.Stx
         /// 0 for local
         /// -1 for global
         /// </summary>
-        public short RefEnvIdx;
+        public short UpEnvIdx = -1;
 
         /// <summary>
-        /// Index of variable in the referenced environment
+        /// FrameNum of variable in the referenced environment
         /// -1 for global
         /// </summary>
-        public short RefVarIdx;
+        public short UpVarIdx = -1;
 
         /// <summary>
         /// Create new reference
         /// </summary>
         /// <param name="syntax">reference's syntax</param>
         /// <param name="argIdx">index in local scope</param>
-        /// <param name="envIdx">index (relative offset) of environment</param>
-        /// <param name="varIdx">index of variable inside referenced environment</param>
-        public AstReference(Syntax syntax, int argIdx, int envIdx, int varIdx) : base(syntax)
-        { 
-            if (argIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
-            if (envIdx > 255) SchemeError.Error("ast-reference", "environment index should be less that 256", syntax);
-            if (varIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
+        /// <param name="upEnvIdx">index (relative offset) of environment</param>
+        /// <param name="upVarIdx">index of variable inside referenced environment</param>
+        public AstReference(Syntax syntax, AstReferenceType type, int argIdx) : base(syntax)
+        {
+            if (argIdx > MAX_INDEX) throw SchemeError.Error("ast-reference", "environment index overflow", syntax);
 
+            ReferenceType = type;
             ArgIdx = (byte)argIdx;
-            RefEnvIdx = (short)envIdx;
-            RefVarIdx = (short)varIdx;
         }
-        public bool IsGlobal { get { return RefVarIdx < 0; } }
-        public bool IsUpValue { get { return RefEnvIdx > 0; } }
+
+        /// <summary>
+        /// Create new reference
+        /// </summary>
+        /// <param name="syntax">reference's syntax</param>
+        /// <param name="argIdx">index in local scope</param>
+        /// <param name="upEnvIdx">index (relative offset) of environment</param>
+        /// <param name="upVarIdx">index of variable inside referenced environment</param>
+        public AstReference(Syntax syntax, AstReferenceType type, int argIdx, int upEnvIdx, int upVarIdx) : base(syntax)
+        { 
+            if (argIdx > MAX_INDEX) throw SchemeError.Error("ast-reference", "environment index overflow", syntax);
+            if (upEnvIdx > MAX_INDEX) throw SchemeError.Error("ast-reference", "environment depth overflow", syntax);
+            if (upVarIdx > MAX_INDEX) throw SchemeError.Error("ast-reference", "environment index overflow", syntax);
+
+            ReferenceType = type;
+            ArgIdx = (byte)argIdx;
+            UpEnvIdx = (short)upEnvIdx;
+            UpVarIdx = (short)upVarIdx;
+        }
+
+        public bool IsLocal { get { return ReferenceType == AstReferenceType.Local; } }
+        public bool IsGlobal { get { return ReferenceType == AstReferenceType.Global; } }
+        public bool IsUpValue { get { return ReferenceType == AstReferenceType.UpValue; } }
+
         public Symbol Identifier { get { return Expression.AsIdentifier(); } }
 
         #region ValueType Methods
@@ -209,26 +239,27 @@ namespace VARP.Scheme.Stx
     // variable assignment e.g. (set! x 99)
     public sealed class AstSet : AST
     {
-        public Syntax Variable;              // x   
-        public AST Value;                    // 99
-        public int VarIdx;
-        public int RefEnvIdx;                // index of environment 
-        public int RefVarIdx;                // index of variables
+        public Syntax Variable;             // x   
+        public AST Value;                   // 99
+        public int VarIdx;                  // index of variable
+        public int UpEnvIdx;                // index of environment 
+        public int UpVarIdx;                // index of variables
+
         public AstSet(Syntax syntax, Syntax variable, AST value, int varIdx, int refEnvIdx, int refVarIdx) : base(syntax)
         {
-            if (varIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
-            if (refEnvIdx > 255) SchemeError.Error("ast-reference", "environment index should be less that 256", syntax);
-            if (refVarIdx > 255) SchemeError.Error("ast-reference", "argument index should be less that 256", syntax);
+            if (varIdx > MAX_INDEX) throw SchemeError.Error("ast-set", "environment index overflow", syntax);
+            if (refEnvIdx > MAX_INDEX) throw SchemeError.Error("ast-set", "environment depth overflow", syntax);
+            if (refVarIdx > MAX_INDEX) throw SchemeError.Error("ast-set", "environment index overflow", syntax);
 
             VarIdx = (byte)varIdx;
-            RefEnvIdx = (short)refEnvIdx;
-            RefVarIdx = (short)refVarIdx;
+            UpEnvIdx = (short)refEnvIdx;
+            UpVarIdx = (short)refVarIdx;
 
             Variable = variable;
             Value = value;
         }
-        public bool IsGlobal { get { return RefVarIdx < 0; } }
-        public bool IsUpValue { get { return RefEnvIdx > 0; } }
+        public bool IsGlobal { get { return UpVarIdx < 0; } }
+        public bool IsUpValue { get { return UpEnvIdx > 0; } }
         public Symbol Identifier { get { return Variable.AsIdentifier(); } }
 
         #region ValueType Methods
@@ -316,9 +347,10 @@ namespace VARP.Scheme.Stx
     public sealed class AstLambda : AST
     {
         private Syntax Keyword;                      // (<lambda> (...) ...)
-        public AstBinding[] ArgList;                // (lambda <(...)> )
+        public AstBinding[] ArgList;                 // (lambda <(...)> ) TODO can be replace to reference to Environment!
         public LinkedList<Value> BodyExpression;     // (lambda (...) <...>)
-        public AstLambda(Syntax syntax, Syntax keyword, AstEnvironment environment, LinkedList<Value> expression) : base(syntax)
+
+        public AstLambda(Syntax syntax, Syntax keyword, Environment environment, LinkedList<Value> expression) : base(syntax)
         {
             ArgList = environment.ToArray();
             BodyExpression = expression;

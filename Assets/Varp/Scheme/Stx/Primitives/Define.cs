@@ -31,12 +31,13 @@ namespace VARP.Scheme.Stx.Primitives
     using REPL;
     using Data;
     using DataStructures;
+    using VARP.Scheme.VM;
 
     public sealed class PrimitiveDefine : BasePrimitive
     {
         // (define x ...)
         // (define (x) ...)
-        public static AST Expand(Syntax stx, AstEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             var list = stx.AsLinkedList<Value>();
             var argc = GetArgsCount(list);
@@ -53,24 +54,24 @@ namespace VARP.Scheme.Stx.Primitives
                 // ----------------------------------------------------------------
                 // identifier aka: (define x ...)
                 // ----------------------------------------------------------------
-                var value = AstBuilder.Expand(val_stx, env);
+                var value = AstBuilder.ExpandInternal(val_stx, env);
                 var var_id = var_stx.AsIdentifier();
-                var binding = env.Lookup(var_id);
+                var binding = env.LookupAst(var_id);
 
                 if (binding == null)
                 {
-                    /// Global variable
+                    // Global variable
                     return new AstSet(stx, var_stx, value, -1, -1, -1);
                 }
-                else if (binding.IsUpvalue)
+                else if (binding is UpBinding)
                 {
-                    /// Up-value variable
+                    // Up-value variable
                     var ubind = binding as UpBinding;
-                    return new AstSet(stx, var_stx, value, binding.VarIdx, ubind.RefEnvIdx, ubind.RefVarIdx);
+                    return new AstSet(stx, var_stx, value, binding.VarIdx, ubind.UpEnvIdx, ubind.UpVarIdx);
                 }
                 else
                 {
-                    /// Local variable
+                    // Local variable
                     return new AstSet(stx, var_stx, value, binding.VarIdx, 0, 0);
                 }
             }
@@ -88,18 +89,18 @@ namespace VARP.Scheme.Stx.Primitives
 
                 var identifier_stx = args_list[0].AsSyntax();
                 var identifier = identifier_stx.AsIdentifier();
-                var binding = env.Lookup(identifier);
+                var binding = env.LookupAst(identifier);
 
                 if (binding == null)
                 {
                     /// Global variable
                     return new AstSet(stx, var_stx, lambda, -1, -1, -1);
                 }
-                else if (binding.IsUpvalue)
+                else if (binding is UpBinding)
                 {
                     /// Up-value variable
                     var ubind = binding as UpBinding;
-                    return new AstSet(stx, var_stx, lambda, binding.VarIdx, ubind.RefEnvIdx, ubind.RefVarIdx);
+                    return new AstSet(stx, var_stx, lambda, binding.VarIdx, ubind.UpEnvIdx, ubind.UpVarIdx);
                 }
                 else
                 {

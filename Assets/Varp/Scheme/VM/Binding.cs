@@ -25,20 +25,20 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-using System;
-using System.Diagnostics;
 using System.Collections.Generic;
 
-namespace VARP.Scheme.Codegen
+namespace VARP.Scheme.VM
 {
-    using VM;
     using Data;
-    using DataStructures;
+    using REPL;
+    using System.Text;
+    using Exception;
     using Stx;
 
-    public sealed partial class CodeGenerator
+    public class Binding : SObject
     {
-
-
+        public Environment environment;
+        public Value value;
     }
+
 }

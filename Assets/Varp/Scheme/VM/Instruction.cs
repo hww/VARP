@@ -27,6 +27,7 @@
 
 using System.Diagnostics;
 using System.Text;
+using VARP.Scheme.Exception;
 
 namespace VARP.Scheme.VM
 {
@@ -69,6 +70,7 @@ namespace VARP.Scheme.VM
         CALL,       //<    A B C    R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
         TAILCALL,   //<    A B C    return R(A)(R(A+1), ... ,R(A+B-1))
         RETURN,     //<    A B      return R(A), ... ,R(A+B-2) (see note)
+        RESULT,     //<    A B      result R(A), ... ,R(A+B-2) (see note) ( same as RETURN but no closing frame )
         FORLOOP,    //<    A sBx    R(A)+=R(A+2); if R(A) <?= R(A+1) then { pc+=sBx; R(A+3)=R(A) }
         FORPREP,    //<    A sBx	R(A)-=R(A+2); pc+=sBx		
         TFORLOOP,   //<    A C      R(A+3), ... ,R(A+2+C) := R(A)(R(A+1), R(A+2)); 
@@ -173,8 +175,11 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        public static Instruction MakeA(OpCode code, short a)
+        public static Instruction MakeA(OpCode code, int a)
         {
+            if (IsNotValueInRange(a, 0, AMask))
+                throw SchemeError.RangeError("Opcode.A", "Opcode", "A", a, code, 0, AMask);
+
             var inst = new Instruction();
             inst.OpCode = code;
             inst.A = a;
@@ -186,8 +191,14 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        public static Instruction MakeAB(OpCode code, short a, short b)
+        public static Instruction MakeAB(OpCode code, int a, int b)
         {
+            if (IsNotValueInRange(a, 0, AMask))
+                throw SchemeError.RangeError("Opcode.A.B", "Opcode", "A", a, code, 0, AMask);
+
+            if (IsNotValueInRange(b, 0, BMask))
+                throw SchemeError.RangeError("Opcode.A.B", "Opcode", "B", b, code, 0, BMask);
+
             var inst = new Instruction();
             inst.OpCode = code;
             inst.A = a;
@@ -200,8 +211,17 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        public static Instruction MakeABC(OpCode code, short a, short b, short c)
+        public static Instruction MakeABC(OpCode code, int a, int b, int c)
         {
+            if (IsNotValueInRange(a, 0, AMask))
+                throw SchemeError.RangeError("Opcode.A.B.C", "Opcode", "A", a, code, 0, AMask);
+
+            if (IsNotValueInRange(b, 0, BMask))
+                throw SchemeError.RangeError("Opcode.A.B.C", "Opcode", "B", b, code, 0, BMask);
+
+            if (IsNotValueInRange(c, 0, CMask))
+                throw SchemeError.RangeError("Opcode.A.B.C", "Opcode", "C", c, code, 0, CMask);
+
             var inst = new Instruction();
             inst.OpCode = code;
             inst.A = a;
@@ -214,8 +234,14 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        public static Instruction MakeABX(OpCode code, short a, int bx)
+        public static Instruction MakeABX(OpCode code, int a, int bx)
         {
+            if (IsNotValueInRange(a, 0, AMask))
+                throw SchemeError.RangeError("Opcode.A.Bx", "Opcode", "A", a, code, 0, AMask);
+
+            if (IsNotValueInRange(bx, -BxMask, BxMask))
+                throw SchemeError.RangeError("Opcode.A.Bx", "Opcode", "Bx", bx, code, -BxMask, BxMask);
+
             var inst = new Instruction();
             inst.OpCode = code;
             inst.A = a;
@@ -228,8 +254,14 @@ namespace VARP.Scheme.VM
         /// </summary>
         /// <param name="code"></param>
         /// <param name="a"></param>
-        public static Instruction MakeASBX(OpCode code, short a, int sbx)
+        public static Instruction MakeASBX(OpCode code, int a, int sbx)
         {
+            if (IsNotValueInRange(a, 0, AMask))
+                throw SchemeError.RangeError("Opcode.A.SBx", "Opcode", "A", a, code, 0, AMask);
+
+            if (IsNotValueInRange(sbx,-SBxMax, SBxMax))
+                throw SchemeError.RangeError("Opcode.A.SBx", "Opcode", "SBx", sbx, code, -SBxMax, SBxMax);
+
             var inst = new Instruction();
             inst.OpCode = code;
             inst.A = a;
@@ -237,6 +269,10 @@ namespace VARP.Scheme.VM
             return inst;
         }
 
+        private static bool IsNotValueInRange(int val, int min, int max)
+        {
+            return val < min || val > max;
+        }
 
         public override string ToString()
         {
@@ -382,11 +418,20 @@ namespace VARP.Scheme.VM
 
                 case OpCode.RETURN:
                     if (B <= 0)
-                        ret.AppendFormat(": return");
+                        ret.AppendFormat(": void");
                     else if (B == 1)
-                        ret.AppendFormat(": return R{0}", A);
+                        ret.AppendFormat(": R{0}", A);
                     else
-                        ret.AppendFormat(": return R{0}..R{1}", A, A + B - 1);
+                        ret.AppendFormat(": R{0}..R{1}", A, A + B - 1);
+                    break;
+
+                case OpCode.RESULT:
+                    if (B <= 0)
+                        ret.AppendFormat(": void");
+                    else if (B == 1)
+                        ret.AppendFormat(": R{0}", A);
+                    else
+                        ret.AppendFormat(": R{0}..R{1}", A, A + B - 1);
                     break;
 
                 case OpCode.FORLOOP:

@@ -99,7 +99,7 @@ namespace VARP.Scheme.Test
         public void Lambda()
         {
             Evaluate("(lambda ())", "#<VARP.Scheme.VM.Frame>");
-            Evaluate("((lambda ()))", "nil");
+            Evaluate("((lambda ()))", string.Empty);
             Evaluate("((lambda () 999))", "999");
             Evaluate("((lambda (x) x) 999)", "999");
             Evaluate("((lambda (x y) (+ x y)) 1 2)", "3");
@@ -175,7 +175,7 @@ namespace VARP.Scheme.Test
 
                 string sresult = sb.ToString();
 
-                Assert.AreEqual(expectedResult, sresult);
+                Assert.AreEqual(expectedResult, sresult, source);
             }
             catch (System.Exception ex)
             {

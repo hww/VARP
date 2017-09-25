@@ -39,7 +39,7 @@ namespace VARP.Scheme.Codegen
 
     public sealed partial class CodeGenerator
     {
-        private delegate short PrimCodeDelegate(AstPrimitive ast, OpCode opcode);
+        private delegate int PrimCodeDelegate(AstPrimitive ast, OpCode opcode);
 
         private struct PrimCodegenItem
         {
@@ -54,7 +54,7 @@ namespace VARP.Scheme.Codegen
             primitivesTable[Symbol.Intern(name)] = new PrimCodegenItem() { method = method, opcode = opcode };
         }
 
-        private short GeneratePrimitive(AstPrimitive ast)
+        private int GeneratePrimitive(AstPrimitive ast)
         {
             if (primitivesTable == null)
             {
@@ -91,7 +91,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal short GenerateArith1(AstPrimitive ast, OpCode opcode)
+        internal int GenerateArith1(AstPrimitive ast, OpCode opcode)
         {
             var result = Push();
             var args = ast.Arguments;
@@ -110,7 +110,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal short GenerateArith2(AstPrimitive ast, OpCode opcode)
+        internal int GenerateArith2(AstPrimitive ast, OpCode opcode)
         {
             var temp = Push();
 
@@ -128,7 +128,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal short GenerateArithX(AstPrimitive ast, OpCode opcode)
+        internal int GenerateArithX(AstPrimitive ast, OpCode opcode)
         {
             // R(A) := R(B) .. ... .. R(C)
 
@@ -158,7 +158,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="opcode"></param>
         /// <returns></returns>
-        internal short GenerateAndOr(AstPrimitive ast, OpCode opcode)
+        internal int GenerateAndOr(AstPrimitive ast, OpCode opcode)
         {
             var isOrOperation = opcode == OpCode.OR;
             var expected = isOrOperation ? (short)1 : (short)0;

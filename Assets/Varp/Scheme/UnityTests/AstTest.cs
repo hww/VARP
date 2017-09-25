@@ -100,7 +100,7 @@ public class AstTest : MonoBehaviour
                 sb.AppendLine(ast.Inspect());
             } while (lexer.LastToken != null);
             astString = sb.ToString();
-            envString = SystemEnvironemnt.environment.Inspect();
+            envString = SystemEnvironment.Top.Inspect();
         }
         catch (SchemeError ex)
         {

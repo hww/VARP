@@ -28,11 +28,15 @@
 namespace VARP.Scheme.Stx
 {
     using Primitives;
-    public sealed class SystemEnvironemnt : AstEnvironment
+    using VARP.Scheme.Data;
+    using VARP.Scheme.VM;
+    
+    public class SystemEnvironment : Environment
     {
-        public static SystemEnvironemnt environment = new SystemEnvironemnt();
+        public static SystemEnvironment Top = new SystemEnvironment();
 
-        public SystemEnvironemnt() : base(null)
+        public SystemEnvironment()
+            : base (null, Symbol.Intern("*SYSTEM-ENV*"), 1000)
         {
             DefinePrimitive("define", PrimitiveDefine.Expand);
             DefinePrimitive("set!", PrimitiveSet.Expand);
@@ -55,7 +59,7 @@ namespace VARP.Scheme.Stx
             DefinePrimitive("!=", PrimitiveArgs2.Expand);
             DefinePrimitive("<=", PrimitiveArgs2.Expand);
             DefinePrimitive(">=", PrimitiveArgs2.Expand);
-
+            
             DefinePrimitive("pow", PrimitiveArgs2.Expand);
 
             DefinePrimitive("neg", PrimitiveArgs1.Expand);
@@ -70,6 +74,7 @@ namespace VARP.Scheme.Stx
 
             DefinePrimitive("quote", QuotePrimitive.Expand);
             DefinePrimitive("quaziquote", QuaziquotePrimitive.Expand);
+
         }
     }
 

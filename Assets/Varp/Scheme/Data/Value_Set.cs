@@ -51,19 +51,19 @@ namespace VARP.Scheme.Data
 
         public void Set(int value)
         {
-            RefVal = global::NumericalClass.Fixnum;
+            RefVal = NumericalType.Fixnum;
             NumVal = value;
         }
 
         public void Set(uint value)
         {
-            RefVal = global::NumericalClass.Fixnum;
+            RefVal = NumericalType.Fixnum;
             NumVal = value;
         }
 
         public void Set(double value)
         {
-            RefVal = global::NumericalClass.Float;
+            RefVal = NumericalType.Float;
             NumVal = value;
         }
         public void Set(string value)

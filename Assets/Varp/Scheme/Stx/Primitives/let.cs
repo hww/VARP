@@ -30,11 +30,12 @@ namespace VARP.Scheme.Stx.Primitives
     using DataStructures;
     using Exception;
     using Data;
+    using VM;
 
     public sealed class PrimitiveLet : BasePrimitive
     {
         // (let () ...)
-        public static AST Expand(Syntax stx, AstEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             var list = stx.AsLinkedList<Value>();
             var argc = GetArgsCount(list);

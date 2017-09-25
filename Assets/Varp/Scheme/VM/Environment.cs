@@ -26,39 +26,57 @@
  */
 
  using System.Collections.Generic;
- using System.Runtime.InteropServices;
 
 namespace VARP.Scheme.VM
 {
     using Data;
     using REPL;
     using System.Text;
+    using Exception;
+    using Stx;
+    using VARP.Scheme.Stx.Primitives;
+    using System;
 
-    public sealed class Binding
+    public class Environment : SObject, IEnumerable<Binding>
     {
-        public Environment environment;
-        public Value value;
-    }
+        //! Default capacity of new environment
+        public const int DEFAULT_ENVIRONMENT_CAPACITY = 16;
 
-    public sealed class Environment : SObject, IEnumerable<Binding>
-    {
-        // Create system environment
-        public static Environment Top = new Environment(null, Symbol.Intern("*SYSTEM-ENV*"), 1000);
+        //! pointer to parent frame
+        public Environment Parent;
 
-        public Environment parent;        //< pointer to parent frame
-        public Symbol name;               //< environment name
+        //! environment name
+        public Symbol Name;
 
-        // Binding in this environment
+        //! index of this environment
+        public readonly int FrameNum;       
+
+        //! Binding in this environment
         private Dictionary<Symbol, Binding> Bindings = new Dictionary<Symbol, Binding>();
 
-        public Environment(Environment parent, Symbol name, int size)
+        /// <summary>
+        /// Create new environment
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="name"></param>
+        /// <param name="capacity"></param>
+        public Environment(Environment parent, Symbol name, int capacity = DEFAULT_ENVIRONMENT_CAPACITY)
         {
-            this.parent = parent;
-            this.name = name;
-            Bindings = new Dictionary<Symbol, Binding>(size);
+            this.Parent = parent;
+            this.Name = name;
+            this.FrameNum = parent == null ? 0 : parent.FrameNum + 1;
+            Bindings = new Dictionary<Symbol, Binding>(capacity);
         }
 
-        public bool IsTop { get { return parent == null; } }
+        /// <summary>
+        /// Check if this environment is top
+        /// </summary>
+        public bool IsTop { get { return Parent == null; } }
+
+        /// <summary>
+        /// Return the capacity of environment
+        /// </summary>
+        public int Count { get { return Bindings.Count; } } 
 
         /// <summary>
         /// Get definition by index. 
@@ -112,7 +130,7 @@ namespace VARP.Scheme.VM
             Binding value;
             if (Bindings.TryGetValue(name, out value))
                 return value;
-            return parent == null ? null : parent.LookupRecursively(name);
+            return Parent == null ? null : Parent.LookupRecursively(name);
         }
 
         #region IEnumerable<T> Members
@@ -137,14 +155,221 @@ namespace VARP.Scheme.VM
 
         #region Value Methods
         public override bool AsBool() { return true; }
-        public override string ToString() { return string.Format("#<lexical-environment size={0}>", Bindings.Count); }
-
+        public override string ToString() { return string.Format("#<environment count={0}>", Bindings.Count); }
+        public AstBinding[] ToArray() {
+            AstBinding[] array = new AstBinding[Bindings.Count];
+            Bindings.Values.CopyTo(array, 0);
+            return array;
+        }
         #endregion
+
+        #region Debuggin and Inspection
+
         public override string Inspect() {
             var sb = new StringBuilder();
             foreach (var v in Bindings)
                 sb.AppendLine( Inspector.Inspect(v.Value));
             return sb.ToString();
         }
+
+        #endregion
+
+        #region Factory
+
+        protected static Environment Create(Environment parent, Symbol name, Frame dynFrame, int capacity = DEFAULT_ENVIRONMENT_CAPACITY)
+        {
+            Debug.Assert(dynFrame != null);
+
+            var frames = dynFrame.ToArray();
+
+            foreach (var frame in frames)
+            {
+                var template = frame.template;
+                var varcount = template.Variables.Length;
+
+                parent = new Environment(parent, Symbol.NULL);
+
+                for (var i = 0; i < varcount; i++)
+                {
+                    var variable = template.GetVariable(i);
+                    var syntax = new Syntax(template.Variables[i].Name);
+
+                    switch (variable.Type)
+                    {
+                        case VariableType.Global:
+                            parent.Define(new GlobalBinding(syntax));
+                            break;
+
+                        case VariableType.Local:
+                            parent.Define(new LocalBinding(syntax));
+                            break;
+
+                        case VariableType.UpValue:
+                            parent.Define(new UpBinding(syntax, variable.UpEnvIdx, variable.UpVarIndex));
+                            break;
+                    }
+                }
+            }
+            return parent;
+        }
+
+
+        #endregion
+
+
+        #region AST Bindings
+
+        /// <summary>
+        /// Find index and frame of argument
+        /// </summary>
+        /// <param name="name">identifier</param>
+        /// <returns>Binding or null</returns>
+        internal Environment LookupAstEnvironment(Symbol name, ref int frameIdx)
+        {
+            var curframe = this;
+
+            while (curframe != null)
+            {
+                var var = curframe.LookupLocal(name);
+                if (var != null)
+                {
+                    frameIdx = FrameNum - curframe.FrameNum;
+                    return curframe;
+                }
+                curframe = curframe.Parent;
+            }
+
+            return null;
+        }
+
+        internal AstBinding LookupAstRecursively(Symbol name, ref int frameIdx)
+        {
+            var curframe = this;
+
+            while (curframe != null)
+            {
+                var variable = curframe.LookupLocal(name);
+                if (variable != null)
+                {
+                    frameIdx = FrameNum - curframe.FrameNum;
+                    if (variable is AstBinding)
+                        return variable as AstBinding;
+                    else
+                        throw new Exception();
+                }
+                curframe = curframe.Parent;
+            }
+
+            return null;
+        }
+        /// <summary>
+        /// Find index and frame of argument
+        /// </summary>
+        /// <param name="name">identifier</param>
+        /// <returns>Binding or null</returns>
+        internal AstBinding LookupAst(Symbol name)
+        {
+            var variable = LookupLocal(name);
+            if (variable == null)
+                return null; 
+            if (variable is AstBinding)
+                return variable as AstBinding;
+            else
+                throw new Exception();
+        }
+
+        /// <summary>
+        /// Find index and frame of argument
+        /// </summary>
+        /// <param name="name">identifier</param>
+        /// <returns>Binding or null</returns>
+        internal AstBinding LockupAstRecursively(Symbol name)
+        {
+            int frameIdx = 0;
+            return LookupAstRecursively(name, ref frameIdx);
+        }
+
+        /// <summary>
+        /// Define new definition.
+        /// </summary>
+        /// <param name="name">identifier</param>
+        /// <param name="binding">binding</param>
+        public int Define(Symbol name, AstBinding binding)
+        {
+            var variable = LookupLocal(name);
+            if (variable != null)
+                throw SchemeError.SyntaxError("define", "environment already have key", binding.Id);
+
+            binding.VarIdx = Bindings.Count;
+            Bindings[name] = binding;
+            return binding.VarIdx;
+        }
+
+        /// <summary>
+        /// Define new definition.
+        /// </summary>
+        /// <param name="binding">binding</param>
+        public int Define(AstBinding binding)
+        {
+            return Define(binding.Identifier, binding);
+        }
+
+        /// <summary>
+        /// Define primitive. The primitive is sort of macro which is
+        /// implemented in C# and extract given expression to AST.
+        /// </summary>
+        /// <param name="name">identifier</param>
+        /// <param name="primitive">primitive</param>
+        /// <returns>new binding</returns>
+        public AstBinding DefinePrimitive(string name, PrimitiveBinding.CompilerPrimitive primitive)
+        {
+            var symbol = Symbol.Intern(name);
+            var syntax = new Syntax(symbol);
+            var binding = new PrimitiveBinding(syntax, primitive);
+            binding.VarIdx = Bindings.Count;
+            Define(symbol, binding);
+            return binding;
+        }
+
+        /// <summary>
+        /// Clear environment
+        /// </summary>
+        public void Clear()
+        {
+            Bindings.Clear();
+            Bindings = null;
+            Parent = null;
+        }
+
+        /// <summary>
+        /// Return level of this environment is the stack
+        /// </summary>
+        /// <returns>0 for root (global or system) environment</returns>
+        public int GetEnvironmentIndex()
+        {
+            var index = 0;
+            var env = Parent;
+            while (env != null)
+            {
+                env = env.Parent; index++;
+            }
+            return index;
+        }
+
+        /// <summary>
+        /// Returns environment with @index levels up or global
+        /// </summary>
+        /// <param name="index">index of the enviromnet</param>
+        /// <returns>environment</returns>
+        public Environment GetEnvironmentAtIndex(int index)
+        {
+            var env = this;
+            while (index > 0 && env.Parent != null)
+                env = env.Parent;
+            return env;
+        }
+
+
+        #endregion
     }
 }

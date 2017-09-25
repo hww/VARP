@@ -25,6 +25,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace VARP.Scheme.Stx
@@ -32,34 +33,40 @@ namespace VARP.Scheme.Stx
     using DataStructures;
     using Data;
     using Exception;
-
+    using VM;
+    using Stx;
 
     public sealed class AstBuilder : SObject
-    {
-        
-
+    {    
         #region Public Methods
+
         // Expand string @expression to abstract syntax tree in global environment
         public static AST Expand(string expression, string filepath)
         {
-            return Expand(expression, filepath, SystemEnvironemnt.environment);
+            return Expand(expression, filepath, SystemEnvironment.Top);
         }
 
         // Expand string @expression to abstract syntax tree, in given @env environment
-        public static AST Expand(string expression, string filepath, AstEnvironment env)
+        public static AST Expand(string expression, string filepath, Environment env)
         {
             var syntax = Parser.Parse(expression, filepath);
-            return Expand(syntax, env);
+            return ExpandInternal(syntax, env);
         }
 
         // Expand string @syntax to abstract syntax tree, in global environment
         public static AST Expand(Syntax syntax)
         {
-            return Expand(syntax, SystemEnvironemnt.environment);
+            return ExpandInternal(syntax, SystemEnvironment.Top);
+        }
+
+        // Expand string @syntax to abstract syntax tree, in global environment
+        public static AST Expand(Syntax syntax, Environment env)
+        {
+            return ExpandInternal(syntax, env);
         }
 
         // Expand string @syntax to abstract syntax tree, in given @env environment
-        public static AST Expand(Syntax syntax, AstEnvironment env)
+        public static AST ExpandInternal(Syntax syntax, Environment env)
         {
             if (syntax == null)
                 return null;
@@ -72,55 +79,93 @@ namespace VARP.Scheme.Stx
             else
                 throw SchemeError.SyntaxError("ast-builder-expand", "expected literal, identifier or list expression", syntax);
         }
+
         #endregion
 
         #region Private Expand Methods
 
         // aka: 99
-        public static AST ExpandLiteral(Syntax syntax, AstEnvironment env)
+        public static AST ExpandLiteral(Syntax syntax, Environment env)
         {
             // n.b. value '() is null it will be as literal
             return new AstLiteral(syntax);
         }
 
         // aka: x
-        public static AST ExpandIdentifier(Syntax syntax, AstEnvironment env)
+        public static AST ExpandIdentifier(Syntax syntax, Environment env)
         {
             if (!syntax.IsIdentifier) throw SchemeError.SyntaxError("ast-builder-expand-identifier", "expected identifier", syntax);
 
             var varname = syntax.GetDatum().AsSymbol();
 
+            // Check and expand some of literals
             if (varname == Symbol.NULL)
-                return new AstLiteral(syntax);
-
-            var binding = env.Lookup(varname);
-            /// If variable is not found designate it as global variable
-            if (binding == null)
-                return new AstReference(syntax, 0, -1, -1);
-            /// Check the case of up-value
-            if (binding.EnvIdx != env.Index)
-                binding = env.Define(new UpBinding(env, binding.Id, binding));
-            if (binding.IsUpvalue)
             {
-                var ubind = binding as UpBinding;
-                return new AstReference(syntax, ubind.VarIdx, ubind.EnvOffset, ubind.RefVarIdx);
+                return new AstLiteral(syntax);
             }
-            /// It is ordinary local variable reference
-            return new AstReference(syntax, binding.VarIdx, 0, 0);
+
+            // Find the variable in ast environment
+            int envIdx = 0;
+            int varIdx = 0;
+            var binding = env.LookupAstRecursively(varname, ref envIdx);
+
+            if (binding == null)
+            {
+                // If variable is not found designate it as global variable
+                var localIdx = env.Define(varname, new GlobalBinding(syntax));
+                return new AstReference(syntax, AstReferenceType.Global, localIdx);
+            }
+            else
+            {
+                if (envIdx == 0)
+                {
+                    // local variable reference
+                    return new AstReference(syntax, AstReferenceType.Local, varIdx, 0, 0);
+                }
+                else
+                {
+                    // up-value reference
+                    if (binding is LocalBinding || binding is ArgumentBinding)
+                    {
+                        // up value to local variable
+                        var localIdx = env.Define(varname, new UpBinding(syntax, envIdx, varIdx));
+                        return new AstReference(syntax, AstReferenceType.UpValue, localIdx, envIdx, varIdx);
+                    }
+                    else if (binding is GlobalBinding)
+                    {
+                        // global variable
+                        var localIdx = env.Define(varname, new GlobalBinding(syntax));
+                        return new AstReference(syntax, AstReferenceType.Global, localIdx);
+                    }
+                    else if (binding is UpBinding)
+                    {
+                        // upValue to other upValue
+                        var upBinding = binding as UpBinding;
+                        var nEnvIdx = upBinding.UpEnvIdx + envIdx;
+                        var nVarIdx = upBinding.UpVarIdx;
+                        var localIdx = env.Define(varname, new UpBinding(syntax, nEnvIdx, nVarIdx));
+                        return new AstReference(syntax, AstReferenceType.UpValue, localIdx, nEnvIdx, nVarIdx);
+                    }
+                    else
+                    {
+                        throw new SystemException();
+                    }
+                }
+            }
         }
 
         // aka: (...)
-        public static AST ExpandExpression(Syntax syntax, AstEnvironment env)
+        public static AST ExpandExpression(Syntax syntax, Environment env)
         {
             var list = syntax.AsValueLinkedList();
             if (list == null) return new AstApplication(syntax, null);
             var ident = list[0].AsSyntax();
             if (ident.IsIdentifier)
             {
-                var binding = env.Lookup(ident.AsIdentifier());
+                var binding = env.LockupAstRecursively(ident.AsIdentifier());
                 if (binding != null)
                 {
-                    if (binding.IsPrimitive)
+                    if (binding is PrimitiveBinding)
                         return (binding as PrimitiveBinding).Primitive(syntax, env);
                 }
             }
@@ -130,7 +175,7 @@ namespace VARP.Scheme.Stx
 
         // Expand list of syntax objects as: (#<syntax> #<syntax> ...)
         // aka: (...)
-        public static LinkedList<Value> ExpandListElements(LinkedList<Value> list, int index, AstEnvironment env)
+        public static LinkedList<Value> ExpandListElements(LinkedList<Value> list, int index, Environment env)
         {
             if (list == null) return null;
 
@@ -139,7 +184,7 @@ namespace VARP.Scheme.Stx
             foreach (var v in list)
             {
                 if (index == 0)
-                    result.AddLast(new Value( Expand(v.AsSyntax(), env)));
+                    result.AddLast(new Value( ExpandInternal(v.AsSyntax(), env)));
                 else
                     index--;
             }

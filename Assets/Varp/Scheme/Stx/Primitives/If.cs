@@ -29,11 +29,12 @@ namespace VARP.Scheme.Stx.Primitives
 {
     using DataStructures;
     using Data;
+    using VARP.Scheme.VM;
 
     public sealed class PrimitiveIf : BasePrimitive
     {
         // (if () ...)
-        public static AST Expand(Syntax stx, AstEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             var list = stx.AsLinkedList<Value>();
             var argc = GetArgsCount(list);
@@ -44,9 +45,9 @@ namespace VARP.Scheme.Stx.Primitives
             var then = list[2].AsSyntax();
             var elsc = argc < 3 ? null : list[3].AsSyntax();
 
-            var cond_ast = AstBuilder.Expand(cond, env);
-            var then_ast = AstBuilder.Expand(then, env);
-            var else_ast = AstBuilder.Expand(elsc, env);
+            var cond_ast = AstBuilder.ExpandInternal(cond, env);
+            var then_ast = AstBuilder.ExpandInternal(then, env);
+            var else_ast = AstBuilder.ExpandInternal(elsc, env);
 
             return new AstConditionIf(stx, keyword, cond_ast, then_ast, else_ast);
         }

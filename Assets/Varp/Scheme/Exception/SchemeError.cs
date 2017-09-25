@@ -223,13 +223,13 @@ namespace VARP.Scheme.Exception
         // Range error methods
         // ----------------------
 
-        public static string RangeErrorMessage(string name,       // "vector-ref" | "array-ref"
-                                        string typeDescription,   // "vector" | "array"
-                                        string indexPrefix,       // "start"
-                                        int index,                // current index
-                                        object inValue,           // [1,2,3,4,5,6]
-                                        int lowerBound,           // minimum index
-                                        int upperBound)           // maximum index
+        public static string RangeErrorMessage(string name,       //< "vector-ref" | "array-ref"
+                                        string typeDescription,   //< "vector" | "array"
+                                        string indexPrefix,       //< "start"
+                                        int index,                //< current index
+                                        object inValue,           //< [1,2,3,4,5,6]
+                                        int lowerBound,           //< minimum index
+                                        int upperBound)           //< maximum index
         {
             var sb = new StringBuilder();
             sb.Append(name);

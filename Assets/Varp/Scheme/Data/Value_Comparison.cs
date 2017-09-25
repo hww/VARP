@@ -63,7 +63,7 @@ namespace VARP.Scheme.Data
             if (RefVal == BoolType.True)
                 return 1;
 
-            if (RefVal == global::NumericalClass.Float)
+            if (RefVal == NumericalType.Float)
                 return GetHashCode(NumVal);
 
             return GetHashCode(RefVal);

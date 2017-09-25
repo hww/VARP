@@ -34,6 +34,7 @@ using VARP.Scheme.REPL;
 using VARP.Scheme.Exception;
 using VARP.Scheme.Codegen;
 using VARP.Scheme.VM;
+using Environment = VARP.Scheme.VM.Environment;
 
 [ExecuteInEditMode]
 public class Evaluator : MonoBehaviour
@@ -50,8 +51,6 @@ public class Evaluator : MonoBehaviour
     public string codeString;
     [TextArea(5, 100)]
     public string evalString;
-
-    public bool astEnvironment;
     [TextArea(5, 100)]
     public string envString;
 
@@ -88,7 +87,7 @@ public class Evaluator : MonoBehaviour
                 sbcode.AppendLine(temp.Inspect());
 
                 var vm = new VarpVM();
-                var vmres = vm.RunTemplate(temp, Environment.Top);
+                var vmres = vm.RunTemplate(temp, SystemEnvironment.Top);
                 sbeval.Append(Inspector.Inspect(vmres));
 
             } while (lexer.LastToken != null);
@@ -126,9 +125,6 @@ public class Evaluator : MonoBehaviour
 
     private void InspectEnvironment()
     {
-        if (astEnvironment)
-            envString = SystemEnvironemnt.environment.Inspect();
-        else
-            envString = Environment.Top.Inspect();
+        envString = SystemEnvironment.Top.Inspect();
     }
 }

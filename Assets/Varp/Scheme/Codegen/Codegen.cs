@@ -48,6 +48,7 @@ namespace VARP.Scheme.Codegen
 
             // now generate the code
             var result = lambda.Generate(ast);
+
             lambda.GenerateReturn(result);
 
             // now lets create template from dummy lambda
@@ -62,7 +63,7 @@ namespace VARP.Scheme.Codegen
         /// <param name="ast"></param>
         /// <param name="template"></param>
         /// <returns>return dummy value</returns>
-        private short Generate(AST ast)
+        private int Generate(AST ast)
         {
             if (ast is AstLiteral)
                 return GenerateLiteral(ast as AstLiteral);
@@ -94,7 +95,7 @@ namespace VARP.Scheme.Codegen
             throw SchemeError.Error("codegen-generate", "unexpected ast", ast);
         }
 
-        public short GenerateReturn(short argument)
+        public int GenerateReturn(int argument)
         {
             // return R(A), ... ,R(A+B-2) (see note)
             if (argument < 0)
@@ -104,13 +105,23 @@ namespace VARP.Scheme.Codegen
             return argument;
         }
 
+        public int GenerateResult(int argument)
+        {
+            // return R(A), ... ,R(A+B-2) (see note)
+            if (argument < 0)
+                AddAB(OpCode.RESULT, 0, 0);
+            else
+                AddAB(OpCode.RESULT, argument, 1);
+            return argument;
+        }
+
         /// <summary>
         /// Generate literal and return the position of literal in values
         /// list.
         /// </summary>
         /// <param name="ast"></param>
         /// <returns></returns>
-        private short GenerateLiteral(AstLiteral ast)
+        private int GenerateLiteral(AstLiteral ast)
         {
             var value = ast.GetDatum();
             var refval = value.RefVal;
@@ -146,9 +157,15 @@ namespace VARP.Scheme.Codegen
             }
         }
 
-        private short GenerateReference(AstReference ast)
+        private int GenerateReference(AstReference ast)
         {
-            if (ast.IsGlobal)
+            if (ast.IsLocal)
+            {
+                // Local case
+                var dst = ReferenceLocal(ast.Identifier);
+                return dst;
+            }
+            else if (ast.IsGlobal)
             {
                 // R(A) := G[K(Bx)]
                 var dst = Push();
@@ -156,25 +173,26 @@ namespace VARP.Scheme.Codegen
                 AddABX(OpCode.GETGLOBAL, dst, litId);
                 return dst;
             }
-            else
+            else if (ast.IsUpValue)
             {
-                var envIdx = (byte)ast.RefEnvIdx;
-                var varIdx = (byte)ast.RefVarIdx;
-                if (envIdx > 0)
-                {
-                    // UpValue case
-                    // R(A) := U[B]
-                    var dst = Push();
-                    AddAB(OpCode.GETUPVAL, dst, 0);
-                    return dst;
-                }
-                else
-                {
-                    // Local case
-                    var dst = ReferenceLocal(ast.Identifier);
-                    return dst;
-                }
+                var envIdx = (byte)ast.UpEnvIdx;
+                var varIdx = (byte)ast.UpVarIdx;
+
+                //if (envIdx > 0)
+                //{
+                // UpValue case
+                // R(A) := U[B]
+                var dst = Push();
+                AddAB(OpCode.GETUPVAL, dst, 0);
+                return dst;
+                //}
+                //else
+                //{
+
+                //}
             }
+            else
+                throw new System.Exception();
         }
 
         private short GenerateSet(AstSet ast)
@@ -194,8 +212,8 @@ namespace VARP.Scheme.Codegen
             }
             else
             {
-                var envIdx = ast.RefEnvIdx;
-                var varIdx = ast.RefVarIdx;
+                var envIdx = ast.UpEnvIdx;
+                var varIdx = ast.UpVarIdx;
 
                 if (envIdx > 0)
                 {
@@ -222,15 +240,17 @@ namespace VARP.Scheme.Codegen
             return -1;
         }
 
-        private short GenerateLambda(AstLambda ast)
+        private int GenerateLambda(AstLambda ast)
         {
-
             // create empty lambda function.
             // there are no any arguments
-            var lambda = new CodeGenerator(ast.ArgList);
+            var lambda = new CodeGenerator(ast.ArgList.Length);
+
+            // update list of arguments
+            lambda.DefineArguments(ast.ArgList);
 
             /// R(A) := closure(KPROTO[Bx], R(A), ... , R(A + n))
-            short temp = -1;
+            var temp = -1;
 
             // now generate the code, and get target register
             foreach (var v in ast.BodyExpression)
@@ -253,7 +273,7 @@ namespace VARP.Scheme.Codegen
             return temp;
         }
 
-        private short GenerateConditionIf(AstConditionIf ast)
+        private int GenerateConditionIf(AstConditionIf ast)
         {
             var temp = (byte)SP;
             Generate(ast.condExpression);
@@ -270,7 +290,7 @@ namespace VARP.Scheme.Codegen
             return temp;
         }
 
-        private short GenerateCondition(AstCondition ast)
+        private int GenerateCondition(AstCondition ast)
         {
             var temp = (byte)SP;
 
@@ -308,7 +328,7 @@ namespace VARP.Scheme.Codegen
         }
 
 
-        private short GenerateApplication(AstApplication ast)
+        private int GenerateApplication(AstApplication ast)
         {
             // R(A), ... ,R(A+C-2) := R(A)(R(A+1), ... ,R(A+B-1))
             var temp = (short)(SP + 1);
@@ -327,7 +347,7 @@ namespace VARP.Scheme.Codegen
             return temp;
         }
 
-        private short GenerateSequence(AstSequence ast)
+        private int GenerateSequence(AstSequence ast)
         {
             var temp = SP;
             var list = ast.BodyExpression;

@@ -92,11 +92,25 @@ namespace VARP.Scheme.VM
                         case OpCode.GETUPVAL:
                             {
                                 // R(A) := U[B]
-                                var uv = values[op.B];
-                                var varNum = (int)uv.NumVal;
-                                var uframe = uv.RefVal as Frame;
-                                if (uframe == null) throw SchemeError.Error("vm", "can't read up value");
-                                values[op.A] = uframe.Values[varNum];
+                                var idx = op.B;
+                                var uv = values[idx];
+                                if (uv.RefVal is Frame)
+                                {
+                                    var uframe = uv.RefVal as Frame;
+                                    var varnum = (int)uv.NumVal;
+                                    values[op.A] = uframe.Values[varnum];
+                                }
+                                else
+                                {
+                                    int franum = 0; 
+                                    int varnum = 0;
+                                    template.GetUpValue(idx, ref franum, ref varnum);
+                                    uv.NumVal = varnum;
+                                    uv.RefVal = frame.GetFrame(franum);
+                                    var uframe = uv.RefVal as Frame;
+                                    values[op.A] = uframe.Values[varnum];
+
+                                }
                             }
                             break;
 
@@ -420,15 +434,15 @@ namespace VARP.Scheme.VM
                                     /// required and optional arguments
                                     /// -------------------------------
                                     var reqnum = closureTemp.ReqArgsNumber;
-                                    var optnum = closureTemp.OptArgsNumber;
                                     var keynum = closureTemp.KeyArgsNumber;
+                                    var optnum = closureTemp.OptArgsNumber;
                                     var src = op.A + 1;
                                     var dst = 0;
 
                                     while (reqnum > 0 && dst < numArgs)
                                     { closure.Values[dst++] = values[src++]; reqnum--; }
 
-                                    /// now initialize optional values
+                                    // now initialize optional values
                                     while (optnum > 0 && dst < numArgs)
                                     { closure.Values[dst++] = values[src++]; optnum--; }
 
@@ -436,10 +450,10 @@ namespace VARP.Scheme.VM
                                             // to make index address in template's
                                             // value array
 
-                                    while (optnum-- > 0)
+                                    while (optnum > 0)
                                     {
-                                        var optv = closureTemp.Values[src++];
-                                        var lidx = optv.LitIdx;
+                                        var lidx = closureTemp.Variables[src++].LitIdx;
+
                                         if (lidx >= 0)
                                         {
                                             var initval = closureTemp.Literals[lidx];
@@ -456,6 +470,7 @@ namespace VARP.Scheme.VM
                                         {
                                             closure.Values[dst++].Set(false);
                                         }
+                                        optnum--;
                                     }
 
                                     /// -------------------------------
@@ -474,19 +489,19 @@ namespace VARP.Scheme.VM
                                 /// up-values 
                                 /// -------------------------------
                                 {
-                                    foreach (var v in closure.template.UpValues)
-                                    {
-                                        var curFrame = closure;             // get current frame
-                                        int curFrameIndex = v.RefEnvIdx;      // get referenced frame index
-                                        while (curFrameIndex > 0)
-                                        {
-                                            if (frame == null) throw SchemeError.Error("vm", "can't find environment");
-                                            curFrame = curFrame.parent;
-                                            curFrameIndex--;
-                                        }
-
-                                        closure.Values[v.VarIdx] = new Value() { RefVal = curFrame, NumVal = v.RefVarIndex };
-                                    }
+                                    //foreach (var v in closure.template.UpValues)
+                                    //{
+                                    //    var curFrame = closure;             // get current frame
+                                    //    int curFrameIndex = v.UpEnvIdx;      // get referenced frame index
+                                    //    while (curFrameIndex > 0)
+                                    //    {
+                                    //        if (frame == null) throw SchemeError.Error("vm", "can't find environment");
+                                    //        curFrame = curFrame.parent;
+                                    //        curFrameIndex--;
+                                    //    }
+                                    //
+                                    //    closure.Values[v.VarIdx] = new Value() { RefVal = curFrame, NumVal = v.UpVarIndex };
+                                    //}
                                 }
 
                                 values[op.A] = RunClosure(closure, closure.template);
@@ -498,7 +513,7 @@ namespace VARP.Scheme.VM
 
                         case OpCode.RETURN:
                             // return R(A) quantity of RB
-                            if (op.B == 0)
+                            if (op.B <= 0)
                             {
                                 frame = frame.parent;
                                 return Value.Void;
@@ -509,6 +524,14 @@ namespace VARP.Scheme.VM
                                 frame = frame.parent;
                                 return res;
                             }
+                            break;
+
+                        case OpCode.RESULT:
+                            // return R(A) quantity of RB
+                            if (op.B <= 0)
+                                return Value.Void;
+                            else
+                                return values[op.A];
                             break;
 
                         case OpCode.FORLOOP:
@@ -596,7 +619,7 @@ namespace VARP.Scheme.VM
 #if PROFILER
             _profiler.EnterFunction(null, TEMPLATE);
 #endif
-            return Value.Void;//values[frame.SP];
+            return values[frame.SP];
         }
 
         /// <summary>
@@ -657,7 +680,7 @@ namespace VARP.Scheme.VM
             var str = val.AsString();
             if (str != null)
             {
-                ret.RefVal = global::NumericalClass.Fixnum;
+                ret.RefVal = NumericalType.Fixnum;
                 ret.NumVal = str.Length;
                 return;
             }
@@ -665,7 +688,7 @@ namespace VARP.Scheme.VM
             var asTable = val.RefVal as Table;
             if (asTable != null)
             {
-                ret.RefVal = global::NumericalClass.Fixnum;
+                ret.RefVal = NumericalType.Fixnum;
                 ret.NumVal = asTable.Count;
                 return;
             }

@@ -119,7 +119,11 @@ namespace VARP.Scheme.Data
     /// <summary>
     /// When Numeric type the numeric part contains the value
     /// </summary>
-    public abstract class NumericalType : ValueType {}
+    public abstract class NumericalType : ValueType
+    {
+        public static readonly FloatType Float = new FloatType();
+        public static readonly FixnumType Fixnum = new FixnumType();
+    }
 
     /// <summary>
     /// This Value class uses double value for containing
@@ -199,6 +203,7 @@ namespace VARP.Scheme.Data
         public bool Is<T>() { return RefVal is T; }
         public bool IsNil { get { return RefVal == null; } }
         public bool IsNotNil { get { return RefVal != null; } }
+        public bool IsVoid { get { return RefVal is VoidType; } }
         public bool IsValueType { get { return RefVal is ValueType; } }
         public bool IsBool { get { return RefVal is BoolType; } }
         public bool IsTrue { get { return RefVal is TrueType; } }
@@ -212,7 +217,7 @@ namespace VARP.Scheme.Data
         public bool IsTable { get { return RefVal is Dictionary<object, Value>; } }
         public bool IsList<T>() { return RefVal is List<T>; } 
         public bool IsSyntax { get { return RefVal is Syntax; } }
-        public bool IsAST { get { return RefVal is AST; } }
+        public bool IsAst { get { return RefVal is AST; } }
         public bool IsValuePair { get { return RefVal is ValuePair; } }
     }
 

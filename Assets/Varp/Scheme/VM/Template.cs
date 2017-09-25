@@ -33,28 +33,33 @@ namespace VARP.Scheme.VM
     using System.Text;
     using Tokenizing;
 
+    internal enum VariableType : byte
+    {
+        Local,
+        Global,
+        UpValue
+    }
+
+    internal struct VariableInfo
+    {
+        public VariableType Type;           //< up value type
+        public Symbol Name;                 //< variable name
+        public short UpVarIndex;            //< index of variable in referenced environment 
+        public short UpEnvIdx;              //< index of referenced environment 
+        public int LitIdx;                  //< initializer: -1 for required
+
+        public bool IsLocal { get { return Type == VariableType.Local; } }
+        public bool IsGlobal { get { return Type == VariableType.Global; } }
+        public bool IsUpvalue { get { return Type == VariableType.UpValue; } }
+    }
+
     public sealed class Template : Inspectable
     {
-
-        internal struct UpValInfo
-        {
-            public Symbol Name;                 //< variable name
-            public byte VarIdx;                 //< index of variable in local environment
-            public byte RefEnvIdx;              //< index of referenced environment 
-            public byte RefVarIndex;            //< index of variable in referenced environment 
-        }
-        internal struct ArgumentInfo
-        {
-            public Symbol Name;                 //< variable name
-            public byte VarIdx;                 //< index of variable in local environment
-            public int LitIdx;                  //< initializer: -1 for required
-        }
-
         internal Instruction[] Code;            //< code sequence
-        internal Location[] Locations;          //< the location in source code
+        internal VariableInfo[] Variables;      //< local vars info, include required, and optional
         internal Value[] Literals;              //< list of literals, there will be child templates
-        internal ArgumentInfo[] Values;         //< local vars info, include required, and optional
-        internal UpValInfo[] UpValues;          //< up-values info
+        internal Location[] CodeDbg;            //< the location in source code
+
         internal int ReqArgsNumber;             //< quantity of arguments
         internal int OptArgsNumber;             //< quantity of arguments
         internal int KeyArgsNumber;             //< quantity of arguments
@@ -85,7 +90,6 @@ namespace VARP.Scheme.VM
             SP = -1;
         }
 
-
         public string Inspect()
         {
             return Inspect(0);
@@ -97,27 +101,30 @@ namespace VARP.Scheme.VM
 
             var sb = new StringBuilder();
             sb.Append(sident);
-            sb.AppendFormat("Template: args: {0} frame: {1}\n", Values.Length, FrameSize);
+            sb.AppendFormat("Template: args: {0} frame: {1}\n", Variables.Length, FrameSize);
             /////////////////
             /// arguments ///
             /////////////////
             sb.Append(sident);
             sb.Append("|  arguments:");
-            foreach (var v in Values)
+            foreach (var v in Variables)
             {
-                sb.Append(" ");
-                sb.Append(v.Name.ToString());
-                switch (v.LitIdx)
+                if (v.IsLocal)
                 {
-                    case -1:
-                        break;
-                    case -2:
-                        sb.Append(":#f");
-                        break;
-                    default:
-                        sb.Append(":");
-                        sb.Append(v.LitIdx.ToString());
-                        break;
+                    sb.Append(" ");
+                    sb.Append(v.Name.ToString());
+                    switch (v.LitIdx)
+                    {
+                        case -1:
+                            break;
+                        case -2:
+                            sb.Append(":#f");
+                            break;
+                        default:
+                            sb.Append(":");
+                            sb.Append(v.LitIdx.ToString());
+                            break;
+                    }
                 }
             }
             /////////////
@@ -126,7 +133,7 @@ namespace VARP.Scheme.VM
             if (RestValueIdx >= 0)
             {
                 sb.Append(" &rest: ");
-                sb.Append(Values[RestValueIdx].Name.ToString());
+                sb.Append(Variables[RestValueIdx].Name.ToString());
             }
             sb.AppendLine();
             ///////////////
@@ -134,14 +141,22 @@ namespace VARP.Scheme.VM
             ///////////////
             sb.Append(sident);
             sb.Append("|  upvalues:");
-            foreach (var v in UpValues)
+            foreach (var v in Variables)
             {
-                sb.Append(" ");
-                sb.Append(v.Name.ToString());
-                sb.Append(":");
-                sb.Append(v.RefEnvIdx);
-                sb.Append(":");
-                sb.Append(v.RefVarIndex);
+                if (v.IsGlobal)
+                {
+                    sb.Append(" ");
+                    sb.Append(v.Name.ToString());
+                }
+                else if (v.IsUpvalue)
+                {
+                    sb.Append(" ");
+                    sb.Append(v.Name.ToString());
+                    sb.Append(":");
+                    sb.Append(v.UpEnvIdx);
+                    sb.Append(":");
+                    sb.Append(v.UpVarIndex);
+                }
             }
             sb.AppendLine();
             ///////////
@@ -193,5 +208,37 @@ namespace VARP.Scheme.VM
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Find index of the argument
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public int IndexOfArgument(Symbol name)
+        {
+            for (var i = 0; i < Variables.Length; i++)
+            {
+                if (Variables[i].Name == name)
+                    return i;
+            }
+            return -1;
+        }
+
+
+        internal VariableInfo GetVariable(int idx)
+        {
+            return Variables[idx];
+        }
+
+        internal Location GetCodeDbg(int idx)
+        {
+            if (CodeDbg == null) return null;
+            return CodeDbg[idx];
+        }
+
+        internal void GetUpValue(int idx, ref int envIdx, ref int varIdx)
+        {
+            envIdx = Variables[idx].UpEnvIdx;
+            varIdx = Variables[idx].UpVarIndex;
+        }
     }
 }

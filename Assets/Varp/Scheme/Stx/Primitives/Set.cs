@@ -25,16 +25,19 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
+
 namespace VARP.Scheme.Stx.Primitives
 {
     using DataStructures;
     using Data;
+    using VM;
 
     public sealed class PrimitiveSet : BasePrimitive
     {
         // (set! x 10)
         // (set! x (+ 1 2))
-        public static AST Expand(Syntax stx, AstEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             var list = stx.AsLinkedList<Value>();
             var argc = GetArgsCount(list);
@@ -45,27 +48,56 @@ namespace VARP.Scheme.Stx.Primitives
             var val_stx = list[2].AsSyntax();
 
             var var_id = var_stx.AsIdentifier();
-            var binding = env.Lookup(var_id); // TODO! Maybe error when it is not defined
-            var value = AstBuilder.Expand(val_stx, env);
+            var value = AstBuilder.ExpandInternal(val_stx, env);
+
+            // Read the variable
+            int envIdx = 0;
+            var binding = env.LookupAstRecursively(var_id, ref envIdx); 
+            
+            // TODO! Maybe error when it is not defined
+
             if (binding == null)
             {
-                /// Global variable
-                return new AstSet(stx, var_stx, value, -1, -1, -1);
-            }
-
-            if (binding.EnvIdx != env.Index)
-                binding = env.Define(new UpBinding(env, binding.Id, binding));
-
-            if (binding.IsUpvalue)
-            {
-                /// Up-value variable
-                var ubind = binding as UpBinding;
-                return new AstSet(stx, var_stx, value, binding.VarIdx, ubind.RefEnvIdx, ubind.RefVarIdx);
+                // Global variable
+                var localIdx = env.Define(var_id, new GlobalBinding(var_stx));
+                return new AstSet(stx, var_stx, value, localIdx, -1, -1);
             }
             else
             {
-                /// Local variable
-                return new AstSet(stx, var_stx, value, binding.VarIdx, 0, 0);
+                if (envIdx == 0)
+                {
+                    // Local variable
+                    return new AstSet(stx, var_stx, value, binding.VarIdx, 0, 0);
+                }
+                else
+                {
+                    // up-value reference
+                    if (binding is LocalBinding || binding is ArgumentBinding)
+                    {
+                        // up value to local variable
+                        var localIdx = env.Define(var_id, new UpBinding(var_stx, envIdx, binding.VarIdx));
+                        return new AstSet(stx, var_stx, value, localIdx, envIdx, binding.VarIdx);
+                    }
+                    else if (binding is GlobalBinding)
+                    {
+                        // global variable
+                        var localIdx = env.Define(var_id, new GlobalBinding(var_stx));
+                        return new AstSet(stx, var_stx, value, localIdx, 0, 0);
+                    }
+                    else if (binding is UpBinding)
+                    {
+                        // upValue to other upValue
+                        var upBinding = binding as UpBinding;
+                        var nEnvIdx = upBinding.UpEnvIdx + envIdx;
+                        var nVarIdx = upBinding.UpVarIdx;
+                        var localIdx = env.Define(var_id, new UpBinding(var_stx, nEnvIdx, nVarIdx));
+                        return new AstSet(stx, var_stx, value, localIdx, nEnvIdx, nVarIdx);
+                    }
+                    else
+                    {
+                        throw new SystemException();
+                    }
+                }
             }
         }
     }

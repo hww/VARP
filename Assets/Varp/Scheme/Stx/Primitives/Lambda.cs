@@ -32,12 +32,12 @@ namespace VARP.Scheme.Stx.Primitives
 
     using Data;
     using DataStructures;
-
+    using VARP.Scheme.VM;
 
     public sealed class PrimitiveLambda : BasePrimitive
     {
         // (lambda () ...)
-        public static AST Expand(Syntax stx, AstEnvironment env)
+        public static AST Expand(Syntax stx, Environment env)
         {
             var list = stx.AsLinkedList<Value>();
             var argc = GetArgsCount(list);
@@ -58,7 +58,7 @@ namespace VARP.Scheme.Stx.Primitives
                 var curent = list.GetNodeAtIndex(2);
                 while (curent != null)
                 {
-                    body.AddLast(AstBuilder.Expand(curent.Value.AsSyntax(), localEnv).ToValue());
+                    body.AddLast(AstBuilder.ExpandInternal(curent.Value.AsSyntax(), localEnv).ToValue());
                     curent = curent.Next;
                 }
             }

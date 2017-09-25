@@ -28,92 +28,89 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
+
 namespace VARP.Scheme.Stx
 {
     using Data;
     using Exception;
+    using VM;
 
-    public class AstBinding : SObject
+    public abstract class AstBinding : Binding
     {
-        public Syntax Id;
-        public byte EnvIdx;           //< the variable binded to environment
-        public byte VarIdx;           //< variable index in the environment
+        public Syntax Id;           //< the variable name definition
+        public int VarIdx;          //< the variable indexs
 
         /// <summary>
         /// Create global binding
         /// </summary>
-        /// <param name="environment"></param>
         /// <param name="variable"></param>
-        /// <param name="index"></param>
-        public AstBinding(AstEnvironment environment, Syntax variable)
+        protected AstBinding(Syntax variable)
         {
-            Debug.Assert(environment != null);
             Debug.Assert(variable != null);
-            if (environment.Index > 255) SchemeError.Error("binding", "too many environments", variable);
-            EnvIdx = (byte)environment.Index;
             Id = variable;
-            VarIdx = 0;
         }
-
 
         /// <summary>
         /// variable identifier
         /// </summary>
         public virtual Symbol Identifier { get { return Id.AsIdentifier(); } }
 
-        public virtual bool IsPrimitive { get { return false; } }
-        public virtual bool IsGlobal { get { return EnvIdx < 0; } }
-        public virtual bool IsLocal { get { return EnvIdx >= 0; } }
-        public virtual bool IsUpvalue { get { return false; } }
-
         #region ValueType Methods
         public override bool AsBool() { return true; }
         public override string ToString() { return string.Format("#<binding {0}>", Identifier.Name); }
         #endregion
     }
+
     public sealed class PrimitiveBinding : AstBinding
     {
-        public delegate AST CompilerPrimitive(Syntax expression, AstEnvironment context);
+        public delegate AST CompilerPrimitive(Syntax expression, Environment context);
 
         public CompilerPrimitive Primitive;     
 
-        // define global variable
-        public PrimitiveBinding(AstEnvironment environment, Syntax identifier, CompilerPrimitive primitive) : base (environment, identifier)
+        public PrimitiveBinding(Syntax identifier, CompilerPrimitive primitive) 
+            : base (identifier)
         {
             Debug.Assert(primitive != null);
             Primitive = primitive;
         }
-
-        public override bool IsPrimitive { get { return true; } }
 
         #region ValueType Methods
         public override bool AsBool() { return true; }
         public override string ToString() { return string.Format("#<primitive {0}>", Identifier.Name); }
         #endregion
     }
+    
+    public sealed class LocalBinding: AstBinding
+    {
+        public LocalBinding(Syntax identifier) : base(identifier) { }
+
+        #region ValueType Methods
+        public override bool AsBool() { return true; }
+        public override string ToString() { return string.Format("#<local-binding {0}>", Identifier.Name); }
+        #endregion 
+    }
+    
+    public sealed class GlobalBinding : AstBinding
+    {
+        public GlobalBinding(Syntax identifier) : base(identifier) { }
+
+        #region ValueType Methods
+        public override bool AsBool() { return true; }
+        public override string ToString() { return string.Format("#<global-binding {0}>", Identifier.Name); }
+        #endregion 
+    }
+    
     public sealed class UpBinding : AstBinding
     {
-        public byte RefEnvIdx;
-        public byte RefVarIdx;
-        public UpBinding(AstEnvironment environment, Syntax identifier, AstBinding other) : base(environment, identifier)
+        public int UpEnvIdx;
+        public int UpVarIdx;
+
+        public UpBinding(Syntax identifier, int envIdx, int varIdx) 
+            : base(identifier)
         {
-            Debug.Assert(other != null);
-
-            if (other is UpBinding)
-            {
-                var ub = other as UpBinding;
-                RefEnvIdx = ub.RefEnvIdx;
-                RefVarIdx = ub.RefVarIdx;
-            }
-            else
-            {
-                RefEnvIdx = other.EnvIdx;
-                RefVarIdx = other.VarIdx;
-            }
+            UpEnvIdx = envIdx;
+            UpVarIdx = varIdx;
         }
-
-        public byte EnvOffset { get { return (byte)(EnvIdx - RefEnvIdx); } }
-        public override bool IsUpvalue { get { return true; } }
 
         #region ValueType Methods
         public override bool AsBool() { return true; }
@@ -139,17 +136,15 @@ namespace VARP.Scheme.Stx
         public AstBinding Refrence;
         public AST Initializer;
 
-        public ArgumentBinding(AstEnvironment environment, Syntax identifier, Type type, AST initializer) : base(environment, identifier)
+        public ArgumentBinding(Syntax identifier, Type type, AST initializer) : base(identifier)
         {
-            //if (initializer == null)
-            //    Debug.LogError(string.Format("The initializer is null! identifier: '{0}' type: '{1}' env: {2}", identifier.ToString(), type.ToString().ToString(), environment.ToString()));
-            Initializer = initializer;
             ArgType = type;
+            Initializer = initializer;
         }
 
         #region ValueType Methods
         public override bool AsBool() { return true; }
-        public override string ToString() { return string.Format("#<opt-binding {0}>", Identifier.Name); }
+        public override string ToString() { return string.Format("#<arg-binding {0}>", Identifier.Name); }
         #endregion
     }
 
