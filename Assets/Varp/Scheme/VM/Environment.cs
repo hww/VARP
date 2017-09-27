@@ -36,6 +36,7 @@ namespace VARP.Scheme.VM
     using Stx;
     using VARP.Scheme.Stx.Primitives;
     using System;
+    using VARP.Scheme.VM.Functions;
 
     public class Environment : SObject, IEnumerable<Binding>
     {
@@ -125,6 +126,31 @@ namespace VARP.Scheme.VM
         }
 
         /// <summary>
+        /// DefineFunction
+        /// </summary>
+        /// <param name="function"></param>
+        /// <param name="func"></param>
+        /// <returns></returns>
+        public Binding DefineFunction(string name, Function func)
+        {
+            return DefineFunction(Symbol.Intern(name), func);
+        }
+
+        public Binding DefineFunction(Symbol name, Function func)
+        {
+            Binding bind = null;
+            if (Bindings.TryGetValue(name, out bind))
+            {
+                bind.value.RefVal = func;
+            }
+            else
+            {
+                Bindings[name] = bind = new Binding() { environment = this, value = new Value(func) };
+            }
+            return bind;
+        }
+
+        /// <summary>
         /// Update or define value
         /// </summary>
         /// <param name="name"></param>
@@ -195,6 +221,7 @@ namespace VARP.Scheme.VM
         #endregion
 
         #region Value Methods
+
         public override bool AsBool() { return true; }
         public override string ToString() { return string.Format("#<environment count={0}>", Bindings.Count); }
 
@@ -246,6 +273,14 @@ namespace VARP.Scheme.VM
 
         #region Factory
 
+        /// <summary>
+        /// Crate lexical environmenf from the runtime frame
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="name"></param>
+        /// <param name="dynFrame"></param>
+        /// <param name="capacity"></param>
+        /// <returns></returns>
         public static Environment Create(Environment parent, Symbol name, Frame dynFrame, int capacity = DEFAULT_ENVIRONMENT_CAPACITY)
         {
             Debug.Assert(dynFrame != null);
@@ -312,6 +347,12 @@ namespace VARP.Scheme.VM
             return null;
         }
 
+        /// <summary>
+        /// Find binding and the frame index
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="frameIdx"></param>
+        /// <returns></returns>
         internal AstBinding LookupAstRecursively(Symbol name, ref int frameIdx)
         {
             var curframe = this;
@@ -332,6 +373,7 @@ namespace VARP.Scheme.VM
 
             return null;
         }
+
         /// <summary>
         /// Find index and frame of argument
         /// </summary>

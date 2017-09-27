@@ -26,15 +26,18 @@
  */
 using System;
 using System.Text;
-using System.Diagnostics;
-using System.Collections.Generic;
 
 namespace VARP.Scheme.VM
 {
     using Data;
     using Exception;
+    using Functions;
+
     public sealed class VarpVM
     {
+        private delegate SObject RkDelegate(int i);
+
+
         public Value RunTemplate(Template template, Frame frame = null)
         {
             return RunClosure(new Frame(frame, template), template);
@@ -44,8 +47,6 @@ namespace VARP.Scheme.VM
         {
             return RunClosure(new Frame(frame, template, environment), template);
         }
-
-        private delegate SObject RkDelegate(int i);
 
         public Value RunClosure(Frame frame, params System.ValueType[] args)
         {
@@ -436,94 +437,97 @@ namespace VARP.Scheme.VM
                                 // C - has quantity of results
 
                                 var func = values[op.A];
-                                var closure = func.As<Frame>();
-                                var closureTemp = closure.template;
-
-                                var numArgs = op.B;
-                                var numRetVals = op.C;
-
-                                //pc++; /// return to the next instruction
-
-                                if (numArgs < closureTemp.ReqArgsNumber)
-                                    throw SchemeError.Error("vm", "not enough arguments");
-
-                                
+                                if (func.RefVal is Frame)
                                 {
-                                    /// -------------------------------
-                                    /// required and optional arguments
-                                    /// -------------------------------
-                                    var reqnum = closureTemp.ReqArgsNumber;
-                                    var keynum = closureTemp.KeyArgsNumber;
-                                    var optnum = closureTemp.OptArgsNumber;
-                                    var src = op.A + 1;
-                                    var dst = 0;
+                                    var closure = func.As<Frame>();
+                                    var closureTemp = closure.template;
 
-                                    while (reqnum > 0 && dst < numArgs)
-                                    { closure.Values[dst++] = values[src++]; reqnum--; }
+                                    var numArgs = op.B;
+                                    var numRetVals = op.C;
 
-                                    // now initialize optional values
-                                    while (optnum > 0 && dst < numArgs)
-                                    { closure.Values[dst++] = values[src++]; optnum--; }
+                                    //pc++; /// return to the next instruction
 
-                                    src--;  // because argument 0 is method we minus 1
-                                            // to make index address in template's
-                                            // value array
+                                    if (numArgs < closureTemp.ReqArgsNumber)
+                                        throw SchemeError.Error("vm", "not enough arguments");
 
-                                    while (optnum > 0)
+
                                     {
-                                        var lidx = closureTemp.Variables[src++].LitIdx;
+                                        /// -------------------------------
+                                        /// required and optional arguments
+                                        /// -------------------------------
+                                        var reqnum = closureTemp.ReqArgsNumber;
+                                        var keynum = closureTemp.KeyArgsNumber;
+                                        var optnum = closureTemp.OptArgsNumber;
+                                        var src = op.A + 1;
+                                        var dst = 0;
 
-                                        if (lidx >= 0)
+                                        while (reqnum > 0 && dst < numArgs)
+                                        { closure.Values[dst++] = values[src++]; reqnum--; }
+
+                                        // now initialize optional values
+                                        while (optnum > 0 && dst < numArgs)
+                                        { closure.Values[dst++] = values[src++]; optnum--; }
+
+                                        src--;  // because argument 0 is method we minus 1
+                                                // to make index address in template's
+                                                // value array
+
+                                        while (optnum > 0)
                                         {
-                                            var initval = closureTemp.Literals[lidx];
-                                            if (initval.Is<Template>())
+                                            var lidx = closureTemp.Variables[src++].LitIdx;
+
+                                            if (lidx >= 0)
                                             {
-                                                var ovtinit = closureTemp.Literals[lidx].As<Template>();
-                                                closure.Values[dst++] = RunClosure(frame, ovtinit);
+                                                var initval = closureTemp.Literals[lidx];
+                                                if (initval.Is<Template>())
+                                                {
+                                                    var ovtinit = closureTemp.Literals[lidx].As<Template>();
+                                                    closure.Values[dst++] = RunClosure(frame, ovtinit);
+                                                }
+                                                else
+                                                    closure.Values[dst++] = initval;
+
                                             }
                                             else
-                                                closure.Values[dst++] = initval;
+                                            {
+                                                closure.Values[dst++].Set(false);
+                                            }
+                                            optnum--;
+                                        }
 
-                                        }
-                                        else
-                                        {
-                                            closure.Values[dst++].Set(false);
-                                        }
-                                        optnum--;
+                                        /// -------------------------------
+                                        /// key arguments
+                                        /// -------------------------------
+
+                                        dst += keynum;
+
+                                        /// -------------------------------
+                                        /// rest arguments
+                                        /// -------------------------------
+
                                     }
 
-                                    /// -------------------------------
-                                    /// key arguments
-                                    /// -------------------------------
-
-                                    dst += keynum;
-
-                                    /// -------------------------------
-                                    /// rest arguments
-                                    /// -------------------------------
-
+                                    values[op.A] = RunClosure(closure, closure.template);
                                 }
-
-                                /// -------------------------------
-                                /// up-values 
-                                /// -------------------------------
+                                else if (func.RefVal is Function)
                                 {
-                                    //foreach (var v in closure.template.UpValues)
-                                    //{
-                                    //    var curFrame = closure;             // get current frame
-                                    //    int curFrameIndex = v.UpEnvIdx;      // get referenced frame index
-                                    //    while (curFrameIndex > 0)
-                                    //    {
-                                    //        if (frame == null) throw SchemeError.Error("vm", "can't find environment");
-                                    //        curFrame = curFrame.parent;
-                                    //        curFrameIndex--;
-                                    //    }
-                                    //
-                                    //    closure.Values[v.VarIdx] = new Value() { RefVal = curFrame, NumVal = v.UpVarIndex };
-                                    //}
-                                }
+                                    // CALL A.B.C
+                                    // <A> result register
+                                    // <B> quantity of arguments
+                                    // 0: () no arguments
+                                    // 1: R(A+2)
+                                    // 2: R(A+3)
+                                    // <C> quantity of results
+                                    // 0: NILL 0 no result
+                                    // 1: R(A) 
+                                    // 2: R(A..B)
 
-                                values[op.A] = RunClosure(closure, closure.template);
+                                    var function = func.As<Function>();
+                                    if (function != null)
+                                        function.Call(frame, op.A, op.B, op.C);
+                                    else
+                                        throw SchemeError.Error("vm", "expected function found", func);
+                                }
                             }
                             break;
 

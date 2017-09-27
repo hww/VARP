@@ -30,7 +30,8 @@ namespace VARP.Scheme.Stx
     using Primitives;
     using VARP.Scheme.Data;
     using VARP.Scheme.VM;
-    
+    using VARP.Scheme.VM.Functions;
+
     public class SystemEnvironment : Environment
     {
         public static SystemEnvironment Top = new SystemEnvironment();
@@ -77,7 +78,7 @@ namespace VARP.Scheme.Stx
 
             DefinePrimitive("syntax", SyntaxTools.Syntax);
 
-
+            DefineFunction("test", Test.Instance);
         }
     }
 

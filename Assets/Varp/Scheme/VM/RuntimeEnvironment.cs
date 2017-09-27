@@ -25,35 +25,18 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace VARP.Scheme.Stx.Primitives
+using System.Collections.Generic;
+
+namespace VARP.Scheme.VM
 {
-    using DataStructures;
-    using Exception;
-    using Data;
+    using Functions;
 
-    public class BasePrimitive
+    public class RuntimeEnvironment
     {
-        #region Assertions
 
-        protected static int GetArgsCount(LinkedList<Value> o) { return o.Count - 1; }
-        protected static void AssertArgsMinimum(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
+        public static void DefineDefaults(Environment environment)
         {
-            if (given < expected)
-                throw SchemeError.ArityError(name, message, expected, given, argv, expression);
+            environment.DefineFunction("test", Test.Instance);
         }
-
-        protected static void AssertArgsMaximum(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
-        {
-            if (given > expected)
-                throw SchemeError.ArityError(name, message, expected, given, argv, expression);
-        }
-
-        protected static void AssertArgsEqual(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
-        {
-            if (given != expected)
-                throw SchemeError.ArityError(name, message, expected, given, argv, expression);
-        }
-
-        #endregion
     }
 }

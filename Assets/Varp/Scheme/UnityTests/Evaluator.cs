@@ -40,23 +40,24 @@ using Environment = VARP.Scheme.VM.Environment;
 public class Evaluator : MonoBehaviour
 {
     private Tokenizer lexer;
-    [TextArea(5, 100)]
+    [TextArea(5, 10)]
     public string testString;
     public bool detailedSyntaxTree;
-    [TextArea(5, 100)]
+    [TextArea(5, 10)]
     public string syntaxString;
-    [TextArea(10, 100)]
+    [TextArea(5, 10)]
     public string astString;
-    [TextArea(10, 100)]
+    [TextArea(5, 10)]
     public string codeString;
-    [TextArea(5, 100)]
+    [TextArea(5, 10)]
     public string evalString;
-    [TextArea(5, 100)]
+    [TextArea(5, 10)]
     public string envString;
 
     private void Start()
     {
         OnValidate();
+
     }
 
     private void OnValidate()
