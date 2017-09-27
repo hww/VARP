@@ -76,6 +76,7 @@ public class Evaluator : MonoBehaviour
 
             do
             {
+                // PARSER
                 var syntax = Parser.Parse(lexer);
                 if (syntax == null) break;
                 if (detailedSyntaxTree)
@@ -83,14 +84,22 @@ public class Evaluator : MonoBehaviour
                 else
                     sbsyntax.AppendLine(Inspector.Inspect(syntax));
 
-                var ast = AstBuilder.Expand(syntax, SystemEnvironment.Top);
+                // ENVIRONMENT
+                var lexical = new Environment(SystemEnvironment.Top, Symbol.NULL, true);
+
+                // AST
+                var ast = AstBuilder.Expand(syntax, lexical);
                 sbast.AppendLine(ast.Inspect());
 
-                var temp = CodeGenerator.GenerateCode(ast);
-                sbcode.AppendLine(temp.Inspect());
+                // COCEGENERATOR
+                var gen = new CodeGenerator(lexical.Count);
+                var temp = gen.GenerateTopLambda(lexical, ast);
+                var template = gen.GetTemplate();
+                sbcode.AppendLine(template.Inspect());
 
+                // EVALUATE
                 var vm = new VarpVM();
-                var vmres = vm.RunTemplate(temp, SystemEnvironment.Top);
+                var vmres = vm.RunTemplate(template, SystemEnvironment.Top);
                 if (vmres.RefVal is Frame)
                     vmres = vm.RunClosure(vmres.RefVal as Frame);
                 sbeval.Append(Inspector.Inspect(vmres));

@@ -59,6 +59,7 @@ namespace VARP.Scheme.Stx
         // Expand string @syntax to abstract syntax tree, in global environment
         public static AST Expand(Syntax syntax, Environment env)
         {
+            if (!env.IsLexical) throw new System.Exception("Expected Lexical environment");
             //if ((options & Options.NoLambda) == 0)
             {
                 //   var list = new LinkedList<Value>();
@@ -73,8 +74,8 @@ namespace VARP.Scheme.Stx
             //else
             {
                 // expand expression
-                var lexicalEnv = new Environment(env, Symbol.Intern("Lexical"));
-                return ExpandInternal(syntax, lexicalEnv);
+                //var lexicalEnv = new Environment(env, Symbol.Intern("Lexical"));
+                return ExpandInternal(syntax, env);
             }
         }
 

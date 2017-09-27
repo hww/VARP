@@ -325,7 +325,7 @@ namespace VARP.Scheme.VM
                     if (variable is AstBinding)
                         return variable as AstBinding;
                     else
-                        throw new Exception();
+                        return null;
                 }
                 curframe = curframe.Parent;
             }
