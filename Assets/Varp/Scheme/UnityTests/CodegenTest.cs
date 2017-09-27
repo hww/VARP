@@ -101,7 +101,7 @@ public class CodegenTest : MonoBehaviour
             {
                 var result = Parser.Parse(lexer);
                 if (result == null) break;
-                var ast = AstBuilder.Expand(result);
+                var ast = AstBuilder.Expand(result, SystemEnvironment.Top);
                 sb.AppendLine(ast.Inspect());
                 var temp = CodeGenerator.GenerateCode(ast);
                 sbcode.AppendLine(temp.Inspect());

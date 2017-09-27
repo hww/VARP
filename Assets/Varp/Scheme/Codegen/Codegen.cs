@@ -123,7 +123,7 @@ namespace VARP.Scheme.Codegen
         /// <returns></returns>
         private int GenerateLiteral(AstLiteral ast)
         {
-            var value = ast.GetDatum();
+            var value = ast.isSyntaxLiteral ? ast.GetSyntax() : ast.GetDatum();
             var refval = value.RefVal;
             var sp = Push();
             if (refval == null)
@@ -169,8 +169,19 @@ namespace VARP.Scheme.Codegen
             {
                 // R(A) := G[K(Bx)]
                 var dst = Push();
-                var litId = DefineLiteral(new Value(ast.Identifier));
-                AddABX(OpCode.GETGLOBAL, dst, litId);
+                var name = ast.Identifier;
+                var litIdx = DefineLiteral(new Value(name));
+                var litIdxCur = Variables[ast.VarIdx].LitIdx;
+                if (litIdxCur < 0)
+                {
+                    var var = Variables[ast.VarIdx];
+                    var.LitIdx = litIdx;
+                    Variables[ast.VarIdx] = var;
+                }
+                else if (litIdxCur != litIdx)
+                    throw new System.Exception();
+
+                AddABX(OpCode.GETGLOBAL, dst, ast.VarIdx);
                 return dst;
             }
             else if (ast.IsUpValue)
@@ -204,11 +215,23 @@ namespace VARP.Scheme.Codegen
             if (ast.IsGlobal)
             {
                 // G[K(Bx)] := R(A)
-                var varid = new Value(ast.Identifier);
-                var litId = DefineLiteral(varid);
-                if (litId > Instruction.BxMask)
+                var varIdx = new Value(ast.Identifier);
+                var litIdx = DefineLiteral(varIdx);
+
+                if (litIdx > Instruction.BxMask)
                     throw SchemeError.CompillerError("GenerateSet", "the index is too large for Bx", ast);
-                AddABX(OpCode.SETGLOBAL, (short)target, litId);
+
+                var litIdxCur = Variables[ast.VarIdx].LitIdx;
+                if (litIdxCur < 0)
+                {
+                    var var = Variables[ast.VarIdx];
+                    var.LitIdx = litIdx;
+                    Variables[ast.VarIdx] = var;
+                }
+                else if (litIdxCur != litIdx)
+                    throw new System.Exception();
+
+                AddABX(OpCode.SETGLOBAL, (short)target, ast.VarIdx);
             }
             else
             {
@@ -270,6 +293,47 @@ namespace VARP.Scheme.Codegen
             temp = Push();
             var closureId = DefineLiteral(new Value(template));
             AddABX(OpCode.CLOSURE, temp, closureId);
+            template.ResultIdx = temp;
+            return temp;
+        }
+
+        /// <summary>
+        /// Generate top level expression
+        /// </summary>
+        /// <param name="environment"></param>
+        /// <param name="ast"></param>
+        /// <param name="frame"></param>
+        /// <returns></returns>
+        public int GenerateTopLambda(Environment environment, AST ast)
+        {
+            if (!environment.IsLexical) throw new System.Exception();
+
+            // create argument list
+            var argList = environment.ToAstArray();
+
+            // create empty lambda function.
+            // there are no any arguments
+            var lambda = new CodeGenerator(argList.Length);
+
+            // update list of arguments
+            lambda.DefineArguments(argList);
+
+            /// R(A) := closure(KPROTO[Bx], R(A), ... , R(A + n))
+            var temp = lambda.Generate(ast);
+
+            // generate return code
+            lambda.GenerateReturn(temp);
+
+            // now lets create template from dummy lambda
+            var template = lambda.GetTemplate();
+            // -----------------------------------------
+            // now generate code for current function
+            // -----------------------------------------
+            temp = Push();
+            var closureId = DefineLiteral(new Value(template));
+            AddABX(OpCode.CLOSURE, temp, closureId);
+            template.ResultIdx = temp;
+
             return temp;
         }
 

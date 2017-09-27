@@ -40,9 +40,9 @@ using Environment = VARP.Scheme.VM.Environment;
 public class Evaluator : MonoBehaviour
 {
     private Tokenizer lexer;
-
     [TextArea(5, 100)]
     public string testString;
+    public bool detailedSyntaxTree;
     [TextArea(5, 100)]
     public string syntaxString;
     [TextArea(10, 100)]
@@ -78,9 +78,12 @@ public class Evaluator : MonoBehaviour
             {
                 var syntax = Parser.Parse(lexer);
                 if (syntax == null) break;
-                sbsyntax.AppendLine(Inspector.Inspect(syntax));
+                if (detailedSyntaxTree)
+                    sbsyntax.AppendLine(Inspector.Inspect(syntax, InspectOptions.PrettyPrint));
+                else
+                    sbsyntax.AppendLine(Inspector.Inspect(syntax));
 
-                var ast = AstBuilder.Expand(syntax);
+                var ast = AstBuilder.Expand(syntax, SystemEnvironment.Top);
                 sbast.AppendLine(ast.Inspect());
 
                 var temp = CodeGenerator.GenerateCode(ast);
@@ -88,6 +91,8 @@ public class Evaluator : MonoBehaviour
 
                 var vm = new VarpVM();
                 var vmres = vm.RunTemplate(temp, SystemEnvironment.Top);
+                if (vmres.RefVal is Frame)
+                    vmres = vm.RunClosure(vmres.RefVal as Frame);
                 sbeval.Append(Inspector.Inspect(vmres));
 
             } while (lexer.LastToken != null);

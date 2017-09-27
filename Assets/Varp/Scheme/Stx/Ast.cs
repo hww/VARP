@@ -68,6 +68,12 @@ namespace VARP.Scheme.Stx
         /// <returns></returns>
         public Value GetDatum() { return GetDatum(Expression); }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public Value GetSyntax() { return new Value(Expression); }
+
         #region Datum Extractor Methods
 
         public static Value GetDatum(AST ast)
@@ -145,8 +151,11 @@ namespace VARP.Scheme.Stx
     // literal e.g. 99 or #f
     public sealed class AstLiteral : AST
     {
-        public AstLiteral(Syntax stx) : base(stx)
+        public readonly bool isSyntaxLiteral;
+
+        public AstLiteral(Syntax stx, bool isSyntaxLiteral = false) : base(stx)
         {
+            this.isSyntaxLiteral = isSyntaxLiteral;
         }
  
         #region ValueType Methods
@@ -156,6 +165,7 @@ namespace VARP.Scheme.Stx
         }
         #endregion
     }
+
 
     // the variable type
     public enum AstReferenceType
@@ -176,7 +186,7 @@ namespace VARP.Scheme.Stx
         /// <summary>
         /// index of the argument (local var index)
         /// </summary>
-        public byte ArgIdx;
+        public byte VarIdx;
 
         /// <summary>
         /// index of the referenced environment
@@ -203,7 +213,7 @@ namespace VARP.Scheme.Stx
             if (argIdx > MAX_INDEX) throw SchemeError.Error("ast-reference", "environment index overflow", syntax);
 
             ReferenceType = type;
-            ArgIdx = (byte)argIdx;
+            VarIdx = (byte)argIdx;
         }
 
         /// <summary>
@@ -220,7 +230,7 @@ namespace VARP.Scheme.Stx
             if (upVarIdx > MAX_INDEX) throw SchemeError.Error("ast-reference", "environment index overflow", syntax);
 
             ReferenceType = type;
-            ArgIdx = (byte)argIdx;
+            VarIdx = (byte)argIdx;
             UpEnvIdx = (short)upEnvIdx;
             UpVarIdx = (short)upVarIdx;
         }
@@ -352,7 +362,7 @@ namespace VARP.Scheme.Stx
 
         public AstLambda(Syntax syntax, Syntax keyword, Environment environment, LinkedList<Value> expression) : base(syntax)
         {
-            ArgList = environment.ToArray();
+            ArgList = environment.ToAstArray();
             BodyExpression = expression;
             if (keyword.GetDatum() == Symbol.LAMBDA)
                 Keyword = keyword;

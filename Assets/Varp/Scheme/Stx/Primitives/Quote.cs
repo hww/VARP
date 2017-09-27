@@ -39,11 +39,13 @@ namespace VARP.Scheme.Stx.Primitives
             var list = stx.AsLinkedList<Value>();
             var argc = GetArgsCount(list);
             AssertArgsEqual("quote", "arity mismatch", 1, argc, list, stx);
-            var lit = list[0].AsSyntax();
-            if (lit.IsLiteral)
-                return new AstLiteral(lit);
-            else
-                return new AstLiteral(stx);
+            return new AstLiteral(list[1].AsSyntax());
+
+            //var lit = list[0].AsSyntax();
+            //if (lit.IsLiteral)
+            //    return new AstLiteral(lit);
+            //else
+            //    return new AstLiteral(stx);
         }
     }
 }

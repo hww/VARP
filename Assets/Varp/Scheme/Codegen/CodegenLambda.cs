@@ -45,7 +45,7 @@ namespace VARP.Scheme.Codegen
         private const int DEFAULT_CODE_SIZE = 16;
 
         private List<Value> Literals;
-        private List<VariableInfo> Values;
+        private List<VariableInfo> Variables;
         private List<Instruction> Code;
 
         private List<Location> CodeDebug;
@@ -53,6 +53,8 @@ namespace VARP.Scheme.Codegen
         private int ReqArgsNumber;
         private int OptArgsNumber;
         private int KeyArgsNumber;
+        private int RestArgsNumber;
+
         private int UpValueIdx;
         private int RestValueIdx;
 
@@ -61,14 +63,14 @@ namespace VARP.Scheme.Codegen
         /// when we type expression like:
         /// (+ 1 2)
         /// </summary>
-        public CodeGenerator(int valuesCount = DEFAULT_VARIABLE_NUMBER)
+        public CodeGenerator(int valuesCount = 0)
         {
-            Values = new List<VariableInfo>(valuesCount);
+            Variables = new List<VariableInfo>(valuesCount + DEFAULT_VARIABLE_NUMBER);
             Literals = new List<Value>(DEFAULT_LITERALS_NUMBER);
             Code = new List<Instruction>(DEFAULT_CODE_SIZE);
             CodeDebug = new List<Location>(DEFAULT_CODE_SIZE);
 
-            OptArgsNumber = KeyArgsNumber = 0;
+            OptArgsNumber = KeyArgsNumber = RestArgsNumber = 0;
             UpValueIdx = RestValueIdx = -1;
             SpMin = 0;
             SP = -1;
@@ -121,7 +123,7 @@ namespace VARP.Scheme.Codegen
                                     literal = -2;
                                 }
                                 // setup optional variable item
-                                Values.Add(new VariableInfo()
+                                Variables.Add(new VariableInfo()
                                 {
                                     Type = VariableType.Local,
                                     Name = v.Id.AsIdentifier(),
@@ -154,7 +156,7 @@ namespace VARP.Scheme.Codegen
                                 }
                                 // setup optional variable item
 
-                                Values.Add(new VariableInfo()
+                                Variables.Add(new VariableInfo()
                                 {
                                     Type = VariableType.Local,
                                     Name = v.Id.AsIdentifier(),
@@ -166,7 +168,8 @@ namespace VARP.Scheme.Codegen
 
                         case ArgumentBinding.Type.Rest:
                             RestValueIdx = idx;
-                            Values.Add(new VariableInfo()
+                            RestArgsNumber = 1;
+                            Variables.Add(new VariableInfo()
                             {
                                 Type = VariableType.Local,
                                 Name = v.Id.AsIdentifier(),
@@ -192,7 +195,7 @@ namespace VARP.Scheme.Codegen
                     throw new System.Exception();
 
             }
-            SpMin = (short)Values.Count;
+            SpMin = (short)Variables.Count;
             SP = (short)(SpMin - 1);
         }
 
@@ -200,10 +203,13 @@ namespace VARP.Scheme.Codegen
         {
             var template = new Template();
 
-            template.Variables = Values.ToArray();
+            template.Variables = Variables.ToArray();
             template.ReqArgsNumber = ReqArgsNumber;
             template.OptArgsNumber = OptArgsNumber;
             template.KeyArgsNumber = KeyArgsNumber;
+            template.RestArgsNumber = RestArgsNumber;
+            template.ArgsCout = ReqArgsNumber + OptArgsNumber + KeyArgsNumber + RestArgsNumber;
+
             template.UpValsNumber = UpValueIdx;
             template.RestValueIdx = RestValueIdx;
             template.Literals = Literals.ToArray();
@@ -212,7 +218,7 @@ namespace VARP.Scheme.Codegen
             template.SP = SpMin;
 
             Literals = null;
-            Values = null;
+            Variables = null;
             Code = null;
 
             return template;
@@ -239,6 +245,21 @@ namespace VARP.Scheme.Codegen
         #region Varibales Methods
 
         /// <summary>
+        /// Find variable by name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public int IndefOfVariable(Symbol name)
+        {
+            for (var i=0; i< Variables.Count; i++)
+            {
+                if (Variables[i].Name == name)
+                    return i;
+            }
+            return -1;
+        }
+
+        /// <summary>
         /// Define up value 
         /// </summary>
         /// <param name=""></param>
@@ -246,7 +267,7 @@ namespace VARP.Scheme.Codegen
         /// <returns></returns>
         public int DefineUpValue(Symbol name, int upEnvIdx, int upVarIdx, Location location = null)
         {
-            Values.Add(new VariableInfo()
+            Variables.Add(new VariableInfo()
             {
                 Type = VariableType.UpValue,
                 Name = name,
@@ -254,7 +275,7 @@ namespace VARP.Scheme.Codegen
                 UpVarIndex = (short)upVarIdx,
             });
 
-            return Values.Count;
+            return Variables.Count;
         }
 
         /// <summary>
@@ -270,8 +291,8 @@ namespace VARP.Scheme.Codegen
             // variable is not exists so we have to construct it
             var info = new VariableInfo() { Type = VariableType.Local, Name = name, LitIdx = literalId };
 
-            Values.Add(info);
-            return Values.Count-1;
+            Variables.Add(info);
+            return Variables.Count-1;
         }
 
         /// <summary>
@@ -287,8 +308,8 @@ namespace VARP.Scheme.Codegen
             // variable is not exists so we have to construct it
             var info = new VariableInfo() { Type = VariableType.Global, Name = name, LitIdx = literalId };
 
-            Values.Add(info);
-            return Values.Count - 1;
+            Variables.Add(info);
+            return Variables.Count - 1;
         }
 
         /// <summary>
@@ -298,8 +319,8 @@ namespace VARP.Scheme.Codegen
         /// <returns></returns>
         public int ReferenceLocal(Symbol name)
         {
-            for (var i = 0; i < Values.Count; i++)
-                if (Values[i].Name == name) return i;
+            for (var i = 0; i < Variables.Count; i++)
+                if (Variables[i].Name == name) return i;
             return -1;
         }
 

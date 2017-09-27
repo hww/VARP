@@ -25,70 +25,23 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
-namespace VARP.Scheme.Data
+namespace VARP.Scheme.Stx.Primitives
 {
-    /// <summary>
-    /// Fields of the class
-    /// </summary>
-    public partial struct Value
+    using DataStructures;
+    using Data;
+    using VM;
+
+    public sealed class SyntaxTools : BasePrimitive
     {
-        public double NumVal;
-        public object RefVal;
-
-        #region Constructors
-        public Value(ValueType type)
+        // '(foo ...)
+        public static AST Syntax(Syntax stx, Environment env)
         {
-            RefVal = type;
-            NumVal = 0;
-        }
-        public Value(BoolType value)
-        {
-            RefVal = value;
-            NumVal = 0;
-        }
-        public Value(char value)
-        {
-            RefVal = CharType.Empty;
-            NumVal = value;
+            var list = stx.AsLinkedList<Value>();
+            var argc = GetArgsCount(list);
+            AssertArgsEqual("syntax", "arity mismatch", 1, argc, list, stx);
+            return new AstLiteral(list[1].AsSyntax(), isSyntaxLiteral: true);
         }
 
-        public Value(bool value)
-        {
-            RefVal = value ? BoolType.True : BoolType.False;
-            NumVal = 0;
-        }
-
-        public Value(int value)
-        {
-            RefVal = NumericalType.Fixnum;
-            NumVal = value;
-        }
-
-        public Value(uint value)
-        {
-            RefVal = NumericalType.Fixnum;
-            NumVal = value;
-        }
-
-        public Value(double value)
-        {
-            RefVal = NumericalType.Float;
-            NumVal = value;
-        }
-
-        public Value(object value) : this()
-        {
-            Set(value);
-        }
-        #endregion
 
     }
-
-
- 
 }

@@ -39,6 +39,7 @@ namespace VARP.Scheme.Stx
 
     public sealed class Syntax : SObject
     {
+        public readonly static Syntax Lambda = new Syntax(Value.Lambda, null as Location);
         public readonly static Syntax Void = new Syntax(Value.Void, null as Location);
         public readonly static Syntax Nil = new Syntax(Value.Nil, null as Location);
         public readonly static Syntax True = new Syntax(Value.True, null as Location);
@@ -50,25 +51,30 @@ namespace VARP.Scheme.Stx
         public Syntax() : base()
         {
         }
+
         public Syntax(SObject expression) : base()
         {
             this.expression = new Value(expression);
         }
+
         public Syntax(Value expression, Location location)
         {
             this.expression = expression;
             this.location = location;
         }
+
         public Syntax(Value expression, Token token)
         {
             this.expression = expression;
             location = token == null ? null : token.location;
         }
+
         public Syntax(object expression, Location location)
         {
             this.expression.Set(expression);
             this.location = location;
         }
+
         public Syntax(object expression, Token token)
         {
             this.expression.Set(expression);
@@ -76,6 +82,7 @@ namespace VARP.Scheme.Stx
         }
 
         #region Cast Syntax To ... Methods
+
         /// <summary>
         /// Get expression
         /// </summary>
@@ -99,6 +106,12 @@ namespace VARP.Scheme.Stx
         }
 
         /// <summary>
+        /// Get expression
+        /// </summary>
+        /// <returns></returns>
+        public Value GetExpression() { return expression; }
+
+        /// <summary>
         /// Get datum
         /// </summary>
         /// <returns></returns>
@@ -112,6 +125,7 @@ namespace VARP.Scheme.Stx
         #endregion
 
         #region Datum Extractor Methods
+
         /// <summary>
         /// Method safely cast the syntax's expression to the Datum
         /// </summary>
@@ -161,6 +175,49 @@ namespace VARP.Scheme.Stx
 
             return expression;
         }
+
+        #endregion
+
+        #region Datum To Syntax
+
+        public static Value GetSyntax(Value expression, Location location = null)
+        {
+            if (expression.IsSyntax)
+                return new Value(expression.AsSyntax());
+
+            if (expression.IsLinkedList<Value>())
+            {
+                var result = new LinkedList<Value>();
+                foreach (var val in expression.AsLinkedList<Value>())
+                    result.AddLast(GetSyntax(val, location));
+                return new Value(result);
+            }
+
+            if (expression.IsLinkedList<Syntax>())
+            {
+                return new Value(expression);
+            }
+
+            if (expression.IsList<Value>())
+            {
+                var src = expression.AsList<Value>();
+                var dst = new List<Value>(src.Count);
+                foreach (var v in src)
+                {
+                    dst.Add(GetSyntax(v, location));
+                }
+                return new Value(dst);
+            }
+
+            if (expression.IsValuePair)
+            {
+                var pair = expression.AsValuePair();
+                return new Value(new Syntax(new ValuePair(GetSyntax(pair.Item1, location), GetSyntax(pair.Item2, location))));
+            }
+
+            return new Value(new Syntax(expression, location));
+        }
+
         #endregion
 
         public bool IsSymbol { get { return expression.IsSymbol; } }
@@ -169,11 +226,11 @@ namespace VARP.Scheme.Stx
         public bool IsExpression { get { return (expression == null) || expression.IsLinkedList<Value>(); } }
 
         #region ValueType Methods
+
         public override bool AsBool() { return true; }
         public override string ToString() { return expression == null ? "()" : expression.ToString(); }
 
         #endregion
-
 
         #region DebuggerDisplay 
         public override string DebuggerDisplay
@@ -191,6 +248,5 @@ namespace VARP.Scheme.Stx
             }
         }
         #endregion
-
     }
 }

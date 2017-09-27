@@ -59,16 +59,11 @@ namespace VARP.Scheme.REPL
 
         public static string Inspect(Object x, InspectOptions options = InspectOptions.Default)
         {
-
-
             if (x == null)
                 return "null";
 
             if (x is Value)
                 return InspectInternal((Value)x, options);
-
-            //if (x is ValueType)
-            //    return InspectInternal(x as ValueType, options);
 
             if (x is SObject)
                 return InspectInternal(x as SObject, options);
@@ -125,11 +120,20 @@ namespace VARP.Scheme.REPL
         private static string InspectInternal(Syntax x, InspectOptions options = InspectOptions.Default)
         {
             var loc = x.Location;
-
-            if (loc == null)
-                return string.Format("#<syntax {0}>", x.ToString());
+            if (options == InspectOptions.Default)
+            {
+                if (loc == null)
+                    return string.Format("#<syntax {0}>", Inspect(x.GetDatum(), options));
+                else
+                    return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.GetDatum(), options));
+            }
             else
-                return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.GetDatum(), options));
+            {
+                if (loc == null)
+                    return string.Format("#<syntax {0}>", Inspect(x.GetExpression(), options));
+                else
+                    return string.Format("#<syntax:{0}:{1} {2}>", loc.LineNumber, loc.ColNumber, Inspect(x.GetExpression(), options));
+            }
         }
 
         private static string InspectInternal(AstBinding bind, InspectOptions options = InspectOptions.Default)

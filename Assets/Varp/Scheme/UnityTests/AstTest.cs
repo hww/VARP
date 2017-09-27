@@ -96,7 +96,7 @@ public class AstTest : MonoBehaviour
             {
                 var result = Parser.Parse(lexer);
                 if (result == null) break;
-                var ast = AstBuilder.Expand(result);
+                var ast = AstBuilder.Expand(result, SystemEnvironment.Top);
                 sb.AppendLine(ast.Inspect());
             } while (lexer.LastToken != null);
             astString = sb.ToString();

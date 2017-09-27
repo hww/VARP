@@ -35,18 +35,24 @@ namespace VARP.Scheme.VM
     using Exception;
     public sealed class VarpVM
     {
-        public Value RunTemplate(Template template)
+        public Value RunTemplate(Template template, Frame frame = null)
         {
-            return RunClosure(new Frame(null, template), template);
+            return RunClosure(new Frame(frame, template), template);
         }
-        public Value RunTemplate(Template template, Environment environment)
+
+        public Value RunTemplate(Template template, Environment environment, Frame frame = null)
         {
-            return RunClosure(new Frame(null, template, environment), template);
+            return RunClosure(new Frame(frame, template, environment), template);
         }
 
         private delegate SObject RkDelegate(int i);
 
-        private Value RunClosure(Frame frame, Template template, params System.ValueType[] args)
+        public Value RunClosure(Frame frame, params System.ValueType[] args)
+        {
+            return RunClosure(frame, frame.template, args);
+        }
+
+        public Value RunClosure(Frame frame, Template template, params System.ValueType[] args)
         {
             var environment = frame.environment;
             var literals = template.Literals;
@@ -153,17 +159,30 @@ namespace VARP.Scheme.VM
                         case OpCode.SETGLOBAL:
                             {
                                 // G[Bx] = R(A)
-                                var literal = literals[op.Bx].AsSymbol();
-                                var binding = environment.LookupRecursively(literal);
-                                if (binding == null)
+                                var varIdx = op.Bx;
+
+                                if (values[varIdx].RefVal == null)
                                 {
-                                    //throw SchemeError.Error("vm-set-gloabal", "undefined variable", upVal.AsSymbol());
-                                    environment[literal] = values[op.A];
+                                    var litIdx = template.GetVariable(varIdx).LitIdx;
+                                    var literal = literals[litIdx].AsSymbol();
+                                    var binding = environment.LookupRecursively(literal);
+                                    if (binding == null)
+                                    {
+                                        values[varIdx].RefVal = environment.DefineOrUpdate(literal, values[op.A]);
+                                    }
+                                    else
+                                    {
+                                        binding.value = values[op.A];
+                                        values[varIdx].RefVal = binding;
+                                    }
                                 }
-                                else
+                                else if (values[varIdx].RefVal is Binding)
                                 {
+                                    var binding = values[varIdx].RefVal as Binding;
                                     binding.value = values[op.A];
                                 }
+                                else
+                                    throw new System.Exception();
                             }
                             break;
 

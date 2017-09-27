@@ -35,34 +35,47 @@ namespace VARP.Scheme.Stx
     using Exception;
     using VM;
     using Stx;
+    using VARP.Scheme.Tokenizing;
+
 
     public sealed class AstBuilder : SObject
-    {    
-        #region Public Methods
-
-        // Expand string @expression to abstract syntax tree in global environment
-        public static AST Expand(string expression, string filepath)
+    {
+        [Flags]
+        public enum Options
         {
-            return Expand(expression, filepath, SystemEnvironment.Top);
+            Default = 0,
+            NoLambda = 1
         }
+
+        #region Public Methods
 
         // Expand string @expression to abstract syntax tree, in given @env environment
         public static AST Expand(string expression, string filepath, Environment env)
         {
             var syntax = Parser.Parse(expression, filepath);
-            return ExpandInternal(syntax, env);
-        }
-
-        // Expand string @syntax to abstract syntax tree, in global environment
-        public static AST Expand(Syntax syntax)
-        {
-            return ExpandInternal(syntax, SystemEnvironment.Top);
+            return Expand(syntax, env);
         }
 
         // Expand string @syntax to abstract syntax tree, in global environment
         public static AST Expand(Syntax syntax, Environment env)
         {
-            return ExpandInternal(syntax, env);
+            //if ((options & Options.NoLambda) == 0)
+            {
+                //   var list = new LinkedList<Value>();
+                //   list.AddLast(new Value(Syntax.Lambda));
+                //   list.AddLast(new Value(Syntax.Nil));
+                //   list.AddLast(new Value(syntax));
+                //
+                //   var lambda = new Syntax(list, (Location)null);
+                //
+                //   return ExpandInternal(lambda, env);
+            }
+            //else
+            {
+                // expand expression
+                var lexicalEnv = new Environment(env, Symbol.Intern("Lexical"));
+                return ExpandInternal(syntax, lexicalEnv);
+            }
         }
 
         // Expand string @syntax to abstract syntax tree, in given @env environment
@@ -106,7 +119,6 @@ namespace VARP.Scheme.Stx
 
             // Find the variable in ast environment
             int envIdx = 0;
-            int varIdx = 0;
             var binding = env.LookupAstRecursively(varname, ref envIdx);
 
             if (binding == null)
@@ -120,22 +132,22 @@ namespace VARP.Scheme.Stx
                 if (envIdx == 0)
                 {
                     // local variable reference
-                    return new AstReference(syntax, AstReferenceType.Local, varIdx, 0, 0);
+                    return new AstReference(syntax, AstReferenceType.Local, binding.VarIdx, 0, 0);
                 }
                 else
                 {
                     // up-value reference
-                    if (binding is LocalBinding || binding is ArgumentBinding)
-                    {
-                        // up value to local variable
-                        var localIdx = env.Define(varname, new UpBinding(syntax, envIdx, varIdx));
-                        return new AstReference(syntax, AstReferenceType.UpValue, localIdx, envIdx, varIdx);
-                    }
-                    else if (binding is GlobalBinding)
+                    if (binding is GlobalBinding || !binding.environment.IsLexical)
                     {
                         // global variable
                         var localIdx = env.Define(varname, new GlobalBinding(syntax));
                         return new AstReference(syntax, AstReferenceType.Global, localIdx);
+                    }
+                    else if (binding is LocalBinding || binding is ArgumentBinding)
+                    {
+                        // up value to local variable
+                        var localIdx = env.Define(varname, new UpBinding(syntax, envIdx, binding.VarIdx));
+                        return new AstReference(syntax, AstReferenceType.UpValue, localIdx, envIdx, binding.VarIdx);
                     }
                     else if (binding is UpBinding)
                     {

@@ -65,6 +65,22 @@ namespace VARP.Scheme.VM
             this.Parent = parent;
             this.Name = name;
             this.FrameNum = parent == null ? 0 : parent.FrameNum + 1;
+            this.IsLexical = parent == null ? false : parent.IsLexical;
+            Bindings = new Dictionary<Symbol, Binding>(capacity);
+        }
+
+        /// <summary>
+        /// Create new environment
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="name"></param>
+        /// <param name="capacity"></param>
+        public Environment(Environment parent, Symbol name, bool isLexical, int capacity = DEFAULT_ENVIRONMENT_CAPACITY)
+        {
+            this.Parent = parent;
+            this.Name = name;
+            this.FrameNum = parent == null ? 0 : parent.FrameNum + 1;
+            this.IsLexical = isLexical;
             Bindings = new Dictionary<Symbol, Binding>(capacity);
         }
 
@@ -77,6 +93,11 @@ namespace VARP.Scheme.VM
         /// Return the capacity of environment
         /// </summary>
         public int Count { get { return Bindings.Count; } } 
+
+        /// <summary>
+        /// Is this environment lexical
+        /// </summary>
+        public bool IsLexical { get; set; }
 
         /// <summary>
         /// Get definition by index. 
@@ -101,6 +122,26 @@ namespace VARP.Scheme.VM
                 else
                     Bindings[name] = new Binding() {environment = this, value = value }; 
             }
+        }
+
+        /// <summary>
+        /// Update or define value
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public Binding DefineOrUpdate(Symbol name, Value value)
+        {
+            Binding bind = null;
+            if (Bindings.TryGetValue(name, out bind))
+            {
+                bind.value = value;
+            }
+            else
+            {
+                Bindings[name] = bind = new Binding() { environment = this, value = value };
+            }
+            return bind;
         }
 
         /// <summary>
@@ -156,11 +197,40 @@ namespace VARP.Scheme.VM
         #region Value Methods
         public override bool AsBool() { return true; }
         public override string ToString() { return string.Format("#<environment count={0}>", Bindings.Count); }
-        public AstBinding[] ToArray() {
-            AstBinding[] array = new AstBinding[Bindings.Count];
+
+        /// <summary>
+        /// Convert environment to array of bindings
+        /// </summary>
+        /// <returns></returns>
+        public AstBinding[] ToArray()
+        {
+            var array = new AstBinding[Bindings.Count];
             Bindings.Values.CopyTo(array, 0);
             return array;
         }
+
+        /// <summary>
+        /// Convert ast environment to the ast array
+        /// </summary>
+        /// <returns></returns>
+        public AstBinding[] ToAstArray() {
+            if (IsLexical)
+            {
+                var array = new AstBinding[Bindings.Count];
+                foreach (var bind in Bindings)
+                {
+                    if (bind.Value is AstBinding)
+                    {
+                        var ast = bind.Value as AstBinding;
+                        array[ast.VarIdx] = ast;
+                    }
+                    else throw new Exception();
+                }
+                return array;
+            }
+            else throw new Exception("Excepted lexical array");
+        }
+
         #endregion
 
         #region Debuggin and Inspection
@@ -176,7 +246,7 @@ namespace VARP.Scheme.VM
 
         #region Factory
 
-        protected static Environment Create(Environment parent, Symbol name, Frame dynFrame, int capacity = DEFAULT_ENVIRONMENT_CAPACITY)
+        public static Environment Create(Environment parent, Symbol name, Frame dynFrame, int capacity = DEFAULT_ENVIRONMENT_CAPACITY)
         {
             Debug.Assert(dynFrame != null);
 
@@ -187,7 +257,7 @@ namespace VARP.Scheme.VM
                 var template = frame.template;
                 var varcount = template.Variables.Length;
 
-                parent = new Environment(parent, Symbol.NULL);
+                parent = new Environment(parent, Symbol.NULL, true);
 
                 for (var i = 0; i < varcount; i++)
                 {
@@ -300,6 +370,7 @@ namespace VARP.Scheme.VM
             if (variable != null)
                 throw SchemeError.SyntaxError("define", "environment already have key", binding.Id);
 
+            binding.environment = this;
             binding.VarIdx = Bindings.Count;
             Bindings[name] = binding;
             return binding.VarIdx;

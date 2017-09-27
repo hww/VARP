@@ -44,7 +44,7 @@ namespace VARP.Scheme.Test
         //Parser terp = new Parser();
         LinkedList<Value> ParseScheme(string expression)
         {
-            AST ast = AstBuilder.Expand(expression, "PairTes.cs");
+            AST ast = AstBuilder.Expand(expression, "ValueListTest.cs", SystemEnvironment.Top);
             Value datum = ast.GetDatum();
 
             return datum.AsLinkedList<Value>();

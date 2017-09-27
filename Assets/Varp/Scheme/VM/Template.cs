@@ -51,6 +51,7 @@ namespace VARP.Scheme.VM
         public bool IsLocal { get { return Type == VariableType.Local; } }
         public bool IsGlobal { get { return Type == VariableType.Global; } }
         public bool IsUpvalue { get { return Type == VariableType.UpValue; } }
+
     }
 
     public sealed class Template : Inspectable
@@ -60,13 +61,16 @@ namespace VARP.Scheme.VM
         internal Value[] Literals;              //< list of literals, there will be child templates
         internal Location[] CodeDbg;            //< the location in source code
 
+        internal int ArgsCout;                  //< total argumets count
         internal int ReqArgsNumber;             //< quantity of arguments
         internal int OptArgsNumber;             //< quantity of arguments
         internal int KeyArgsNumber;             //< quantity of arguments
         internal int UpValsNumber;              //< quantity of arguments
+        internal int RestArgsNumber;            //< rest arguments number
         internal int RestValueIdx;              //< index of first element
         internal int SP;                        //< stack pointer position
         internal int FrameSize;                 //< full frame size
+        internal int ResultIdx;                 //< where is result after this template
 
         public Template()
         {
@@ -101,7 +105,7 @@ namespace VARP.Scheme.VM
 
             var sb = new StringBuilder();
             sb.Append(sident);
-            sb.AppendFormat("Template: args: {0} frame: {1}\n", Variables.Length, FrameSize);
+            sb.AppendFormat("Template: args: {0} frame: {1}\n", ArgsCout, FrameSize);
             /////////////////
             /// arguments ///
             /////////////////

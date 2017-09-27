@@ -186,6 +186,7 @@ namespace VARP.Scheme.Data
         internal static readonly Value Void = new Value(global::VoidType.Void);
         internal static readonly Value False = new Value(BoolType.False);
         internal static readonly Value True = new Value(BoolType.True);
+        internal static readonly Value Lambda = new Value(Symbol.LAMBDA);
 
 
 

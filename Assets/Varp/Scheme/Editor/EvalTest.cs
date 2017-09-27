@@ -160,13 +160,10 @@ namespace VARP.Scheme.Test
                 bool addSpace = false;
                 do
                 {
-                    Syntax result = Parser.Parse(lexer);
-                    if (result == null) break;
+                    var syntax = Parser.Parse(lexer);
+                    if (syntax == null) break;
 
-                    AST ast = AstBuilder.Expand(result);
-                    Template temp = CodeGenerator.GenerateCode(ast);
-                    VarpVM vm = new VarpVM();
-                    Value vmres = vm.RunTemplate(temp);
+                    var vmres = Scheme.Evaluate(syntax, SystemEnvironment.Top);
 
                     if (addSpace) sb.Append(" "); else addSpace = true;
                     sb.Append(Inspector.Inspect(vmres));

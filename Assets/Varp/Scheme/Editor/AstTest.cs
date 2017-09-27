@@ -35,6 +35,9 @@ namespace VARP.Scheme.Test
     using Tokenizing;
     using Stx;
     using REPL;
+    using VARP.Scheme.VM;
+    using VARP.Scheme.Codegen;
+    using VARP.Scheme.Data;
 
     public class AstTest
     {
@@ -104,7 +107,8 @@ namespace VARP.Scheme.Test
 
                     if (result == null) break;
 
-                    AST ast = AstBuilder.Expand(result);
+                    var env = new Environment(SystemEnvironment.Top, Symbol.NULL, true);
+                    var ast = AstBuilder.Expand(result, env);
 
                     if (addSpace) sb.Append(" "); else addSpace = true;
                     sb.Append(Inspector.Inspect(ast.GetDatum()));
@@ -118,5 +122,6 @@ namespace VARP.Scheme.Test
                 Debug.LogError(string.Format("{0}\n{1}\n{2}", source, ex.Message, ex.StackTrace));
             }
         }
+
     }
 }

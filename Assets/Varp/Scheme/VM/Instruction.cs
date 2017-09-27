@@ -305,7 +305,8 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.GETGLOBAL:
-                    ret.AppendFormat(": R({0}) = G[K({1})]", A, Bx);
+                    // LUA ret.AppendFormat(": R({0}) = G[K({1})]", A, Bx);
+                    ret.AppendFormat(": R({0}) = G[Rt({1})]", A, Bx);
                     break;
 
                 case OpCode.GETTABLE:
@@ -313,7 +314,8 @@ namespace VARP.Scheme.VM
                     break;
 
                 case OpCode.SETGLOBAL:
-                    ret.AppendFormat(": G[K{1}] = R({0})", A, Bx);
+                    //LUA ret.AppendFormat(": G[K{1}] = R({0})", A, Bx);
+                    ret.AppendFormat(": G[Rt{1}] = R({0})", A, Bx);
                     break;
 
                 case OpCode.SETUPVAL:

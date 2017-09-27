@@ -75,6 +75,9 @@ namespace VARP.Scheme.Stx
             DefinePrimitive("quote", QuotePrimitive.Expand);
             DefinePrimitive("quaziquote", QuaziquotePrimitive.Expand);
 
+            DefinePrimitive("syntax", SyntaxTools.Syntax);
+
+
         }
     }
 
