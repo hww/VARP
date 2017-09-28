@@ -88,29 +88,34 @@ namespace VARP.Scheme.Data
             Debug.Assert(val != null);
             return AddQuotes(val.ToString());
         }
+
         public static string ToString(Value val)
         {
             if (val.IsString)
                 return AddQuotes(val.ToString());
             return val.ToString();
         }
-        public static string ToString(ValueType val)
+
+        public static string ToString(ValueType value)
         {
-            Debug.Assert(val != null);
-            if (val is NumericalType)
-                throw SchemeError.Error("to-string", "can't inspect number-class", val);
-            return val.ToString();
+            Debug.Assert(value != null);
+            if (value is NumericalType)
+                throw SchemeError.ErrorWithName("to-string", "can't inspect number-class", value);
+            return value.ToString();
         }
+
         public static string ToString(List<Value> list)
         {
             Debug.Assert(list != null);
             return ValueList.ToString(list);
         }
+
         public static string ToString(LinkedList<Value> list)
         {
             Debug.Assert(list != null);
             return ValueLinkedList.ToString(list);
         }
+
         public static string ToString(Dictionary<object, Value> list)
         {
             Debug.Assert(list != null);

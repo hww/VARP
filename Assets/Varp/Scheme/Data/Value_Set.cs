@@ -153,7 +153,7 @@ namespace VARP.Scheme.Data
             else if (value is ushort)
                 Set((double)(ushort)value);
             else
-                throw SchemeError.Error("value-set", "can't assign the C# value-type", value);
+                throw SchemeError.ErrorWithName("value-set", "can't assign the C# value-type", value);
         }
 
         #endregion

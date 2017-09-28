@@ -193,7 +193,7 @@ namespace VARP.Scheme.VM
                                 var uv = values[op.B];
                                 var varNum = (int)uv.NumVal;
                                 var uframe = uv.RefVal as Frame;
-                                if (uframe == null) throw SchemeError.Error("vm", "can't write up value");
+                                if (uframe == null) throw SchemeError.ErrorWithName("vm", "can't write up value");
                                 uframe.Values[varNum] = values[op.A];
                             }
                             break;
@@ -448,7 +448,7 @@ namespace VARP.Scheme.VM
                                     //pc++; /// return to the next instruction
 
                                     if (numArgs < closureTemp.ReqArgsNumber)
-                                        throw SchemeError.Error("vm", "not enough arguments");
+                                        throw SchemeError.ErrorWithName("vm", "not enough arguments");
 
 
                                     {
@@ -526,7 +526,7 @@ namespace VARP.Scheme.VM
                                     if (function != null)
                                         function.Call(frame, op.A, op.B, op.C);
                                     else
-                                        throw SchemeError.Error("vm", "expected function found", func);
+                                        throw SchemeError.ErrorWithName("vm", "expected function found", func);
                                 }
                             }
                             break;

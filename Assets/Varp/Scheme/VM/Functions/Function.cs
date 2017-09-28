@@ -60,29 +60,33 @@ namespace VARP.Scheme.VM.Functions
 
         #region Assertions
 
-        private static SchemeError ArityError(string name, string message, int expected, int given, Value[] argv, Syntax expression)
+        private static SchemeError ArityError(string name, string message, int argidx, int given, int expected, Value[] argv)
         {
             var arguments = new LinkedList<Value>();
-            for (var i = 0; i < argv.Length; i++) arguments.AddLast(argv[i]); 
-            return new SchemeError(SchemeError.ArityErrorMessage(name, message, expected, given, arguments, expression));
+            if (given > 0)
+            {
+                var lastidx = argidx + given;
+                for (var i = argidx; i < lastidx; i++) arguments.AddLast(argv[i]);
+            }
+            return new SchemeError(SchemeError.ArityErrorMessage(name, message, expected, given, arguments, null));
         }
 
-        protected static void AssertArgsMinimum(string name, string message, int expected, int given, Frame frame, Syntax expression)
+        protected static void AssertArgsMinimum(string name, string message, int argidx, int given, int expected, Frame frame)
         {
             if (given < expected)
-                throw ArityError(name, message, expected, given, frame.Values, expression);
+                throw ArityError(name, message, argidx, given, expected, frame.Values);
         }
 
-        protected static void AssertArgsMaximum(string name, string message, int expected, int given, Frame frame, Syntax expression)
+        protected static void AssertArgsMaximum(string name, string message, int argidx, int given, int expected, Frame frame)
         {
             if (given > expected)
-                throw ArityError(name, message, expected, given, frame.Values, expression);
+                throw ArityError(name, message, argidx, given, expected, frame.Values);
         }
 
-        protected static void AssertArgsEqual(string name, string message, int expected, int given, Frame frame, Syntax expression)
+        protected static void AssertArgsEqual(string name, string message, int argidx, int given, int expected, Frame frame)
         {
             if (given != expected)
-                throw ArityError(name, message, expected, given, frame.Values, expression);
+                throw ArityError(name, message, argidx, given, expected, frame.Values);
         }
 
         #endregion

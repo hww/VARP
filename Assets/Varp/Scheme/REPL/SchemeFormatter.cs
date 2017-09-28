@@ -32,10 +32,17 @@ namespace VARP.Scheme.REPL
     /// <summary>
     /// Format string, and apply inspector before object with format starts with '?'
     /// </summary>
+    /// <usage>
+    /// string.Format(new SchemeFormatter(), "{0,?}", obj);
+    /// </usage>
     public class SchemeFormatter : IFormatProvider, ICustomFormatter
     {
-        // String.Format calls this method to get an instance of an 
-        // ICustomFormatter to handle the formatting. 
+        /// <summary>
+        /// String.Format calls this method to get an instance of an
+        /// ICustomFormatter to handle the formatting.
+        /// </summary>
+        /// <param name="service"></param>
+        /// <returns></returns>
         public object GetFormat(Type service)
         {
             if (service == typeof(ICustomFormatter))
@@ -47,8 +54,15 @@ namespace VARP.Scheme.REPL
                 return null;
             }
         }
-        // After String.Format gets the ICustomFormatter, it calls this format 
-        // method on each argument. 
+
+        /// <summary>
+        /// After String.Format gets the ICustomFormatter, it calls this format 
+        /// method on each argument. 
+        /// </summary>
+        /// <param name="format"></param>
+        /// <param name="arg"></param>
+        /// <param name="provider"></param>
+        /// <returns></returns>
         public string Format(string format, object arg, IFormatProvider provider)
         {
             if (format == null)

@@ -359,7 +359,7 @@ namespace VARP.Scheme.Codegen
         #region Program Counter Variables
 
         private int PC { get { return Code.Count; } }
-        private int Jmp(int src, int dst) { return dst - src; }
+        private int Jmp(int src, int dst) { return dst - src -1; }
 
         /// <summary>
         /// Make instruction of format A

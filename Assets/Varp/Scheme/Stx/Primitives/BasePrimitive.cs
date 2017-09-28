@@ -36,6 +36,7 @@ namespace VARP.Scheme.Stx.Primitives
         #region Assertions
 
         protected static int GetArgsCount(LinkedList<Value> o) { return o.Count - 1; }
+
         protected static void AssertArgsMinimum(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
         {
             if (given < expected)

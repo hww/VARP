@@ -92,7 +92,7 @@ namespace VARP.Scheme.Codegen
             if (ast is AstSequence)
                 return GenerateSequence(ast as AstSequence);
 
-            throw SchemeError.Error("codegen-generate", "unexpected ast", ast);
+            throw SchemeError.ErrorWithName("codegen-generate", "unexpected ast", ast);
         }
 
         public int GenerateReturn(int argument)
@@ -219,7 +219,7 @@ namespace VARP.Scheme.Codegen
                 var litIdx = DefineLiteral(varIdx);
 
                 if (litIdx > Instruction.BxMask)
-                    throw SchemeError.CompillerError("GenerateSet", "the index is too large for Bx", ast);
+                    throw SchemeError.ErrorWithName("GenerateSet", "the index is too large for Bx", ast);
 
                 var litIdxCur = Variables[ast.VarIdx].LitIdx;
                 if (litIdxCur < 0)
@@ -243,9 +243,9 @@ namespace VARP.Scheme.Codegen
                     // UpValue case
                     // U[B] := R(A)
                     if (varIdx > Instruction.BMask)
-                        throw SchemeError.CompillerError("GenerateSet", "the index is too large for RB", ast);
+                        throw SchemeError.ErrorWithName("GenerateSet", "the index is too large for RB", ast);
                     if (target > Instruction.AMask)
-                        throw SchemeError.CompillerError("GenerateSet", "the index is too large for RA", ast);
+                        throw SchemeError.ErrorWithName("GenerateSet", "the index is too large for RA", ast);
                   //  AddAB(OpCode.SETUPVAL, (short)varIdx, (short)target);
                 }
                 else
@@ -253,9 +253,9 @@ namespace VARP.Scheme.Codegen
                     // Local case
                     // R(A) = R(B)
                     if (varIdx > Instruction.AMask)
-                        throw SchemeError.CompillerError("GenerateSet", "the index is too large for RA", ast);
+                        throw SchemeError.ErrorWithName("GenerateSet", "the index is too large for RA", ast);
                     if (target > Instruction.BMask)
-                        throw SchemeError.CompillerError("GenerateSet", "the index is too large for RB", ast);
+                        throw SchemeError.ErrorWithName("GenerateSet", "the index is too large for RB", ast);
 
                     AddAB(OpCode.MOVE, (short)varIdx, (short)target);
                 }
@@ -339,18 +339,27 @@ namespace VARP.Scheme.Codegen
 
         private int GenerateConditionIf(AstConditionIf ast)
         {
-            var temp = (byte)SP;
-            Generate(ast.condExpression);
+            var oldsp = SP;
+            var temp = Generate(ast.condExpression);
 
             // if ((bool)R(A) != (bool)C) then {skip next instruction}
             AddABC(OpCode.TEST, temp, 0, 0);
-            var jmp_address = AddOpcode(Instruction.Nop);
+            var else_jmp = AddOpcode(Instruction.Nop);
 
+            // then 
+            SP = oldsp;
             Generate(ast.thenExperssion);
+            var then_end = AddOpcode(Instruction.Nop);
+
+            SP = oldsp;
             var else_address = PC;
             Generate(ast.elseExpression);
+            var else_end = PC;
 
-            Code[jmp_address] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(jmp_address, else_address));
+            Code[else_jmp] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(else_jmp, else_address));
+            Code[then_end] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(then_end, else_end));
+
+            SP = temp;
             return temp;
         }
 
@@ -388,6 +397,8 @@ namespace VARP.Scheme.Codegen
             {
                 Generate(ast.ElseCase[1].AsAST());
             }
+
+            SP = temp;
             return temp;
         }
 

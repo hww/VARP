@@ -42,8 +42,6 @@ namespace VARP.Scheme.Stx
     /// </summary>
     public abstract class AST : SObject
     {
-        protected const int MAX_INDEX = 255;
-
         /// <summary>
         /// This is location of the expression
         /// For instance the expression (+ 1 2) will have
@@ -210,8 +208,6 @@ namespace VARP.Scheme.Stx
         /// <param name="upVarIdx">index of variable inside referenced environment</param>
         public AstReference(Syntax syntax, AstReferenceType type, int argIdx) : base(syntax)
         {
-            if (argIdx > MAX_INDEX) throw SchemeError.Error("ast-reference", "environment index overflow", syntax);
-
             ReferenceType = type;
             VarIdx = (byte)argIdx;
         }
@@ -225,10 +221,6 @@ namespace VARP.Scheme.Stx
         /// <param name="upVarIdx">index of variable inside referenced environment</param>
         public AstReference(Syntax syntax, AstReferenceType type, int argIdx, int upEnvIdx, int upVarIdx) : base(syntax)
         { 
-            if (argIdx > MAX_INDEX) throw SchemeError.Error("ast-reference", "environment index overflow", syntax);
-            if (upEnvIdx > MAX_INDEX) throw SchemeError.Error("ast-reference", "environment depth overflow", syntax);
-            if (upVarIdx > MAX_INDEX) throw SchemeError.Error("ast-reference", "environment index overflow", syntax);
-
             ReferenceType = type;
             VarIdx = (byte)argIdx;
             UpEnvIdx = (short)upEnvIdx;
@@ -257,10 +249,6 @@ namespace VARP.Scheme.Stx
 
         public AstSet(Syntax syntax, Syntax variable, AST value, int varIdx, int refEnvIdx, int refVarIdx) : base(syntax)
         {
-            if (varIdx > MAX_INDEX) throw SchemeError.Error("ast-set", "environment index overflow", syntax);
-            if (refEnvIdx > MAX_INDEX) throw SchemeError.Error("ast-set", "environment depth overflow", syntax);
-            if (refVarIdx > MAX_INDEX) throw SchemeError.Error("ast-set", "environment index overflow", syntax);
-
             VarIdx = (byte)varIdx;
             UpEnvIdx = (short)refEnvIdx;
             UpVarIdx = (short)refVarIdx;

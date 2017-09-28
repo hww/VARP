@@ -28,6 +28,20 @@
 using System.Text;
 using System.Collections.Generic;
 
+
+// ================================================================================
+// 
+// All messages have to be down-cased
+// Format:
+// @srcloc: @name: @message; @continued-message ...  @field: @detail›
+// 
+// @srcloc             | location in source file
+// @name               | name of the method where happen exception
+// @message            | short message as "syntax error"
+// @continuedMessage   | long error message, for several sentences separate by ';'
+// 
+// ================================================================================
+
 namespace VARP.Scheme.Exception
 {
     using DataStructures;
@@ -40,7 +54,7 @@ namespace VARP.Scheme.Exception
     /// <summary>
     /// General exception class
     /// </summary>
-    public class SchemeError : System.ApplicationException
+    public partial class SchemeError : System.ApplicationException
     {
         public SchemeError() : base()
         {
@@ -54,11 +68,30 @@ namespace VARP.Scheme.Exception
         {
         }
 
-        /// ================================================================================
-        /// Expand location string from object
-        /// ================================================================================
-       
-        static protected string GetLocationString(object x)
+        // ================================================================================
+        // Special formatter
+        // ================================================================================
+
+        /// <summary>
+        /// Create message with source location, and additionally
+        /// the the formatted string builder will be called
+        /// </summary>
+        /// <usage>
+        /// string.Format("{0,?}", obj);
+        /// </usage>
+        /// <param name="format"></param>
+        /// <param name="objects"></param>
+        /// <returns></returns>
+        public string Format(string format, params object[] objects)
+        {
+            return string.Format(new SchemeFormatter(), format, objects);
+        }
+
+        // ================================================================================
+        // Expand location string from object
+        // ================================================================================
+
+        protected static string GetLocationString(object x)
         {
             if (x is Location)
                 return GetLocationStringIntern(x as Location);
@@ -69,24 +102,36 @@ namespace VARP.Scheme.Exception
             return string.Empty;
         }
 
-        private static string GetLocationStringIntern(Location x)
+
+        protected static string GetLocationStringIntern(Location x)
         {
             return x == null ? string.Empty : string.Format("{0}({1},{2}): ", x.File, x.LineNumber, x.ColNumber);
         }
 
-        /// ================================================================================
-        /// 
-        /// All messages have to be down-cased
-        /// Format:
-        /// @srcloc: @name: @message; @continued-message ...  @field: @detail›
-        /// 
-        /// @srcloc             | location in source file
-        /// @name               | name of the method where happen exception
-        /// @message            | short message as "syntax error"
-        /// @continuedMessage   | long error message, for several sentences separate by ';'
-        /// 
-        /// ================================================================================
+        // ================================================================================
+        // Inspector
+        // ================================================================================
 
+        /// <summary>
+        /// Inspect object for error message
+        /// Standart REPL inspector uses o.Inspect() method
+        /// this version will use AsString() method
+        /// </summary>
+        /// <param name="o"></param>
+        protected static string Inspect(object o)
+        {
+            if (o == null)
+                return "()";
+            if (o is Value)
+                return ((Value)o).AsString();
+            if (o is ValueType)
+                return (o as ValueType).ToString();
+            return o.ToString();
+        }
+    }
+
+    public partial class SchemeError
+    {
         /// <summary>
         /// Create simple message without any formatting and inspect objects
         /// </summary>
@@ -95,6 +140,8 @@ namespace VARP.Scheme.Exception
         public static string ErrorMessage(string message, params object[] fields)
         {
             var sb = new StringBuilder();
+            sb.Append(message);
+            sb.Append(": ");
             foreach (var v in fields)
             {
                 sb.Append(" ");
@@ -108,27 +155,22 @@ namespace VARP.Scheme.Exception
             return new SchemeError(ErrorMessage(message, fields));
         }
 
-        /// <summary>
-        /// Create message with source location, and additionally
-        /// the the formatted string builder will be called
-        /// Use ? formatter as:
-        /// string.Format("{0,?}", obj);
-        /// </summary>
-        /// <param name="message">the mesage</param>
-        /// <param name="fields">inspected objects</param>
-        public static string ErrorMessage(string name, string format, params object[] fields)
+        public static string ErrorMessageWithName(string name, string message, params object[] fields)
         {
-            return string.Format(new SchemeFormatter(), "{0}: {1}", name, string.Format(format, fields));
-        }
-        public static SchemeError Error(string name, string expected, params object[] fields)
-        {
-            return new SchemeError(ErrorMessage(name, expected, fields));
+            return ErrorMessage(string.Format("{0}: {1}", name, message), fields);
         }
 
-        // ----------------------
-        // Argument error methods
-        // ----------------------
+        public static SchemeError ErrorWithName(string name, string message, params object[] fields)
+        {
+            return new SchemeError(ErrorMessageWithName(name, message, fields));
+        }
+    }
 
+    /// <summary>
+    /// Argument error methods
+    /// </summary>
+    public partial class SchemeError
+    {
         public static string ArgumentErrorMessage(string name, string expected, object val)
         {
             var vstr = Inspect(val);
@@ -172,38 +214,55 @@ namespace VARP.Scheme.Exception
         {
             return new SchemeError(ResultErrorMessage(name, expected, badPos, vals));
         }
+
         public static SchemeError ArgumentError(string name, string expected, int badPos, LinkedList<Value> val)
         {
             return new SchemeError(ResultErrorMessage(name, expected, val));
         }
+    }
 
-
-        // ----------------------
-        // Result error methods
-        // ----------------------
-
-        public static string ResultErrorMessage(string name, string expected, object val)
+    /// <summary>
+    /// Result error methods
+    /// </summary>
+    public partial class SchemeError
+    {
+        /// <summary>
+        /// Result error message for single result outputs
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="expected"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public static string ResultErrorMessage(string name, string expected, object result)
         {
-            var locs = GetLocationString(val);
-            var vstr = Inspect(val);
+            var locs = GetLocationString(result);
+            var vstr = Inspect(result);
             return string.Format("{0}{1}: contract violation\n   expected: {2}\n   given: {3}", locs, name, expected, vstr);
         }
 
-        public static string ResultErrorMessage(string name, string expected, int badPos, params object[] vals)
+        /// <summary>
+        /// Result error message for multiple results
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="expected"></param>
+        /// <param name="badPos"></param>
+        /// <param name="results"></param>
+        /// <returns></returns>
+        public static string ResultErrorMessage(string name, string expected, int badPos, params object[] results)
         {
             var sb = new StringBuilder();
             var loc = string.Empty;
             var badStr = string.Empty;
-            for (var i = 0; i < vals.Length; i++)
+            for (var i = 0; i < results.Length; i++)
             {
                 if (i == badPos)
                 {
-                    loc = GetLocationString(vals[i]);
-                    badStr = Inspect(vals[i]);
+                    loc = GetLocationString(results[i]);
+                    badStr = Inspect(results[i]);
                     continue; // skip bad argument
                 }
                 sb.Append("  ");
-                sb.AppendLine(Inspect(vals[i]));
+                sb.AppendLine(Inspect(results[i]));
             }
             var argStr = sb.ToString();
             return string.Format("{0}{1}: contract violation\n   expected: {2}\n   given: {3}\n  result position: {4}\n  other result position...:\n{5}", loc, name, expected, badPos, badStr, argStr);
@@ -218,11 +277,24 @@ namespace VARP.Scheme.Exception
         {
             return new SchemeError(ResultErrorMessage(name, expected, badPos, vals));
         }
+    }
 
-        // ----------------------
-        // Range error methods
-        // ----------------------
-
+    /// <summary>
+    /// Range error methods
+    /// </summary>
+    public partial class SchemeError
+    {
+        /// <summary>
+        /// Range error message
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="typeDescription"></param>
+        /// <param name="indexPrefix"></param>
+        /// <param name="index"></param>
+        /// <param name="inValue"></param>
+        /// <param name="lowerBound"></param>
+        /// <param name="upperBound"></param>
+        /// <returns></returns>
         public static string RangeErrorMessage(string name,       //< "vector-ref" | "array-ref"
                                         string typeDescription,   //< "vector" | "array"
                                         string indexPrefix,       //< "start"
@@ -252,6 +324,17 @@ namespace VARP.Scheme.Exception
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Range exception
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="typeDescription"></param>
+        /// <param name="indexPrefix"></param>
+        /// <param name="index"></param>
+        /// <param name="inValue"></param>
+        /// <param name="lowerBound"></param>
+        /// <param name="upperBound"></param>
+        /// <returns></returns>
         public static SchemeError RangeError(
             string name,                            // "vector-ref" | "array-ref"
             string typeDescription,                 // "vector" | "array"
@@ -263,21 +346,22 @@ namespace VARP.Scheme.Exception
         {
             return new SchemeError(RangeErrorMessage(name, typeDescription, indexPrefix, index, inValue, lowerBound, upperBound));
         }
-
-        // ----------------------
-        // Arity error methods
-        // ----------------------
-
-            /// <summary>
-            /// Arity error message
-            /// </summary>
-            /// <param name="name">function name wehre happens error</param>
-            /// <param name="message">the error message</param>
-            /// <param name="expected">expected arguments quantity</param>
-            /// <param name="given">given arguments quantity</param>
-            /// <param name="argv">arguments</param>
-            /// <param name="expression">the expression whenre happens error</param>
-            /// <returns></returns>
+    }
+    /// <summary>
+    /// Arity error methods
+    /// </summary>
+    public partial class SchemeError
+    {
+        /// <summary>
+        /// Arity error message
+        /// </summary>
+        /// <param name="name">function name wehre happens error</param>
+        /// <param name="message">the error message</param>
+        /// <param name="expected">expected arguments quantity</param>
+        /// <param name="given">given arguments quantity</param>
+        /// <param name="argv">arguments</param>
+        /// <param name="expression">the expression whenre happens error</param>
+        /// <returns></returns>
         public static string ArityErrorMessage(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
         {
             var sb = new StringBuilder();
@@ -292,18 +376,29 @@ namespace VARP.Scheme.Exception
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Arity exception
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="message"></param>
+        /// <param name="expected"></param>
+        /// <param name="given"></param>
+        /// <param name="argv"></param>
+        /// <param name="expression"></param>
+        /// <returns></returns>
         public static SchemeError ArityError(string name, string message, int expected, int given, LinkedList<Value> argv, Syntax expression)
         {
             return new SchemeError(ArityErrorMessage(name, message, expected, given, argv, expression));
         }
+    }
 
-
-        // ----------------------
-        // Syntax error methods
-        // ----------------------
-
+    /// <summary>
+    /// Syntax error methods
+    /// </summary>
+    public partial class SchemeError 
+    { 
         /// <summary>
-        /// 
+        /// Syntax error message
         /// </summary>
         /// <param name="name">name of method where happen error</param>
         /// <param name="message">error message</param>
@@ -312,78 +407,33 @@ namespace VARP.Scheme.Exception
         /// <returns></returns>
         public static string SyntaxErrorMessage(string name, string message, object expression, object subexpression = null)
         {
-            var expressionStr = Inspect(expression);
             if (subexpression == null)
             {
-                var loc = GetLocationString(expression);
-                return string.Format("{0}: {1}: {2} in: {3}", loc, name, message, expressionStr);
+                var expStr = Inspect(expression);
+                var expLoc = GetLocationString(expression);
+                return string.Format("{0}: {1}: {2} in: {3}", expLoc, name, message, expStr);
             }
             else
             {
-                var loc = GetLocationString(subexpression);
-                var subexpressionStr = Inspect(expression);
-                return string.Format("{0}: {1}: {2} in: {3}\n error syntax: {4}", loc, name, message, expressionStr);
+                var expStr = Inspect(expression);
+                var subLoc = GetLocationString(subexpression);
+                var subStr = Inspect(expression);
+                return string.Format("{0}: {1}: {2} in: {3}\n error syntax: {4}", subLoc, name, message, expStr, subStr);
             }
         }
 
+        /// <summary>
+        /// Create new syntax error exception
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="message"></param>
+        /// <param name="expression"></param>
+        /// <param name="subexpression"></param>
+        /// <returns></returns>
         public static SchemeError SyntaxError(string name, string message, object expression, object subexpression = null)
         {
             return new SchemeError(SyntaxErrorMessage(name, message, expression, subexpression));
         }
-
-        // ----------------------
-        // Compiller error methods
-        // ----------------------
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="name">name of method where happen error</param>
-        /// <param name="message">error message</param>
-        /// <param name="expression">expression where happen error</param>
-        /// <param name="subexpression">exact token or syntax where happen error</param>
-        /// <returns></returns>
-        public static string CompillerErrorMessage(string name, string message, object expression, object subexpression = null)
-        {
-            var expressionStr = Inspect(expression);
-            if (subexpression == null)
-            {
-                var loc = GetLocationString(expression);
-                return string.Format("{0}: {1}: {2} in: {3}", loc, name, message, expressionStr);
-            }
-            else
-            {
-                var loc = GetLocationString(subexpression);
-                var subexpressionStr = Inspect(expression);
-                return string.Format("{0}: {1}: {2} in: {3}\n error syntax: {4}", loc, name, message, expressionStr);
-            }
-        }
-
-        public static SchemeError CompillerError(string name, string message, object expression, object subexpression = null)
-        {
-            return new SchemeError(CompillerErrorMessage(name, message, expression, subexpression));
-        }
-
-        // ----------------------
-        // Inspector
-        // ----------------------
-
-        // Standart REPL inspector uses o.Inspect() method
-        // this verio will use AsStrin() method
-
-        /// <summary>
-        /// Inspect object for error message
-        /// </summary>
-        /// <param name="o"></param>
-        private static string Inspect(object o)
-        {
-            if (o == null)
-                return "()";
-            if (o is Value)
-                return ((Value)o).AsString();
-            if (o is ValueType)
-                return (o as ValueType).ToString();
-            return o.ToString();
-        }
     }
+
 }

@@ -44,7 +44,7 @@ namespace VARP.Scheme.Libs
             }
             catch (System.Exception ex)
             {
-                throw SchemeError.Error("get-integer", "improperly formed int value", value);
+                throw SchemeError.ErrorWithName("get-integer", "improperly formed int value", value);
             }
         }
 
@@ -58,7 +58,7 @@ namespace VARP.Scheme.Libs
             }
             catch (System.Exception ex)
             {
-                throw SchemeError.Error("get-hexadecimal", "improperly formed int value", value);
+                throw SchemeError.ErrorWithName("get-hexadecimal", "improperly formed int value", value);
             }
         }
 
@@ -69,7 +69,7 @@ namespace VARP.Scheme.Libs
             if (float.TryParse(value, out val))
                 return val;
 
-            throw SchemeError.Error("get-float", "improperly formed float value", value);
+            throw SchemeError.ErrorWithName("get-float", "improperly formed float value", value);
         }
 
         public static double GetDouble(string value)
@@ -79,7 +79,7 @@ namespace VARP.Scheme.Libs
             if (double.TryParse(value, out val))
                 return val;
 
-            throw SchemeError.Error("get-double", "improperly formed float value", value);
+            throw SchemeError.ErrorWithName("get-double", "improperly formed float value", value);
         }
 
         /// <summary>
@@ -90,14 +90,14 @@ namespace VARP.Scheme.Libs
         public static double GetNumerical(string value)
         {
             if (string.IsNullOrEmpty(value))
-                throw SchemeError.Error("get-double", "unexpected empty string", value);
+                throw SchemeError.ErrorWithName("get-double", "unexpected empty string", value);
             if (char.IsDigit(value[0]))
                 return GetDouble(value);
 
             if (value[0] == '#')
                 return GetHexadecimal(value);
 
-            throw SchemeError.Error("get-numerical", "improperly formed numerical value", value);
+            throw SchemeError.ErrorWithName("get-numerical", "improperly formed numerical value", value);
         }
     }
 }

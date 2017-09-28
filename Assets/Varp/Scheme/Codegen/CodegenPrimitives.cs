@@ -101,6 +101,7 @@ namespace VARP.Scheme.Codegen
                 AddAB(opcode, result, expres);
                 Pop();
             }
+            SP = result;
             return result;
         }
 
@@ -119,6 +120,7 @@ namespace VARP.Scheme.Codegen
             int arg1 = Generate(args[1].AsAST());
             AddABC(opcode, temp, (byte)arg0, (byte)arg1);
 
+            SP = temp;
             return temp;
         }
 
@@ -146,6 +148,7 @@ namespace VARP.Scheme.Codegen
                 }
             }
             AddABC(OpCode.CONCAT, temp, temp, (short)(temp + args.Count - 1));
+            SP = temp;
             return temp;
         }
 
@@ -188,6 +191,7 @@ namespace VARP.Scheme.Codegen
             foreach (var jmp in jumps)
                 Code[jmp] = Instruction.MakeASBX(OpCode.JMP, 0, Jmp(jmp, pc));
 
+            SP = result;
             return result;
         }
     }
