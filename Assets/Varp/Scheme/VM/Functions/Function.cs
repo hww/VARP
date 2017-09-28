@@ -32,26 +32,25 @@ namespace VARP.Scheme.VM.Functions
     using VARP.Scheme.Exception;
     using VARP.Scheme.Stx;
 
-    public abstract class Function
+    public abstract class Function : SObject
     {
 
         /// <summary>
         /// Native functions will be called by VM
         /// wit three arguments: CALL A.B.C
         /// 
-        /// <A> result register index
-        /// 
-        /// <B> quantity of arguments
+        /// Operand 'A' contains the index of result 
+        /// Operand 'C' is quantity of results
+        /// 0: NILL 0 no result
+        /// 1: R(A) 
+        /// 2: R(A..B)
+        /// 3: R(A..C)
+        /// Operand 'B' is quantity of arguments
         /// 0: () no arguments
         /// 1: R(A+1)
         /// 2: R(A+1..A+2)
         /// 3: R(A+1..A+3)
         /// 
-        /// <C> quantity of results
-        /// 0: NILL 0 no result
-        /// 1: R(A) 
-        /// 2: R(A..B)
-        /// 3: R(A..C)
         /// </summary>
         /// <param name="frame"></param>
         /// <param name="a"></param>
@@ -88,5 +87,12 @@ namespace VARP.Scheme.VM.Functions
 
         #endregion
 
+        #region SObject
+
+        public override bool AsBool() { return true; }
+        public override string ToString() { return string.Format("#<function {0}>", this.GetType().Name); }
+        public override string Inspect() { return ToString(); }
+
+        #endregion
     }
 }
